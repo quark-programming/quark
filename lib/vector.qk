@@ -1,0 +1,52 @@
+T* extern malloc<T>(usize size);
+T* extern realloc<T>(T* ptr, usize size);
+
+struct Slice<T> {
+	T* data;
+	usize size;
+}
+
+struct Vec<T> {
+	T* data;
+	usize size;
+	usize capacity;
+
+	Vec<T> new() {
+		return Vec { 
+			data: malloc(sizeof(T)),
+			size: 0,
+			capacity: 1
+		};
+	}
+
+	usize len(self) {
+		return self.size;
+	}
+
+	void reserve(&self, usize n) {
+		if(self->size + n <= self->capacity) return;
+
+		while(self->capacity < self->size + n) {
+			self->capacity = self->capacity * 2;
+		}
+
+		self->data = realloc(self->data, self->capacity);
+	}
+
+	void push(&self, T item) {
+		self->reserve(1);
+		self->data[self->size] = item;
+		self->size = self->size + 1;
+	}
+
+	void push_slice(&self, Slice<T> slice) {
+		self->reserve(slice.size);
+
+		int i = 0;
+		while(i < slice.size) {
+			self->data[self->size] = slice.data[i];
+			self->size = self->size + 1;
+			i = i + 1;
+		}
+	}
+}

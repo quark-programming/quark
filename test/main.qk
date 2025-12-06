@@ -1,9 +1,11 @@
-import lib::io;
+struct Array<T> {
+   T* data;
+   usize size;
+}
 
-str x = str::from("Hello World");
-print(x);
+Array<int> numbers;
 
-String owned = x.to_owned();
-owned.vector.push(*(char* _ = "!"));
-
-print(owned.to_str());
+Array<char> string = Array {
+   data: "Hello World",
+   size: 11,
+};

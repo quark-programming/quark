@@ -31,5 +31,5 @@ See source files in [lib/](lib/) for examples or the current [test file](test/ma
 ```quark
 import lib::io;
 
-print(str::from("Hello World"));
+print("Hello World");
 ```

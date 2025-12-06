@@ -1,0 +1,23 @@
+const bool true = 1;
+const bool false = 0;
+
+struct Option<T> {
+	T value;
+	bool some;
+
+	Option<T> Some(T value) {
+		return Option { value, true };
+	}
+
+	Option<T> None() {
+		return Option { some: false };
+	}
+
+	bool is_some(self) {
+		return self.some;
+	}
+
+	bool is_none(self) {
+		return 1 - self.some;
+	}
+}

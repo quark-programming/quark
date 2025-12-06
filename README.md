@@ -24,7 +24,7 @@ $ ./qc main.qk -o main.c
 
 ## Examples
 
-See source files in [lib/](lib/) for examples or the current [test file](test/main.qk).
+See source files in [lib/](lib/) for examples or the current [test file](test/main.qk) or visit [quar.k.vu](https://quar.k.vu) for documentation.
 
 ## Hello World
 

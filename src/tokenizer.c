@@ -4,20 +4,42 @@ enum {
 	TokenIdentifier = 'a',
 	TokenNumber,
 	TokenString,
+	TokenCharacter,
 	TokenRightArrow,
 
 	TokenDoubleColon,
+	TokenDoublePlus,
+	TokenDoubleMinus,
+	TokenDoubleLess,
+	TokenDoubleGreater,
+	TokenDoubleEqual,
+	TokenDoubleAnd,
+	TokenDoubleOr,
 
 	TokenLessEqual,
 	TokenGreaterEqual,
+	TokenNotEqual,
+	TokenPlusEqual,
+	TokenMinusEqual,
+	TokenTimesEqual,
+	TokenDivideEqual,
+	TokenModEqual,
+	TokenAndEqual,
+	TokenXorEqual,
+	TokenOrEqual,
 };
 
 unsigned char const tokenizer_double_characters[128] = {
-	[':'] = TokenDoubleColon,
+	[':'] = TokenDoubleColon, ['+'] = TokenDoublePlus, ['-'] = TokenDoubleMinus,
+	['<'] = TokenDoubleLess, ['>'] = TokenDoubleGreater, ['='] = TokenDoubleEqual,
+	['&'] = TokenDoubleAnd, ['|'] = TokenDoubleOr,
 };
 
 unsigned char const tokenizer_equal_characters[128] = {
-	['<'] = TokenLessEqual, ['>'] = TokenGreaterEqual,
+	['<'] = TokenLessEqual, ['>'] = TokenGreaterEqual, ['!'] = TokenNotEqual,
+	['+'] = TokenPlusEqual, ['-'] = TokenMinusEqual, ['*'] = TokenTimesEqual,
+	['/'] = TokenDivideEqual, ['%'] = TokenModEqual, ['&'] = TokenAndEqual,
+	['^'] = TokenXorEqual, ['|'] = TokenOrEqual,
 };
 
 typedef struct {
@@ -64,13 +86,13 @@ Token create_token(Trace trace) {
 		return (Token) { trace, TokenNumber };
 	}
 
-	if(*trace.slice.data == '"') {
-		while(trace.slice.data[++trace.slice.size] != '"') {
+	if(*trace.slice.data == '"' || *trace.slice.data == '\'') {
+		while(trace.slice.data[++trace.slice.size] != trace.slice.data[0]) {
 			if(trace.slice.data[trace.slice.size] == '\\')
 				trace.slice.size++;
 		}
 		trace.col += ++trace.slice.size;
-		return (Token) { trace, TokenString };
+		return (Token) { trace, trace.slice.data[0] == '"' ? TokenString : TokenCharacter };
 	}
 
 	if(tokenizer_double_characters[*trace.slice.data] &&

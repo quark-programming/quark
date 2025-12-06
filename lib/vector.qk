@@ -49,4 +49,8 @@ struct Vec<T> {
 			i = i + 1;
 		}
 	}
+
+	void pop(&self) {
+		self->size--;
+	}
 }

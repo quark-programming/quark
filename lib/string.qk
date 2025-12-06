@@ -19,10 +19,6 @@ struct Range {
 struct str {
 	Slice<char> slice;
 
-	str from(char* string_literal) {
-		return str { Slice<char> { string_literal, strlen(string_literal) } };
-	}
-
 	usize len(self) {
 		return self.slice.size;
 	}
@@ -35,9 +31,8 @@ struct String {
 		return String { Vec<char>::new() };
 	}
 
-	String from(char* string_literal) {
+	String from(str string) {
 		Vec<char> vector = Vec::new();
-		str string = str::from(string_literal);
 		vector.push_slice(string.slice);
 		return String { vector };
 	}

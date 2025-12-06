@@ -4,6 +4,6 @@ import lib::string;
 
 void print(str message) {
 	fwrite(message.slice.data, message.slice.size, sizeof(char), extern<File*> "stdout");
-	char* newline = "\n";
-	fwrite(newline, 1, sizeof(char), extern<File*> "stdout");
+	const char newline = '\n';
+	fwrite(&newline, 1, sizeof(char), extern<File*> "stdout");
 }

@@ -50,7 +50,8 @@ typedef struct {
 	Identifier* identifier; \
 	Node* const_value; \
 	Generics generics; \
-	unsigned is_inline : 1
+	unsigned is_inline : 1, \
+			 observerd : 1;
 
 typedef struct {
 	extends_Node;
@@ -96,7 +97,6 @@ void comp_Identifier(Identifier*, str*, Compiler*);
 
 typedef struct {
 	extends_Declaration;
-	unsigned observed : 1;
 } VariableDeclaration;
 typedef Vector(VariableDeclaration*) VariableDeclarationList;
 void comp_VariableDeclaration(VariableDeclaration*, str*, Compiler*);
@@ -199,6 +199,13 @@ typedef struct {
 } Prefix;
 void comp_Prefix(Prefix*, str*, Compiler*);
 
+typedef struct {
+	extends_Node;
+	str postfix;
+	Node* child;
+} Postfix;
+void comp_Postfix(Postfix*, str*, Compiler*);
+
 union Type {
 	struct { extends_Type; };
 
@@ -230,6 +237,7 @@ union Node {
 	External External;
 	Wrapper Wrapper;
 	Prefix Prefix;
+	Postfix Postfix;
 
 	Type Type;
 

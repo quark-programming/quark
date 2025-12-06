@@ -1,11 +1,3 @@
-struct Array<T> {
-   T* data;
-   usize size;
-}
+import lib::io;
 
-Array<int> numbers;
-
-Array<char> string = Array {
-   data: "Hello World",
-   size: 11,
-};
+print("Hello World");

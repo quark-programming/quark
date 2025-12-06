@@ -36,6 +36,7 @@ void put(Scope* scope, str identifier, Declaration* declaration) {
 
 Wrapper* variable_of(Declaration* declaration, Trace trace, unsigned long flags) {
 	if(!declaration) return (void*) 1;
+	declaration->observerd = 1;
 	flags |= fConstExpr | fMutable | declaration->flags & fType;
 
 	return (void*) new_node((Node) { .Wrapper = {

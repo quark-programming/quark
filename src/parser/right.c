@@ -10,6 +10,7 @@ enum {
 	RightAltBinary,
 	RightDeclaration,
 	RightAssignment,
+	RightIncDec,
 	RightCall,
 	RightFieldAccess,
 	RightCompare,
@@ -22,15 +23,34 @@ typedef struct {
 } RightOperator;
 
 extern int collecting_type_arguments;
+// https://en.cppreference.com/w/c/language/operator_precedence.html
 RightOperator right_operator_table[128] = {
-	['.'] = { 1, RightFieldAccess }, [TokenRightArrow] = { 1, RightFieldAccess },
+	[TokenDoublePlus] = { 1, RightIncDec }, [TokenDoubleMinus] = { 1, RightIncDec },
 	['['] = { 1, RightIndex }, ['('] = { 1, RightCall },
+	['.'] = { 1, RightFieldAccess }, [TokenRightArrow] = { 1, RightFieldAccess },
+
 	['*'] = { 3, RightAltBinary }, ['/'] = { 3 }, ['%'] = { 3 },
+
 	['+'] = { 4 }, ['-'] = { 4 },
+
+	[TokenDoubleLess] = { 5 }, [TokenDoubleGreater] = { 5 },
+
 	['<'] = { 6, RightCompare }, ['>'] = { 6, RightCompare },
 	[TokenLessEqual] = { 6, RightCompare }, [TokenGreaterEqual] = { 6, RightCompare },
+
+	[TokenDoubleEqual] = { 7, RightCompare }, [TokenNotEqual] = { 7, RightCompare },
+
+	['&'] = { 8 }, ['^'] = { 9 }, ['|'] = { 10 },
+
+	[TokenDoubleAnd] = { 11, RightCompare }, [TokenDoubleOr] = { 12, RightCompare },
+
 	[TokenIdentifier] = { 13, RightDeclaration },
-	['='] = { 14, RightAssignment },
+
+	['='] = { 14, RightAssignment }, [TokenPlusEqual] = { 14, RightAssignment },
+	[TokenMinusEqual] = { 14, RightAssignment }, [TokenTimesEqual] = { 14, RightAssignment },
+	[TokenDivideEqual] = { 14, RightAssignment }, [TokenModEqual] = { 14, RightAssignment },
+	[TokenAndEqual] = { 14, RightAssignment }, [TokenXorEqual] = { 14, RightAssignment },
+	[TokenOrEqual] = { 14, RightAssignment },
 };
 
 Node* expression(Parser* parser) {
@@ -159,6 +179,23 @@ outer_while:
 		if(operator.precedence == 6 && collecting_type_arguments) break;
 
 		switch(operator.type) {
+			case RightIncDec: {
+				if(!(lefthand->flags & fMutable) || lefthand->type->flags & fConst) {
+					push(parser->tokenizer->messages, Err( lefthand->trace,
+								str("left hand of assignment is not a mutable value")));
+				}
+
+				Trace operator = next(parser->tokenizer).trace;
+
+				return new_node((Node) { .Postfix = {
+						.compiler = (void*) &comp_Postfix,
+						.trace = operator,
+						.type = lefthand->type,
+						.child = lefthand,
+						.postfix = operator.slice,
+				}});
+			}
+
 			case RightAltBinary: {
 				switch(parser->tokenizer->current.type) {
 					case '*':

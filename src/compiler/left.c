@@ -115,3 +115,9 @@ void comp_Prefix(Prefix* self, str* line, Compiler* compiler) {
 	self->child->compiler(self->child, line, compiler);
 	strf(line, ")");
 }
+
+void comp_Postfix(Postfix* self, str* line, Compiler* compiler) {
+	strf(line, "(");
+	self->child->compiler(self->child, line, compiler);
+	strf(line, "%.*s)", (int) self->postfix.size, self->postfix.data);
+}

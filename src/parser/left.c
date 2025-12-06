@@ -1,5 +1,19 @@
 #include "types.c"
 
+Node* experssion(Parser* parser);
+
+Node* eval(char* filename, char* code, Parser* parser) {
+	Tokenizer eval_tokenizer = new_tokenizer(filename
+			?: parser->tokenizer->current.trace.filename, code, parser->tokenizer->messages);
+	Tokenizer* const tokenizer = parser->tokenizer;
+
+	parser->tokenizer = &eval_tokenizer;
+	Node* const node = expression(parser);
+	parser->tokenizer = tokenizer;
+
+	return node;
+}
+
 Node* right(Node* lefthand, Parser* parser, unsigned char precedence);
 
 Node* reference(Node* node, Trace trace) {
@@ -254,16 +268,39 @@ ret:
 			return expression;
 		}
 
-		case TokenString:
-			return new_node((Node) { .External = {
-					.compiler = (void*) &comp_External,
+		case TokenString: {
+			NodeList fields = { 0 };
+			push(&fields, new_node((Node) { .External = { (void*) &comp_External,
+						.type = (void*) eval("'string literal'", "char*", parser),
+						.data = token.trace.slice,
+			}}));
+
+			Node* size_tree = eval("'string literal'", "sizeof(extern<auto> \"\") - 1",
+					parser);
+			size_tree->BinaryOperation.left->FunctionCall.arguments.data[0]
+				->External.data = token.trace.slice;
+			push(&fields, size_tree);
+
+			strs field_names = { 0 };
+			push(&field_names, (str) { 0 });
+			push(&field_names, (str) { 0 });
+
+			return new_node((Node) { .StructLiteral = {
+					.compiler = (void*) &comp_structLiteral,
 					.trace = token.trace,
-					.type = new_type((Type) { .Wrapper = {
-							.compiler = (void*) &comp_Wrapper,
-							.trace = token.trace,
-					}}),
-					.data = token.trace.slice,
-			}});		
+					.type = (void*) eval("'string literal'", "str", parser),
+					.fields = fields,
+					.field_names = field_names,
+			}});
+		}
+
+		case TokenCharacter: return new_node((Node) { .External = {
+									 .compiler = (void*) &comp_External,
+									 .trace = token.trace,
+									 .type = (void*) eval("'character'", "char", parser),
+									 .flags = fConst,
+									 .data = token.trace.slice,
+		}});
 
 		case '&': {
 			Node* expression = right(left(parser), parser, 2);

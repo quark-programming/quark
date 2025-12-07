@@ -16,32 +16,23 @@ enum {
 
 OpenedType open_type_wa(Type* type, Type* follower, int (*acceptor)(Type*, Type*, void*),
 		void* accumulator, unsigned flags);
+void close_type(TypeStateActions actions, unsigned flags);
 
 #define open_type(type, flags) open_type_wa(type, NULL, NULL, NULL, flags);
 
 int type_state_action(TypeStateAction action, unsigned flags) {
 	switch(action.type) {
 		case StateActionGenerics: {
-			TypeList to_push = { 0 };
 			for(size_t i = 0; i < action.TypeList.size; i++) {
 				if(action.TypeList.data[i]->compiler == (void*) &comp_Wrapper
-						&& action.TypeList.data[i]->Wrapper.anchor) {
-						puts("here");
-					if(action.TypeList.data[i]->Wrapper.anchor->declaration
-							== (void*) action.target) {
-						printf("%p\n", action.target->Declaration.generics.stack.data[0]
-								.data[i]);
-						push(&to_push, action.target->Declaration.generics.stack.data[0]
-								.data[i]);
-					} else {
-						push(&to_push, (void*) action.TypeList.data[i]->Wrapper.anchor);
-					}
-				} else {
-					push(&to_push, action.TypeList.data[i]);
+						&& action.TypeList.data[i]->Wrapper.anchor
+						&& action.TypeList.data[i]->Wrapper.anchor->declaration
+						== (void*) action.target) {
+					return 0;
 				}
 			}
 
-			push(&action.target->Declaration.generics.stack, to_push);
+			push(&action.target->Declaration.generics.stack, action.TypeList);
 
 			static int noloop = 1;
 
@@ -83,7 +74,7 @@ void undo_type_state_action(TypeStateAction action, unsigned flags) {
 
 	switch(action.type) {
 		case StateActionGenerics:
-			free(last(action.target->Declaration.generics.stack).data);
+			// free(last(action.target->Declaration.generics.stack).data);
 			action.target->Declaration.generics.stack.size--;
 			break;
 
@@ -239,12 +230,11 @@ int traverse_type(Type* type, Type* follower, int (*acceptor)(Type*, Type*, void
 			TypeList b = find_last_generic_action(ofollower.actions,
 					(void*) otype.type->StructType.parent);
 
-			printf("things: %zu %zu\n", a.size, b.size);
+			// printf("things: %zu %zu\n", a.size, b.size);
 			if(!a.size) a = otype.type->StructType.parent->generics.stack.data[0];
 			if(!b.size) b = otype.type->StructType.parent->generics.stack.data[0];
 
 			for(size_t i = 0; i < a.size; i++) {
-			printf("%p\n", a.data[i]);
 				if((result = traverse_type(a.data[i], b.data[i], acceptor,
 								accumulator, flags)))
 					break;

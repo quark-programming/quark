@@ -14,11 +14,13 @@ NodeList collect_until(Parser* parser, Node* (*supplier)(Parser*),
 	return collection;
 }
 
+extern char* library_path;
+
 Node* statement(Parser* parser) {
 	if(parser->tokenizer->current.type == TokenIdentifier) {
 		if(streq(parser->tokenizer->current.trace.slice, str("import"))) {
 			Trace trace = next(parser->tokenizer).trace;
-			str import_path = strf(0, ".");
+			str import_path = strf(0, library_path);
 
 			do {
 				Trace section = expect(parser->tokenizer, TokenIdentifier).trace;
@@ -33,7 +35,7 @@ Node* statement(Parser* parser) {
 			char* input_content = fs_readfile(import_path.data);
 			if(!input_content) {
 				push(parser->tokenizer->messages, Err(trace, strf(0,
-								"unable to open read '%.*s'\n",
+								"unable to open read '%.*s'",
 								(int) import_path.size, import_path.data)));
 				return new_node((Node) { &comp_Ignore });
 			}

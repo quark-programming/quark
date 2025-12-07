@@ -1,7 +1,5 @@
 usize extern fwrite<T>(T* ptr, usize size, usize nitems, File* stream);
 
-import lib::string;
-
 void print(str message) {
 	fwrite(message.slice.data, message.slice.size, sizeof(char), extern<File*> "stdout");
 	const char newline = '\n';

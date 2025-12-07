@@ -1,0 +1,29 @@
+type i8 = extern int int8_t;
+type u8 = extern int uint8_t;
+type i16 = extern int int16_t;
+type u16 = extern int uint16_t;
+type i32 = extern int int32_t;
+type u32 = extern int uint32_t;
+type i64 = extern int int64_t;
+type u64 = extern int uint64_t;
+
+type f32 = extern int float;
+type f64 = extern int double;
+
+type isize = extern int ssize_t;
+type usize = extern int size_t;
+
+type char = extern int char;
+type ichar = extern int "signed char";
+type uchar = extern int "unsigned char";
+
+type Short = extern int short;
+type UShort = extern int "unsigned short";
+type Int = extern int int;
+type UInt = extern int unsigned;
+type Long = extern int long;
+type ULong = extern int "unsigned long";
+
+type bool = extern int bool;
+type File = extern FILE;
+type void = extern void;

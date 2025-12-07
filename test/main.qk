@@ -1,7 +1,1 @@
-struct Slice<T> {}
-
-struct Vec<T> {
-	void from(Slice<T> x) {}
-}
-
-Vec::from(Slice<i32> {});
+print("Hello World");

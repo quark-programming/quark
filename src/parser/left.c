@@ -2,17 +2,19 @@
 
 Node* experssion(Parser* parser);
 
-Node* eval(char* filename, char* code, Parser* parser) {
+Node* eval_w(char* filename, char* code, Parser* parser, Node* (*supplier)(Parser*)) {
 	Tokenizer eval_tokenizer = new_tokenizer(filename
 			?: parser->tokenizer->current.trace.filename, code, parser->tokenizer->messages);
 	Tokenizer* const tokenizer = parser->tokenizer;
 
 	parser->tokenizer = &eval_tokenizer;
-	Node* const node = expression(parser);
+	Node* const node = supplier(parser);
 	parser->tokenizer = tokenizer;
 
 	return node;
 }
+
+#define eval(filename, code, parser) eval_w(filename, code, parser, &expression)
 
 Node* right(Node* lefthand, Parser* parser, unsigned char precedence);
 
@@ -142,26 +144,44 @@ Node* left(Parser* parser) {
 			}
 
 			if(streq(token.trace.slice, str("extern"))) {
-				expect(parser->tokenizer, '<');
-				collecting_type_arguments = 1;
-				Type* type = (void*) expression(parser);
-				collecting_type_arguments = 0;
-				if(!(type->flags & fType)) type = type->type;
-				expect(parser->tokenizer, '>');
+				Type* type = NULL;
+				unsigned long flags = 0;
 
-				Token external_token = expect(parser->tokenizer, TokenString);
+				if(try(parser->tokenizer, '<', 0)) {
+					collecting_type_arguments = 1;
+					type = (void*) expression(parser);
+					collecting_type_arguments = 0;
+					if(!(type->flags & fType)) type = type->type;
+					expect(parser->tokenizer, '>');
+				} else {
+					flags |= fType;
+					if(streq(parser->tokenizer->current.trace.slice, str("int"))) {
+						flags |= tfNumeric;
+						next(parser->tokenizer);
+					}
+				}
+
+				Token external_token;
+				if(!try(parser->tokenizer, TokenIdentifier, &external_token)) {
+					external_token = expect(parser->tokenizer, TokenString);
+				}
+				
 				Trace trace = stretch(token.trace, external_token.trace);
 				str data = external_token.trace.slice;
-				data.data++;
-				data.size -= 2;
+				if(external_token.type == TokenString) {
+					data.data++;
+					data.size -= 2;
+				}
 
-				return new_node((Node) { .External = {
+				Node* external = new_node((Node) { .External = {
 						.compiler = (void*) &comp_External,
-						.flags = fConstExpr,
+						.flags = fConstExpr | flags,
 						.trace = trace,
 						.type = type,
 						.data = data,
 				}});
+				if(!external->type) external->type = (void*) external;
+				return external;
 			}
 
 

@@ -164,7 +164,6 @@ typedef struct GenericType {
 	extends_Type;
 	Declaration* declaration;
 	size_t index;
-	unsigned offset;
 } GenericType;
 void comp_GenericType(GenericType*, str*, Compiler*);
 

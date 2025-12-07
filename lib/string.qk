@@ -1,8 +1,6 @@
 usize extern strlen(char* str);
 T* extern memcpy<T>(T* dest, T* src, usize n);
 
-import lib::vector;
-
 struct str {
 	Slice<char> slice;
 

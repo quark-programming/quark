@@ -19,7 +19,8 @@ void comp_struct_declaration(StructType* self, str* line, Compiler* compiler) {
 }
 
 void comp_VariableDeclaration(VariableDeclaration* self, str* line, Compiler* compiler) {
-	if(self->generics.base.size && !self->generics.stack.size) return;
+	if(self->generics.base.size && !self->generics.stack.size
+			|| self->identifier->flags & fExternal) return;
 
 	if(self->const_value && self->const_value->flags & fType) {
 		const OpenedType opened = open_type((void*) self->const_value, 0);

@@ -1,6 +1,3 @@
-const bool true = 1;
-const bool false = 0;
-
 struct Option<T> {
 	T value;
 	bool some;

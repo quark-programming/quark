@@ -144,7 +144,8 @@ void comp_FunctionType(FunctionType* self, str* line, Compiler* compiler) {
 
 	strf(line, "__Function%zd", self->typedef_id);
 	if(self->declaration->generics.stack.size) {
-		append_generics_identifier(line, last(self->declaration->generics.stack));
+		append_generics_identifier(line, last(self->declaration->generics.stack),
+				StringifyAlphaNum);
 	}
 }
 

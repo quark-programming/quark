@@ -7,6 +7,10 @@ struct str {
 	usize len(self) {
 		return self.slice.size;
 	}
+
+	char* data(self) {
+		return self.slice.data;
+	}
 }
 
 struct String {

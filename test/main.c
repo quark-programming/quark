@@ -8,11 +8,14 @@ struct Slice__char { char* data; size_t size; };
 struct str { struct Slice__char slice; };
 struct Vec__char { char* data; size_t size; size_t capacity; };
 struct String { struct Vec__char vector; };
+struct Option__ptrto_uint32_t { uint32_t* value; bool some; };
+struct Option__uint32_t { uint32_t value; bool some; };
 
 int main();
 struct Range Range__new(size_t, size_t);
 size_t Range__len(struct Range);
 size_t str__len(struct str);
+char* str__data(struct str);
 struct String str__to_owned(struct str);
 struct Vec__char Vec__char__new();
 size_t Vec__char__len(struct Vec__char);
@@ -25,10 +28,29 @@ struct String String__new();
 struct String String__from(struct str);
 struct str String__to_str(struct String);
 void print(struct str);
+struct Option__ptrto_uint32_t Option__ptrto_uint32_t__Some(uint32_t*);
+struct Option__ptrto_uint32_t Option__ptrto_uint32_t__None();
+bool Option__ptrto_uint32_t__is_some(struct Option__ptrto_uint32_t);
+bool Option__ptrto_uint32_t__is_none(struct Option__ptrto_uint32_t);
+struct Option__uint32_t Option__uint32_t__Some(uint32_t);
+struct Option__uint32_t Option__uint32_t__None();
+bool Option__uint32_t__is_some(struct Option__uint32_t);
+bool Option__uint32_t__is_none(struct Option__uint32_t);
 
 
 int main() {
-    print((struct str) { "Hello World", (sizeof("Hello World") - 1) });
+    struct Option__ptrto_uint32_t x;
+    struct Option__uint32_t y;
+    struct Option__ptrto_uint32_t __qv0;
+    struct Option__uint32_t __qv1;
+    (x = Option__ptrto_uint32_t__None());
+    {
+        (__qv0 = x);
+        (__qv1 = Option__uint32_t__None());
+        if((__qv0 . some)) 
+            (__qv1 = Option__uint32_t__Some((*((__qv0 . value) + 0))));
+    }
+    (y = __qv1);
 }
 
 
@@ -44,6 +66,11 @@ size_t Range__len(struct Range self) {
 
 size_t str__len(struct str self) {
     return ((self . slice) . size);
+}
+
+
+char* str__data(struct str self) {
+    return ((self . slice) . data);
 }
 
 
@@ -131,4 +158,44 @@ void print(struct str message) {
     char const newline = '\n';
     fwrite(((message . slice) . data), ((message . slice) . size), sizeof(char), stdout);
     fwrite((&newline), 1, sizeof(char), stdout);
+}
+
+
+struct Option__ptrto_uint32_t Option__ptrto_uint32_t__Some(uint32_t* value) {
+    return (struct Option__ptrto_uint32_t) { value, (bool) 1 };
+}
+
+
+struct Option__ptrto_uint32_t Option__ptrto_uint32_t__None() {
+    return (struct Option__ptrto_uint32_t) { .some = (bool) 0 };
+}
+
+
+bool Option__ptrto_uint32_t__is_some(struct Option__ptrto_uint32_t self) {
+    return (self . some);
+}
+
+
+bool Option__ptrto_uint32_t__is_none(struct Option__ptrto_uint32_t self) {
+    return (1 - (self . some));
+}
+
+
+struct Option__uint32_t Option__uint32_t__Some(uint32_t value) {
+    return (struct Option__uint32_t) { value, (bool) 1 };
+}
+
+
+struct Option__uint32_t Option__uint32_t__None() {
+    return (struct Option__uint32_t) { .some = (bool) 0 };
+}
+
+
+bool Option__uint32_t__is_some(struct Option__uint32_t self) {
+    return (self . some);
+}
+
+
+bool Option__uint32_t__is_none(struct Option__uint32_t self) {
+    return (1 - (self . some));
 }

@@ -40,17 +40,14 @@ int streq(str a, str b) {
 
 Trace stretch(Trace a, Trace b) {
 	a.slice.size = b.slice.data - a.slice.data + b.slice.size;
+	if(a.slice.size >= 256) a.slice.size = 16;
 	return a;
 }
 
-#define Err(trace, content) \
-	((Message) { trace, "\33[31m", "error", content })
-#define Hint(content) \
-	((Message) { { 0 }, "\33[36m", "hint", content })
-#define See(trace, content) \
-	((Message) { trace, "\33[36m", "see", content })
-#define Warn(trace, content) \
-	((Message) { trace, "\33[33m", "warning", content })
+#define Err(trace, content) ((Message) { trace, "\33[31m", "error", content })
+#define Hint(content) ((Message) { { 0 }, "\33[36m", "hint", content })
+#define See(trace, content) ((Message) { trace, "\33[36m", "see", content })
+#define Warn(trace, content) ((Message) { trace, "\33[33m", "warning", content })
 
 int print_message(Message message) {
 	if(!message.trace.filename) {

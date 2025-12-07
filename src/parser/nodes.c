@@ -33,6 +33,7 @@ typedef struct {
 	DeclarationList declarations;
 	NodeList children;
 	Declaration* parent;
+	Node* value;
 	unsigned wrap_brackets : 1;
 } Scope;
 typedef Vector(Scope*) Stack;

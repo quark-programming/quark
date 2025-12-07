@@ -39,7 +39,8 @@ int type_state_action(TypeStateAction action, unsigned flags) {
 			if(in_compiler_step && noloop && !(flags & ActionNoChildCompilation)) {
 				noloop = 0;
 				str unique_key = { 0 };
-				append_generics_identifier(&unique_key, action.TypeList);
+				append_generics_identifier(&unique_key, action.TypeList, 
+						1 << 0 /* StringifyAlphaNum */);
 				noloop = 1;
 
 				if(!get(action.target->Declaration.generics.unique_map,
@@ -286,6 +287,10 @@ int stringify_acceptor(Type* type, Type* _, StringifyAccumulator* accumulator) {
 				? "struct_%.*s" : "struct %.*s",
 				(int) type->StructType.parent->identifier->base.size,
 				type->StructType.parent->identifier->base.data);
+		if(type->StructType.parent->generics.stack.size) {
+			append_generics_identifier(accumulator->string,
+					last(type->StructType.parent->generics.stack), accumulator->flags);
+		}
 		return 1;
 	} else {
 		strf(accumulator->string, accumulator->flags & StringifyAlphaNum

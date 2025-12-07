@@ -15,6 +15,7 @@ enum {
 	RightFieldAccess,
 	RightCompare,
 	RightIndex,
+	RightOptional,
 };
 
 typedef struct {
@@ -28,6 +29,7 @@ RightOperator right_operator_table[128] = {
 	[TokenDoublePlus] = { 1, RightIncDec }, [TokenDoubleMinus] = { 1, RightIncDec },
 	['['] = { 1, RightIndex }, ['('] = { 1, RightCall },
 	['.'] = { 1, RightFieldAccess }, [TokenRightArrow] = { 1, RightFieldAccess },
+	['?'] = { 1, RightOptional },
 
 	['*'] = { 3, RightAltBinary }, ['/'] = { 3 }, ['%'] = { 3 },
 
@@ -171,6 +173,18 @@ Message see_declaration(Declaration* declaration, Node* node) {
 					(int) node->trace.slice.size, node->trace.slice.data));
 }
 
+Node* temp_value(Node* value, Parser* parser, unsigned* set_id) {
+	static unsigned id = 0;
+	if(set_id) *set_id = id;
+	const str declaration_code = strf(0, "auto __qv%u = extern<auto> \"\";%c", id++, '\0');
+	Node* declaration = eval_w(parser->tokenizer->current.trace.filename,
+			declaration_code.data, parser, &statement);
+	declaration->Statement.expression->BinaryOperation.right = value;
+	clash_types(declaration->Statement.expression->BinaryOperation.left->type,
+			value->type, value->trace, parser->tokenizer->messages, 0);
+	return declaration;
+}
+
 Node* right(Node* lefthand, Parser* parser, unsigned char precedence) {
 	RightOperator operator;
 outer_while:
@@ -179,6 +193,78 @@ outer_while:
 		if(operator.precedence == 6 && collecting_type_arguments) break;
 
 		switch(operator.type) {
+			case RightOptional: {
+				Trace trace_end = next(parser->tokenizer).trace;
+
+				if((operator = right_operator_table[parser->tokenizer->current.type])
+						.precedence <= 1) {
+					unsigned temp_id;
+					Node* temp = temp_value(lefthand, parser, &temp_id);
+
+					const str left_value_code = strf(0, "__qv%u.value%c", temp_id, '\0');
+					Node* some_branch = right(eval(NULL, left_value_code.data, parser),
+							parser, 2);
+
+					Scope* collection = new_scope(NULL);
+					collection->trace = lefthand->trace;
+					collection->wrap_brackets = 1;
+					push(&collection->children, temp);
+
+					const OpenedType open = open_type(some_branch->type, 0);
+					if(open.type->compiler == (void*) comp_External &&
+							streq(open.type->External.data, str("void"))) {
+						Node* if_statement = eval_w(NULL, strf(0,
+									"if(__qv%u.some) extern<auto> _;%c", temp_id, '\0').data,
+								parser, &statement);
+						if_statement->Control.body->children.data[0]->Statement.expression
+							= some_branch;
+						push(&collection->children, if_statement);
+						close_type(open.actions, 0);
+						return (void*) collection;
+					}
+					close_type(open.actions, 0);
+
+					unsigned value_id;
+					Node* value = temp_value(eval(NULL, "Option::None()", parser),
+							parser, &value_id);
+					
+					const str if_statement_code = strf(0,
+							"if(__qv%u.some) __qv%u = Option::Some(extern<auto> _);%c",
+							temp_id, value_id, '\0');
+					Node* if_statement = eval_w(NULL, if_statement_code.data, parser,
+							&statement);
+					printf("%p %p\n", 
+							if_statement->Control.body->children.data[0]->compiler,
+							comp_Statement);
+					// exit(1);
+					clash_types(if_statement->Control.body->children.data[0]->Statement
+							.expression->BinaryOperation.right->FunctionCall.arguments
+							.data[0]->type, some_branch->type, some_branch->trace,
+							parser->tokenizer->messages, 0);
+					if_statement->Control.body->children.data[0]->Statement.expression
+						->BinaryOperation.right->FunctionCall.arguments.data[0] = some_branch;
+					
+					push(&collection->children, value);
+					push(&collection->children, if_statement);
+					collection->value = eval(NULL, strf(0, "__qv%u%c", value_id, 0).data,
+							parser);
+					collection->type = collection->value->type;
+
+					lefthand = (void*) collection;
+					break;
+				}
+
+				if(lefthand->flags & fType) {
+					Wrapper* option = (void*) eval("option", "Option", parser);
+					clash_types(option->action.TypeList.data[0], (void*) lefthand, 
+							stretch(lefthand->trace, trace_end),
+							parser->tokenizer->messages, 0);
+					lefthand = (void*) option;
+					break;
+				}
+				break;
+			}
+
 			case RightIncDec: {
 				if(!(lefthand->flags & fMutable) || lefthand->type->flags & fConst) {
 					push(parser->tokenizer->messages, Err( lefthand->trace,
@@ -187,13 +273,14 @@ outer_while:
 
 				Trace operator = next(parser->tokenizer).trace;
 
-				return new_node((Node) { .Postfix = {
+				lefthand = new_node((Node) { .Postfix = {
 						.compiler = (void*) &comp_Postfix,
 						.trace = operator,
 						.type = lefthand->type,
 						.child = lefthand,
 						.postfix = operator.slice,
 				}});
+				break;
 			}
 
 			case RightAltBinary: {
@@ -330,7 +417,7 @@ outer_while:
 				}});
 			}
 
-			case RightFieldAccess: {
+			case RightFieldAccess: field_access: {
 				Type* type = lefthand->type;
 				if(parser->tokenizer->current.type == TokenRightArrow) {
 					type = (void*) dereference((void*) type, lefthand->trace,

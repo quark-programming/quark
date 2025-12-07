@@ -144,12 +144,25 @@ void apply_generics(Declaration* declaration, GenericsCollection collection) {
 	init_scope(&declaration->generics.unique_map);
 }
 
-void append_generics_identifier(str* string, TypeList generics) {
+void append_generics_identifier(str* string, TypeList generics, unsigned flags) {
 	if(!generics.size) return;
 	
+	if(!(flags & 1 << 0 /* StringifyAlphaNum */)) {
+		strf(string, "<");
+	}
+
 	for(size_t i = 0; i < generics.size; i++) {
-		strf(string, "__");
-		stringify_type(generics.data[i], string, 1 << 0 /* StringifyAlphaNum */);
+		if(flags & 1 << 0 /* StringifyAlphaNum */) {
+			strf(string, "__");
+		} else if(i) {
+			strf(string, ", ");
+		}
+
+		stringify_type(generics.data[i], string, flags);
+	}
+
+	if(!(flags & 1 << 0 /* StringifyAlphaNum */)) {
+		strf(string, ">");
 	}
 }
 
@@ -160,7 +173,8 @@ strs filter_unique_generics_variants(TypeLists variants, str base) {
 
 	for(size_t i = 0; i < variants.size; i++) {
 		str identifier = strf(0, "%.*s", (int) base.size, base.data);
-		append_generics_identifier(&identifier, variants.data[i]);
+		append_generics_identifier(&identifier, variants.data[i], 
+				1 << 0 /* StringifyAlphaNum */);
 
 		if(get(variants_set, (Trace) { .slice = identifier })) {
 			variants.data[i].size = 0;

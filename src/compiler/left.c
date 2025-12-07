@@ -65,7 +65,8 @@ void comp_Identifier(Identifier* self, str* line, Compiler* compiler) {
 	if(self->declaration && self->declaration->generics.base.size
 			&& self->declaration->generics.stack.size
 			&& !(self->flags & fExternal)) {
-		append_generics_identifier(line, last(self->declaration->generics.stack));
+		append_generics_identifier(line, last(self->declaration->generics.stack),
+				StringifyAlphaNum);
 	}
 }
 
@@ -93,6 +94,8 @@ void comp_Scope(Scope* self, str* line, Compiler* compiler) {
 		str bracket = new_line(compiler);
 		push(&compiler->sections.data[compiler->open_section].lines, strf(&bracket, "}"));
 	}
+
+	if(self->value) self->value->compiler(self->value, line, compiler);
 }
 
 void comp_Missing(Missing* self, str* line, Compiler* compiler) {

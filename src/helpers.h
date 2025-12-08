@@ -5,7 +5,7 @@
 
 char* fs_readfile(char* filename) {
     FILE* file = fopen(filename, "r");
-    if(!file) return 0;
+    if (!file) return 0;
 
     fseek(file, 0, SEEK_END);
     size_t filesize = ftell(file);

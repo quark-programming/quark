@@ -99,7 +99,7 @@ void comp_Scope(Scope* self, str* line, Compiler* compiler) {
 }
 
 void comp_Missing(Missing* self, str* line, Compiler* compiler) {
-	push(compiler->messages, Err(self->trace,
+	push(compiler->messages, REPORT_ERR(self->trace,
 				strf(0, "cannot find '\33[35m%.*s\33[0m' in scope",
 					(int) self->trace.slice.size, self->trace.slice.data)));
 }

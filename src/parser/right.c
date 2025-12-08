@@ -79,9 +79,9 @@ int recycle_missing(Type* missing, Type* _, Parser* parser) {
 
 Wrapper* declaration(Node* type, Token identifier, Parser* parser) {
 	if(!(type->flags & fType)) {
-		push(parser->tokenizer->messages, Err(type->trace,
+		push(parser->tokenizer->messages, REPORT_ERR(type->trace,
 					str("expected a type before declaration identifier")));
-		push(parser->tokenizer->messages, Hint(str("also try '\33[35mtypeof(expr)\33[0m'")));
+		push(parser->tokenizer->messages, REPORT_HINT(str("also try '\33[35mtypeof(expr)\33[0m'")));
 		type = (void*) type->type;
 	}
 
@@ -131,7 +131,7 @@ Wrapper* declaration(Node* type, Token identifier, Parser* parser) {
 				arg_declaration->is_inline = 1;
 				push(&declaration->arguments, arg_declaration);
 			} else {
-				push(parser->tokenizer->messages, Err(
+				push(parser->tokenizer->messages, REPORT_ERR(
 							argument_declarations.data[i]->trace,
 							str("expected an argument declaration")));
 			}
@@ -170,7 +170,7 @@ Wrapper* declaration(Node* type, Token identifier, Parser* parser) {
 }
 
 Message see_declaration(Declaration* declaration, Node* node) {
-	return See(declaration->trace, strf(0, "declaration of '\33[35m%.*s\33[0m'",
+	return REPORT_INFO(declaration->trace, strf(0, "declaration of '\33[35m%.*s\33[0m'",
 					(int) node->trace.slice.size, node->trace.slice.data));
 }
 
@@ -268,7 +268,7 @@ outer_while:
 
 			case RightIncDec: {
 				if(!(lefthand->flags & fMutable) || lefthand->type->flags & fConst) {
-					push(parser->tokenizer->messages, Err( lefthand->trace,
+					push(parser->tokenizer->messages, REPORT_ERR( lefthand->trace,
 								str("left hand of assignment is not a mutable value")));
 				}
 
@@ -297,7 +297,7 @@ outer_while:
 
 			case RightAssignment:
 				if(!(lefthand->flags & fMutable) || lefthand->type->flags & fConst) {
-					push(parser->tokenizer->messages, Err(lefthand->trace,
+					push(parser->tokenizer->messages, REPORT_ERR(lefthand->trace,
 								str("left hand of assignment is not a mutable value")));
 				}
 			case RightCompare:
@@ -352,7 +352,7 @@ outer_while:
 				Type* const open_function_type = opened_function_type.type;
 
 				if(open_function_type->compiler != (void*) &comp_FunctionType) {
-					push(parser->tokenizer->messages, Err(lefthand->trace,
+					push(parser->tokenizer->messages, REPORT_ERR(lefthand->trace,
 								str("calling a non-function value")));
 
 					return_type = new_type((Type) { .Wrapper = {
@@ -384,7 +384,7 @@ outer_while:
 
 				for(size_t i = 0; i < arguments.size; i++) {
 					if(i + 1 >= signature.size) {
-						push(parser->tokenizer->messages, Err(
+						push(parser->tokenizer->messages, REPORT_ERR(
 									stretch(arguments.data[i]->trace, last(arguments)->trace),
 									str("too many arguments in function call")));
 						push(parser->tokenizer->messages,
@@ -398,7 +398,7 @@ outer_while:
 				}
 
 				if(arguments.size + 1 < signature.size) {
-					push(parser->tokenizer->messages, Err(lefthand->trace,
+					push(parser->tokenizer->messages, REPORT_ERR(lefthand->trace,
 								str("not enough arguments in function call")));
 					push(parser->tokenizer->messages,
 							see_declaration(
@@ -434,7 +434,7 @@ outer_while:
 
 				// TODO: error message if not struct
 				if(struct_type->compiler != (void*) &comp_StructType) {
-					push(parser->tokenizer->messages, Err(lefthand->trace, strf(0,
+					push(parser->tokenizer->messages, REPORT_ERR(lefthand->trace, strf(0,
 									"'\33[35m%.*s\33[0m' is not a structure",
 									(int) lefthand->trace.slice.size,
 									lefthand->trace.slice.data)));
@@ -463,7 +463,7 @@ outer_while:
 						break;
 					}
 
-					push(parser->tokenizer->messages, Err(
+					push(parser->tokenizer->messages, REPORT_ERR(
 								field_token.trace, strf(0,
 									"no field named '\33[35m%.*s\33[0m' on struct "
 									"'\33[35m%.*s\33[0m'",

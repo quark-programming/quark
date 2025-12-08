@@ -49,7 +49,7 @@ typedef struct {
 
 typedef struct {
 	Token current;
-	Messages* messages;
+	Message_Vector* messages;
 } Tokenizer;
 
 int char_ranges(char ch, char* ranges) {
@@ -126,7 +126,7 @@ Token create_token(Trace trace) {
 	return (Token) { trace, *trace.slice.data };
 }
 
-Tokenizer new_tokenizer(char* filename, char* data, Messages* messages) {
+Tokenizer new_tokenizer(char* filename, char* data, Message_Vector* messages) {
 	return (Tokenizer) {
 		.current = create_token((Trace) {
 				.slice = { 0, 0, data },
@@ -140,7 +140,7 @@ Tokenizer new_tokenizer(char* filename, char* data, Messages* messages) {
 
 Token next(Tokenizer* tokenizer) {
 	Token next = tokenizer->current;
-	if(!next.type) push(tokenizer->messages, Err(next.trace,
+	if(!next.type) push(tokenizer->messages, REPORT_ERR(next.trace,
 				str("expected a token, but got \33[35mend of file\33[0m")));
 	else tokenizer->current = create_token(next.trace);
 	return next;
@@ -148,7 +148,7 @@ Token next(Tokenizer* tokenizer) {
 
 Token expect(Tokenizer* tokenizer, unsigned char type) {
 	Token expect = next(tokenizer);
-	if(expect.type != type) push(tokenizer->messages, Err(expect.trace,
+	if(expect.type != type) push(tokenizer->messages, REPORT_ERR(expect.trace,
 				strf(0, "expected type [\33[35m%c (%u)\33[0m], but got '\33[35m%.*s\33[0m'",
 					type, type, (int) expect.trace.slice.size, expect.trace.slice.data)));
 	return expect;

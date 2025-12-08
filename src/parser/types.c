@@ -314,7 +314,7 @@ enum {
 
 typedef struct {
 	Trace trace;
-	Messages* messages;
+	Message_Vector* messages;
 	unsigned flags;
 } ClashAccumulator;
 
@@ -398,7 +398,7 @@ int clash_acceptor(Type* type, Type* follower, ClashAccumulator* accumulator) {
 	return TestMismatch;
 }
 
-int clash_types(Type* a, Type* b, Trace trace, Messages* messages, unsigned flags) {
+int clash_types(Type* a, Type* b, Trace trace, Message_Vector* messages, unsigned flags) {
 	ClashAccumulator accumulator = { trace, messages, flags };
 	int result = traverse_type(a, b, (void*) &clash_acceptor, &accumulator, 0);
 
@@ -413,7 +413,7 @@ int clash_types(Type* a, Type* b, Trace trace, Messages* messages, unsigned flag
 				? "\33[0m' (types are circularly referencing eachother)"
 				: "\33[0m'");
 
-		push(messages, Err(trace, message));
+		push(messages, REPORT_ERR(trace, message));
 	}
 
 	return result;

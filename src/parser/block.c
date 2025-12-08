@@ -1,4 +1,4 @@
-#include "../fs.c"
+#include "../helpers.h"
 #include "right.c"
 
 NodeList collect_until(Parser* parser, Node* (*supplier)(Parser*), unsigned char divider, unsigned char terminator) {
@@ -33,7 +33,7 @@ Node* statement(Parser* parser) {
 
 			char* input_content = fs_readfile(import_path.data);
 			if(!input_content) {
-				push(parser->tokenizer->messages, Err(trace, strf(0,
+				push(parser->tokenizer->messages, REPORT_ERR(trace, strf(0,
 								"unable to open read '%.*s'",
 								(int) import_path.size, import_path.data)));
 				return new_node((Node) { &comp_Ignore });
@@ -56,7 +56,7 @@ Node* statement(Parser* parser) {
 			expect(parser->tokenizer, ';');
 
 			if(last(parser->stack)->parent->compiler != (void*) &comp_FunctionDeclaration) {
-				push(parser->tokenizer->messages, Err(trace_start,
+				push(parser->tokenizer->messages, REPORT_ERR(trace_start,
 							str("return statement needs to be "
 								"inside of a function")));
 			} else if(value) {

@@ -5,7 +5,7 @@ NodeList collect_until(Parser* parser, Node* (*supplier)(Parser*),
 		unsigned char divider, unsigned char terminator);
 Node* expression(Parser* parser);
 Message see_declaration(Declaration* declaration, Node* node);
-int clash_types(Type* a, Type* b, Trace trace, Messages* messages, unsigned flags);
+int clash_types(Type* a, Type* b, Trace trace, Message_Vector* messages, unsigned flags);
 void stringify_type(Type* type, str* string, unsigned flags);
 
 Type* wrap_applied_generics(Type* type, TypeList generics, Declaration* declaration) {
@@ -42,12 +42,12 @@ void assign_generics(Wrapper* variable, Parser* parser) {
 		collecting_type_arguments = 0;
 		for(size_t i = 0; i < type_arguments.size; i++) {
 			if(!(type_arguments.data[i]->flags & fType)) {
-				push(parser->tokenizer->messages, Err(type_arguments.data[i]->trace,
+				push(parser->tokenizer->messages, REPORT_ERR(type_arguments.data[i]->trace,
 							str("expected a type in type arguments")));
 			}
 
 			if(i >= base_generics.size) {
-				push(parser->tokenizer->messages, Err(stretch(type_arguments.data[i]->trace,
+				push(parser->tokenizer->messages, REPORT_ERR(stretch(type_arguments.data[i]->trace,
 								last(type_arguments)->trace), str("too many type arguments")));
 				push(parser->tokenizer->messages, see_declaration(declaration,
 							type_arguments.data[i]));

@@ -1,8 +1,8 @@
-#include "fs.c"
 #include "clargs.c"
 #include "compiler/block.c"
+#include "helpers.h"
 
-typedef Vector(char*) CStrings;
+typedef Vector(char*) Str_Vector;
 
 int in_compiler_step = 0;
 
@@ -38,7 +38,7 @@ char* library_path = ".";
 int main(int argc, char** argv) {
 	char* name = clname(argc, argv);
 
-	CStrings input_files = { 0 };
+	Str_Vector input_files = { 0 };
 	char* output_file = "out.c";
 
 	int flag;
@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
 				input_files.data[0]);
 	}
 
-	Messages messages = { 0 };
+	Message_Vector messages = { 0 };
 	Tokenizer tokenizer = new_tokenizer(input_files.data[0], input_content, &messages);
 	Parser parser = { &tokenizer };
 	Compiler compiler = { .messages = &messages };
@@ -77,6 +77,7 @@ int main(int argc, char** argv) {
 	FunctionDeclaration* entry = entry_declaration();
 	push(&parser.stack, entry->body);
 
+    // TODO: like really? just inserting import lib::std;
 	push(&entry->body->children, eval_w("lib::std", "import lib::std;", &parser, &statement));
 	NodeList body = collect_until(&parser, &statement, 0, 0);
 	resv(&entry->body->children, body.size);

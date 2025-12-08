@@ -45,7 +45,7 @@ void comp_VariableDeclaration(VariableDeclaration* self, str* line, Compiler* co
 			strf(line, " = ");
 			self->const_value->compiler(self->const_value, line, compiler);
 		} else if(self->type->flags & fConst) {
-			push(compiler->messages, Err(self->trace,
+			push(compiler->messages, REPORT_ERR(self->trace,
 						str("expected declaration with '\33[35mconst\33[0m' type to have a "
 							"value")));
 		}

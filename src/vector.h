@@ -1,5 +1,5 @@
-#ifndef VECTOR
-#define VECTOR
+#ifndef VECTOR_H
+#define VECTOR_H
 
 #include <stdlib.h>
 
@@ -18,6 +18,8 @@
 	(vec)->data[(vec)->size++] = (item); \
 } while(0)
 
+#define pop(vec) (vec)->data[--(vec)->size]
+
 #define last(vec) (vec).data[(vec).size - 1]
 
-#endif
+#endif//VECTOR_H

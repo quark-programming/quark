@@ -9,7 +9,7 @@ typedef Vector(CompilerSection) CompilerSections;
 struct Compiler {
 	CompilerSections sections;
 	size_t open_section;
-	Messages* messages;
+	Message_Vector* messages;
 };
 
 str new_line(Compiler* compiler) {

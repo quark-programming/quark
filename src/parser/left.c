@@ -47,12 +47,12 @@ Node* reference(Node* node, Trace trace) {
 	}});
 }
 
-Node* dereference(Node* node, Trace trace, Messages* messages) {
+Node* dereference(Node* node, Trace trace, Message_Vector* messages) {
 	if(node->flags & fType) {
 		const OpenedType open = open_type((void*) node, 0);
 
 		if(open.type->compiler != (void*) &comp_PointerType) {
-			push(messages, Err(trace, strf(0, "Cannot derefence a non-pointer value")));
+			push(messages, REPORT_ERR(trace, strf(0, "Cannot derefence a non-pointer value")));
 			close_type(open.actions, 0);
 			return node;
 		}
@@ -135,7 +135,7 @@ Node* left(Parser* parser) {
 				Type* type = (void*) right(left(parser), parser, 13);
 				
 				if(!(type->flags & fType)) {
-					push(parser->tokenizer->messages, Err(type->trace,
+					push(parser->tokenizer->messages, REPORT_ERR(type->trace,
 								str("expected a type after '\33[35mconst\33[0m'")));
 					type = type->type;
 				}
@@ -254,7 +254,7 @@ Node* left(Parser* parser) {
 								goto found_field;
 						}
 
-						push(parser->tokenizer->messages, Err(field_name_trace,
+						push(parser->tokenizer->messages, REPORT_ERR(field_name_trace,
 									strf(0, "no field named '\33[35m%.*s\33[0m' on "
 										"struct '\33[35m%.*s\33[0m'",
 										(int) field_name_trace.slice.size,
@@ -378,7 +378,7 @@ ret:
 		}
 	}
 
-	push(parser->tokenizer->messages, Err(token.trace,
+	push(parser->tokenizer->messages, REPORT_ERR(token.trace,
 				strf(0, "expected a \33[35mliteral\33[0m, but got '\33[35m%.*s\33[0m'",
 					(int) token.trace.slice.size, token.trace.slice.data)));
 	return new_node((Node) {

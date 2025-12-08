@@ -13,3 +13,6 @@ test: build
 	./qc test/main.qk -o test/main.c
 	$(CC) test/main.c -o test/main -Wno-parentheses-equality
 	./test/main
+
+clear:
+	rm $(out)

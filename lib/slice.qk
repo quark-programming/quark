@@ -1,0 +1,29 @@
+struct Slice<T> {
+	T* data;
+	usize size;
+}
+
+struct str {
+	Slice<char> slice;
+
+	usize len(self) {
+		return self.slice.size;
+	}
+
+	char* data(self) {
+		return self.slice.data;
+	}
+}
+
+struct Range {
+	usize start;
+	usize end;
+
+	Range new(usize start, usize end) {
+		return Range { start, end };
+	}
+
+	usize len(self) {
+		return self.end - self.start;
+	}
+}

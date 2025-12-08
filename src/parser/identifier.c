@@ -15,6 +15,8 @@ IdentifierInfo new_identifier(Token base_identifier, Parser* parser) {
 		base_identifier = expect(parser->tokenizer, TokenIdentifier);
 	}
 
+	const NodeList global_free = global_node_unused;
+
 	IdentifierInfo info = {
 		.identifier = (void*) new_node((Node) { .Identifier = {
 				.compiler = (void*) &comp_Identifier,

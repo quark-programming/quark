@@ -1,33 +1,37 @@
 usize extern strlen(char* str);
 T* extern memcpy<T>(T* dest, T* src, usize n);
 
-struct str {
-	Slice<char> slice;
-
-	usize len(self) {
-		return self.slice.size;
-	}
-
-	char* data(self) {
-		return self.slice.data;
-	}
-}
+[str] _UnwrappedVector::error_messages;
 
 struct String {
-	Vec<char> vector;
+	_UnwrappedVector<char> vector;
 
 	String new() {
-		return String { Vec<char>::new() };
+		String self = String { _UnwrappedVector<char>::new() };
+
+
+		return self;
 	}
 
 	String from(str string) {
-		Vec<char> vector = Vec::new();
+		_UnwrappedVector<char> vector = _UnwrappedVector::new();
+
 		vector.push_many(string.slice);
 		return String { vector };
 	}
 
 	str to_str(self) {
-		return str { Slice<char> { self.vector.data, self.vector.len() } };
+		return str { Slice<char> { self.vector.data, self.vector.size } };
+	}
+
+	String* cat(&self, str string) {
+		self->vector.push_many(string.slice);
+		return self;
+	}
+
+	char* to_cstr(&self) {
+		self->vector.push('\0');
+		return self->vector.data;
 	}
 }
 

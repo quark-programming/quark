@@ -111,6 +111,17 @@ Token create_token(Trace trace) {
 		return (Token) { trace, TokenRightArrow };
 	}
 
+	if (trace.slice.data[0] == '/' && trace.slice.data[1] == '/') {
+		while (*++trace.slice.data && *trace.slice.data != '\n');
+		return create_token(trace);
+	}
+
+	if (trace.slice.data[0] == '/' && trace.slice.data[1] == '*') {
+		while (*++trace.slice.data && *trace.slice.data != '*' || *++trace.slice.data != '/');
+		trace.slice.data++;
+		return create_token(trace);
+	}
+
 	trace.col += trace.slice.size = 1;
 	return (Token) { trace, *trace.slice.data };
 }

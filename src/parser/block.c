@@ -1,8 +1,7 @@
 #include "../fs.c"
 #include "right.c"
 
-NodeList collect_until(Parser* parser, Node* (*supplier)(Parser*),
-		unsigned char divider, unsigned char terminator) {
+NodeList collect_until(Parser* parser, Node* (*supplier)(Parser*), unsigned char divider, unsigned char terminator) {
 	NodeList collection = { 0 };
 
 	while(parser->tokenizer->current.type && parser->tokenizer->current.type != terminator) {

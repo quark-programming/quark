@@ -1,3 +1,4 @@
 *.swp
 qc
 .DS_Store
+qc.dSYM

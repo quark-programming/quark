@@ -1,7 +1,21 @@
 usize extern fwrite<T>(T* ptr, usize size, usize nitems, File* stream);
 
-void print(str message) {
-	fwrite(message.slice.data, message.slice.size, sizeof(char), extern<File*> "stdout");
+void write_file(File* file, str message) {
+	fwrite(message.slice.data, message.slice.size, sizeof(char), file);
+}
+
+void print_file(File* file, str message) {
+	fwrite(message.slice.data, message.slice.size, sizeof(char), file);
 	const char newline = '\n';
-	fwrite(&newline, 1, sizeof(char), extern<File*> "stdout");
+	fwrite(&newline, 1, sizeof(char), file);
+}
+
+void print(str message) {
+	print_file(extern<File*> stdout, message);
+}
+
+void panic(str message) {
+	write_file(extern<File*> stderr, "\x1b[31mpanicked: \x1b[0m");
+	print_file(extern<File*> stderr, message);
+	exit(extern<Int> EXIT_FAILURE);
 }

@@ -7,7 +7,7 @@
 
 #define resv(vec, n) do { \
 	if((vec)->size + n > (vec)->cap) { \
-		while(((vec)->cap = (vec)->cap * 2 ?: 1) < (vec)->size + n); \
+		while(((vec)->cap = ((vec)->cap * 2 ?: 1)) < (vec)->size + n); \
 		(vec)->data = realloc((vec)->data, (vec)->cap \
 				* sizeof(*(vec)->data)); \
 	} \

@@ -24,6 +24,7 @@ Scope* new_scope(Declaration* parent) {
 	};
 	init_scope(&scope);
 
+
 	Scope* boxed_scope = (void*) new_node((Node) { .Scope = scope });
 	if(!boxed_scope->parent) boxed_scope->parent = (void*) boxed_scope;
 	return boxed_scope;

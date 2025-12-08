@@ -1,0 +1,2 @@
+void extern exit(Int code);
+

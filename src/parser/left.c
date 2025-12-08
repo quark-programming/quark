@@ -32,6 +32,7 @@ Node* reference(Node* node, Trace trace) {
 	if(node->flags & fType) {
 		return (void*) new_type((Type) { .PointerType = {
 				.compiler = (void*) &comp_PointerType,
+				.flags = tfNumeric,
 				.trace = trace,
 				.base = (void*) node,
 		}});
@@ -128,7 +129,7 @@ Node* left(Parser* parser) {
 				}});
 			}
 
-			// TODO: sizeof() & fix segfault on function calls on missing values
+			// TODO: fix segfault on function calls on missing values
 
 			if(streq(token.trace.slice, str("const"))) {
 				Type* type = (void*) right(left(parser), parser, 13);
@@ -184,7 +185,6 @@ Node* left(Parser* parser) {
 				return external;
 			}
 
-
 			IdentifierInfo info = new_identifier(token, parser);
 			unbox((void*) info.identifier);
 
@@ -208,8 +208,7 @@ Node* left(Parser* parser) {
 						self->identifier->declaration = (void*) self;
 						put(last(parser->stack), token.trace.slice, (void*) self);
 
-						Wrapper* variable = variable_of((void*) self, token.trace,
-								fIgnoreStatment);
+						Wrapper* variable = variable_of((void*) self, token.trace, fIgnoreStatment);
 						variable->self_argument = 1;
 						return (void*) variable;
 					}

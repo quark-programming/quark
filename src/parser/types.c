@@ -323,11 +323,11 @@ int circular_acceptor(Type* type, Type* _, Type* compare) {
 }
 
 int assign_wrapper(Wrapper* wrapper, Type* follower, ClashAccumulator* accumulator) {
-	printf("assigning:\t \33[3%dm%-24.*s \33[3%dm%.*s\33[0m\n",
-			(int) ((size_t) wrapper->trace.slice.data / 16) % 6 + 1,
-			(int) wrapper->trace.slice.size, wrapper->trace.slice.data,
-			(int) ((size_t) follower->trace.slice.data / 16) % 6 + 1,
-			(int) follower->trace.slice.size, follower->trace.slice.data);
+ 	printf("assigning:\t \33[3%dm%-24.*s \33[3%dm%.*s\33[0m\n",
+ 			(int) ((size_t) wrapper->trace.slice.data / 16) % 6 + 1,
+ 			(int) wrapper->trace.slice.size, wrapper->trace.slice.data,
+ 			(int) ((size_t) follower->trace.slice.data / 16) % 6 + 1,
+ 			(int) follower->trace.slice.size, follower->trace.slice.data);
 
 	if(wrapper->flags & tfNumeric && !(follower->flags & tfNumeric)
 			&& follower->compiler != (void*) &comp_Wrapper) return TestMismatch;
@@ -379,9 +379,9 @@ int assign_wrapper(Wrapper* wrapper, Type* follower, ClashAccumulator* accumulat
 }
 
 int clash_acceptor(Type* type, Type* follower, ClashAccumulator* accumulator) {
-	printf("\33[90mclash:\t\t %-24.*s %.*s\33[0m\n",
-			(int) type->trace.slice.size, type->trace.slice.data,
-			(int) follower->trace.slice.size, follower->trace.slice.data);
+ 	printf("\33[90mclash:\t\t %-24.*s %.*s\33[0m\n",
+ 			(int) type->trace.slice.size, type->trace.slice.data,
+ 			(int) follower->trace.slice.size, follower->trace.slice.data);
 
 	if(type->compiler == (void*) &comp_Wrapper &&
 			!(type->Wrapper.anchor && follower->compiler == (void*) &comp_Wrapper)) {

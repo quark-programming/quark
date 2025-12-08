@@ -1,0 +1,49 @@
+T* extern malloc<T>(usize size);
+T* extern realloc<T>(T* data, usize size);
+T* extern memcpy<T>(T* dest, T* src, usize size);
+
+struct _UnwrappedVector<T> {
+	T* data;
+	usize size;
+	usize capacity;
+
+	_UnwrappedVector<T> new() {
+		return _UnwrappedVector {
+			data: malloc(sizeof(T)),
+			size: 0,
+			capacity: 1,
+		};
+	}
+
+	Int reserve(&self, usize n) {
+		if(self->size + n <= self->capacity) return 0;
+
+		while(self->capacity < self->size + n) {
+			if(self->capacity * 2 < self->capacity) return 1;
+			self->capacity *= 2;
+		}
+
+		self->data = realloc(self->data, self->capacity);
+		if(self->data == 0) return 2;
+		return 0;
+	}
+
+	Int push(&self, T item) {
+		const Int reserve_result = self->reserve(1);
+		if(reserve_result) return reserve_result;
+		self->data[self->size++] = item;
+		return 0;
+	}
+
+	Int push_many(&self, [T] slice) {
+		const Int reserve_result = self->reserve(slice.size);
+		if(reserve_result) return reserve_result;
+		memcpy(self->data + self->size, slice.data, slice.size);
+		return 0;
+	}
+
+	Int pop(&self) {
+		if(self->size-- == 0) return 3;
+		return 0;
+	}
+}

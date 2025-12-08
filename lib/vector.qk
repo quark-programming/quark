@@ -1,24 +1,3 @@
-T* extern malloc<T>(usize size);
-T* extern realloc<T>(T* ptr, usize size);
-
-struct Range {
-	usize start;
-	usize end;
-
-	Range new(usize start, usize end) {
-		return Range { start, end };
-	}
-
-	usize len(self) {
-		return self.end - self.start;
-	}
-}
-
-struct Slice<T> {
-	T* data;
-	usize size;
-}
-
 struct Vec<T> {
 	T* data;
 	usize size;

@@ -107,8 +107,9 @@ Wrapper* declaration(Node* type, Token identifier, Parser* parser) {
 					.identifier = info.identifier,
 				}
 		});
-		(declaration->body = info.generics_collection.scope ?: new_scope(NULL))->parent
-			= (void*) declaration;
+		declaration->body = info.generics_collection.scope ?: new_scope(NULL);
+		declaration->body->parent = (void*) declaration;
+
 		function_type->declaration = declaration;
 		info.identifier->declaration = (void*) declaration;
 
@@ -296,7 +297,7 @@ outer_while:
 
 			case RightAssignment:
 				if(!(lefthand->flags & fMutable) || lefthand->type->flags & fConst) {
-					push(parser->tokenizer->messages, Err( lefthand->trace,
+					push(parser->tokenizer->messages, Err(lefthand->trace,
 								str("left hand of assignment is not a mutable value")));
 				}
 			case RightCompare:
@@ -408,13 +409,14 @@ outer_while:
 				return_type = make_type_standalone(return_type);
 				close_type(opened_function_type.actions, 0);
 
-				return new_node((Node) { .FunctionCall = {
+				lefthand = new_node((Node) { .FunctionCall = {
 						.compiler = (void*) &comp_FunctionCall,
 						.type = return_type,
 						.trace = lefthand->trace,
 						.function = lefthand,
 						.arguments = arguments,
 				}});
+				break;
 			}
 
 			case RightFieldAccess: field_access: {

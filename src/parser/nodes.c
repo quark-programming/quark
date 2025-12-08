@@ -290,8 +290,9 @@ Node* new_node(Node node) {
 	Nodes* vector = &last(global_node_arena);
 
 	if(vector->cap == vector->size) {
-		push(&global_node_arena, (Nodes) { 0 });
-		resv(&last(global_node_arena), vector->cap * 2);
+		Nodes section = { 0 };
+		resv(&section, vector->cap * 2);
+		push(&global_node_arena, section);
 		vector = &last(global_node_arena);
 	}
 

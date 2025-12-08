@@ -17,4 +17,23 @@ struct Option<T> {
 	bool is_none(self) {
 		return 1 - self.some;
 	}
+
+	T unwrap(self) {
+		if(self.some == 0) {
+			panic("Unwrapped on None");
+		}
+		return self.value;
+	}
+
+	T expect(self, str message) {
+		if(self.some == 0) {
+			panic(message);
+		}
+		return self.value;
+	}
+
+	T unwrap_or_default(self, T default) {
+		if(self.some) return self.value;
+		return default;
+	}
 }

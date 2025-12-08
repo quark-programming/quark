@@ -1,4 +1,5 @@
 #include "types.c"
+#include "../helpers.h"
 
 Node* experssion(Parser * parser);
 
@@ -398,53 +399,49 @@ Node* left(Parser* parser) {
 
     case TokenString:
         {
+            str string_data = token.trace.slice;
+            size_t actual_length = calculate_string_length(string_data.data, string_data.size);
+
             NodeList fields = {0};
-            push(&fields, new_node((Node)
-            {
-                .
-                External = {
-                    (void*)&comp_External,
+            push(&fields, new_node((Node) {
+                .External = {
+                    .compiler = (void*)&comp_External,
                     .type = (void*)eval("'string literal'", "char*", parser),
                     .data = token.trace.slice,
                 }
-            }
-            )
-            )
-            ;
+            }));
 
-            Node* size_tree = eval("'string literal'", "sizeof(extern<auto> \"\") - 1",
-                                   parser);
-            size_tree->BinaryOperation.left->FunctionCall.arguments.data[0]
-                ->External.data = token.trace.slice;
-            push(&fields, size_tree);
+            push(&fields, new_node((Node) {
+                .NumericLiteral = {
+                    .compiler = (void*)&comp_NumericLiteral,
+                    .trace = token.trace,
+                    .type = new_type((Type) {
+                        .Wrapper = {
+                            .compiler = (void*)&comp_Wrapper,
+                            .trace = token.trace,
+                            .flags = fConstExpr | tfNumeric,
+                        }
+                    }),
+                    .flags = fConstExpr,
+                    .number = actual_length,
+                }
+            }));
 
             strs field_names = {0};
-            push(&field_names, (str)
-            {
-                0
-            }
-            )
-            ;
-            push(&field_names, (str)
-            {
-                0
-            }
-            )
-            ;
+            push(&field_names, (str){0});
+            push(&field_names, (str){0});
+
 
             return new_node((Node)
             {
-                .
-                StructLiteral = {
+                .StructLiteral = {
                     .compiler = (void*)&comp_structLiteral,
                     .trace = token.trace,
                     .type = (void*)eval("'string literal'", "str", parser),
                     .fields = fields,
                     .field_names = field_names,
                 }
-            }
-            )
-            ;
+            });
         }
 
     case TokenCharacter: return new_node((Node)

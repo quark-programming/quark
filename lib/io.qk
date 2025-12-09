@@ -1,4 +1,5 @@
 usize extern fwrite<T>(T* ptr, usize size, usize nitems, File* stream);
+File* extern stdout;
 
 void write_file(File* file, str message) {
 	fwrite(message.slice.data, message.slice.size, sizeof(char), file);

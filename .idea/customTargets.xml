@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CLionExternalBuildManager">
-    <target id="970b6f5a-7ba6-4376-b928-405763d42fb1" name="build-debug" defaultType="MAKE">
-      <configuration id="50805e38-ead3-4d6b-928f-b97fe425566e" name="build-debug">
+    <target id="6a7b3879-89c4-483f-919a-5c4386aa6fb6" name="quark" defaultType="MAKE">
+      <configuration id="54490979-41eb-447a-8fb5-4fc937508b6d" name="quark">
         <build type="MAKE">
           <make targetName="build-debug" />
         </build>
+        <clean type="MAKE">
+          <make targetName="clean" />
+        </clean>
       </configuration>
     </target>
   </component>

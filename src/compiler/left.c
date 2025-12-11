@@ -123,7 +123,7 @@ void comp_Missing(Missing* self, str* line, Compiler* compiler) {
     (void)line; // TODO: remove or use
     push(compiler->messages, REPORT_ERR(self->trace,
              strf(0, "cannot find '\33[35m"STR_FMT"\33[0m' in scope",
-                 STR_ARGS(self->trace.slice))));
+                 STR_ARGS(self->trace.source))));
 }
 
 void comp_External(External* self, str* line, Compiler* compiler) {

@@ -19,7 +19,7 @@ extern char* library_path;
 Node* statement(Parser* parser) {
     if (parser->tokenizer->current.type == TokenIdentifier)
     {
-        if (streq(parser->tokenizer->current.trace.slice, str("import")))
+        if (streq(parser->tokenizer->current.trace.source, str("import")))
         {
             Trace trace = next(parser->tokenizer).trace;
             str import_path = strf(0, library_path);
@@ -27,7 +27,7 @@ Node* statement(Parser* parser) {
             do
             {
                 Trace section = expect(parser->tokenizer, TokenIdentifier).trace;
-                strf(&import_path, "/"STR_FMT, STR_ARGS(section.slice));
+                strf(&import_path, "/"STR_FMT, STR_ARGS(section.source));
                 trace = stretch(trace, section);
             }
             while (try(parser->tokenizer, TokenDoubleColon, NULL));
@@ -56,7 +56,7 @@ Node* statement(Parser* parser) {
             return (void*)scope;
         }
 
-        if (streq(parser->tokenizer->current.trace.slice, str("return")))
+        if (streq(parser->tokenizer->current.trace.source, str("return")))
         {
             Trace trace_start = next(parser->tokenizer).trace;
             Node* value = parser->tokenizer->current.type == ';' ? NULL : expression(parser);
@@ -83,7 +83,7 @@ Node* statement(Parser* parser) {
             });
         }
 
-        if (streq(parser->tokenizer->current.trace.slice, str("struct")))
+        if (streq(parser->tokenizer->current.trace.source, str("struct")))
         {
             Trace trace_start = next(parser->tokenizer).trace;
             IdentifierInfo info = new_identifier(
@@ -154,10 +154,10 @@ Node* statement(Parser* parser) {
             return new_node((Node){.compiler = &comp_Ignore});
         }
 
-        if (streq(parser->tokenizer->current.trace.slice, str("if")) ||
-            streq(parser->tokenizer->current.trace.slice, str("while")))
+        if (streq(parser->tokenizer->current.trace.source, str("if")) ||
+            streq(parser->tokenizer->current.trace.source, str("while")))
         {
-            str keyword = next(parser->tokenizer).trace.slice;
+            str keyword = next(parser->tokenizer).trace.source;
             expect(parser->tokenizer, '(');
 
             NodeList inputs = {0};
@@ -187,7 +187,7 @@ Node* statement(Parser* parser) {
             });
         }
 
-        if (streq(parser->tokenizer->current.trace.slice, str("type")))
+        if (streq(parser->tokenizer->current.trace.source, str("type")))
         {
             next(parser->tokenizer);
 

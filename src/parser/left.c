@@ -116,7 +116,7 @@ Node* left(Parser* parser) {
                     }
                 }),
                 .flags = fConstExpr,
-                .number = strtol(token.trace.slice.data, 0, 0),
+                .number = strtol(token.trace.source.data, 0, 0),
             }
         }
         )
@@ -124,7 +124,7 @@ Node* left(Parser* parser) {
 
     case TokenIdentifier:
         {
-            if (streq(token.trace.slice, str("auto")))
+            if (streq(token.trace.source, str("auto")))
             {
                 return (void*)new_type((Type)
                 {
@@ -138,7 +138,7 @@ Node* left(Parser* parser) {
                 ;
             }
 
-            if (streq(token.trace.slice, str("int")))
+            if (streq(token.trace.source, str("int")))
             {
                 return (void*)new_type((Type)
                 {
@@ -153,7 +153,7 @@ Node* left(Parser* parser) {
                 ;
             }
 
-            if (streq(token.trace.slice, str("typeof")))
+            if (streq(token.trace.source, str("typeof")))
             {
                 expect(parser->tokenizer, '(');
                 Node* argument = right(left(parser), parser, 15);
@@ -161,7 +161,7 @@ Node* left(Parser* parser) {
                 return (void*)argument->type;
             }
 
-            if (streq(token.trace.slice, str("sizeof")))
+            if (streq(token.trace.source, str("sizeof")))
             {
                 expect(parser->tokenizer, '(');
                 NodeList arguments = {0};
@@ -180,7 +180,7 @@ Node* left(Parser* parser) {
                             }
                         }),
                         .arguments = arguments,
-                        .type = (void*)find(parser->stack, (Trace) {.slice = str("usize")}),
+                        .type = (void*)find(parser->stack, (Trace) {.source = str("usize")}),
                     }
                 }
                 )
@@ -189,7 +189,7 @@ Node* left(Parser* parser) {
 
             // TODO: fix segfault on function calls on missing values
 
-            if (streq(token.trace.slice, str("const")))
+            if (streq(token.trace.source, str("const")))
             {
                 Type* type = (void*)right(left(parser), parser, 13);
 
@@ -204,7 +204,7 @@ Node* left(Parser* parser) {
                 return (void*)type;
             }
 
-            if (streq(token.trace.slice, str("extern")))
+            if (streq(token.trace.source, str("extern")))
             {
                 Type* type = NULL;
                 unsigned long flags = 0;
@@ -222,7 +222,7 @@ Node* left(Parser* parser) {
                 else
                 {
                     flags |= fType;
-                    if (streq(parser->tokenizer->current.trace.slice, str("int")))
+                    if (streq(parser->tokenizer->current.trace.source, str("int")))
                     {
                         flags |= tfNumeric;
                         next(parser->tokenizer);
@@ -238,7 +238,7 @@ Node* left(Parser* parser) {
                 }
 
                 Trace trace = stretch(token.trace, external_token.trace);
-                str data = external_token.trace.slice;
+                str data = external_token.trace.source;
                 if (external_token.type == TokenString)
                 {
                     data.data++;
@@ -267,7 +267,7 @@ Node* left(Parser* parser) {
 
             if (!info.value)
             {
-                if (streq(token.trace.slice, str("self")) && parser->stack.size >= 2)
+                if (streq(token.trace.source, str("self")) && parser->stack.size >= 2)
                 {
                     StructType* parent = (void*)parser->stack
                                                       .data[parser->stack.size - 2]->parent;
@@ -286,7 +286,7 @@ Node* left(Parser* parser) {
                                     .Identifier = {
                                         .compiler = (void*)&comp_Identifier,
                                         // set declaration
-                                        .base = token.trace.slice,
+                                        .base = token.trace.source,
                                     }
                                 }),
                             }
@@ -294,7 +294,7 @@ Node* left(Parser* parser) {
                         )
                         ;
                         self->identifier->declaration = (void*)self;
-                        put(last(parser->stack), token.trace.slice, (void*)self);
+                        put(last(parser->stack), token.trace.source, (void*)self);
 
                         Wrapper* variable = variable_of((void*)self, token.trace, fIgnoreStatment);
                         variable->self_argument = 1;
@@ -350,7 +350,7 @@ Node* left(Parser* parser) {
                     )
                     {
                         Trace field_name_trace = field_value->trace;
-                        field_name = field_value->trace.slice;
+                        field_name = field_value->trace.source;
                         unbox(field_value);
                         field_value = expression(parser);
 
@@ -364,10 +364,10 @@ Node* left(Parser* parser) {
                         push(parser->tokenizer->messages, REPORT_ERR(field_name_trace,
                                                                      strf(0, "no field named '\33[35m%.*s\33[0m' on "
                                                                           "struct '\33[35m%.*s\33[0m'",
-                                                                          (int)field_name_trace.slice.size,
-                                                                          field_name_trace.slice.data,
-                                                                          (int)info.trace.slice.size,
-                                                                          info.trace.slice.data)));
+                                                                          (int)field_name_trace.source.size,
+                                                                          field_name_trace.source.data,
+                                                                          (int)info.trace.source.size,
+                                                                          info.trace.source.data)));
                         push(parser->tokenizer->messages,
                              see_declaration((void*)struct_type, (void*)info.value));
                     }
@@ -399,7 +399,7 @@ Node* left(Parser* parser) {
 
     case TokenString:
         {
-            str string_data = token.trace.slice;
+            str string_data = token.trace.source;
             size_t actual_length = calculate_string_length(string_data.data, string_data.size);
 
             NodeList fields = {0};
@@ -407,7 +407,7 @@ Node* left(Parser* parser) {
                 .External = {
                     .compiler = (void*)&comp_External,
                     .type = (void*)eval("'string literal'", "char*", parser),
-                    .data = token.trace.slice,
+                    .data = token.trace.source,
                 }
             }));
 
@@ -452,7 +452,7 @@ Node* left(Parser* parser) {
                 .trace = token.trace,
                 .type = (void*)eval("'character'", "char", parser),
                 .flags = fConst,
-                .data = token.trace.slice,
+                .data = token.trace.source,
             }
         }
         )
@@ -550,7 +550,7 @@ Node* left(Parser* parser) {
 
     push(parser->tokenizer->messages, REPORT_ERR(token.trace,
                                                  strf(0, "expected a \33[35mliteral\33[0m, but got '\33[35m%.*s\33[0m'",
-                                                      (int)token.trace.slice.size, token.trace.slice.data)));
+                                                      (int)token.trace.source.size, token.trace.source.data)));
     return new_node((Node)
     {
         .

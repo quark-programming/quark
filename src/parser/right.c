@@ -186,7 +186,7 @@ Message see_declaration(Declaration* declaration, Node* node) {
     if (!declaration) {
         return REPORT_INFO((Trace){0}, str("declaration not found"));
     }
-    return REPORT_INFO(declaration->trace, strf(0, "declaration of '\33[35m%.*s\33[0m'", (int)node->trace.slice.size, node->trace.slice.data));
+    return REPORT_INFO(declaration->trace, strf(0, "declaration of '\33[35m%.*s\33[0m'", (int)node->trace.source.size, node->trace.source.data));
 }
 
 Node* temp_value(Node* value, Parser* parser, unsigned* set_id) {
@@ -306,7 +306,7 @@ outer_while:
                         .trace = operator,
                         .type = lefthand->type,
                         .child = lefthand,
-                        .postfix = operator.slice,
+                        .postfix = operator.source,
                     }
                 });
                 break;
@@ -348,7 +348,7 @@ outer_while:
                         .trace = stretch(lefthand->trace, righthand->trace),
                         .type = lefthand->type,
                         .left = lefthand,
-                        .operator = operator_token.trace.slice,
+                        .operator = operator_token.trace.source,
                         .right = righthand,
                     }
                 });
@@ -481,7 +481,7 @@ outer_while:
                 const OpenedType opened = open_type((void*) type, 0);
                 StructType* const struct_type = (void*)opened.type;
 
-                str operator_token = next(parser->tokenizer).trace.slice;
+                str operator_token = next(parser->tokenizer).trace.source;
                 Token field_token = expect(parser->tokenizer, TokenIdentifier);
 
                 // TODO: error message if not struct
@@ -489,8 +489,8 @@ outer_while:
                 {
                     push(parser->tokenizer->messages, REPORT_ERR(lefthand->trace, strf(0,
                              "'\33[35m%.*s\33[0m' is not a structure",
-                             (int) lefthand->trace.slice.size,
-                             lefthand->trace.slice.data)));
+                             (int) lefthand->trace.source.size,
+                             lefthand->trace.source.data)));
                     close_type(opened.actions, 0);
                     return lefthand;
                 }
@@ -498,7 +498,7 @@ outer_while:
                 ssize_t found_index = -1;
                 for (size_t i = 0; i < struct_type->fields.size; i++)
                 {
-                    if (streq(field_token.trace.slice,
+                    if (streq(field_token.trace.source,
                               struct_type->fields.data[i]->identifier->base))
                     {
                         found_index = i;
@@ -524,10 +524,10 @@ outer_while:
                              field_token.trace, strf(0,
                                  "no field named '\33[35m%.*s\33[0m' on struct "
                                  "'\33[35m%.*s\33[0m'",
-                                 (int) field_token.trace.slice.size,
-                                 field_token.trace.slice.data,
-                                 (int) lefthand->trace.slice.size,
-                                 lefthand->trace.slice.data)));
+                                 (int) field_token.trace.source.size,
+                                 field_token.trace.source.data,
+                                 (int) lefthand->trace.source.size,
+                                 lefthand->trace.source.data)));
                     push(parser->tokenizer->messages, see_declaration((void*) struct_type,
                              lefthand));
                     break;
@@ -548,7 +548,7 @@ outer_while:
                         .right = new_node((Node){
                             .External = {
                                 .compiler = (void*)&comp_External,
-                                .data = field_token.trace.slice,
+                                .data = field_token.trace.source,
                             }
                         }),
                     }

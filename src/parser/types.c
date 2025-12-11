@@ -51,7 +51,7 @@ int type_state_action(TypeStateAction action, unsigned flags) {
                 noloop = 1;
 
                 if (!get(action.target->Declaration.generics.unique_map,
-                         (Trace){.slice = unique_key}))
+                         (Trace){.source = unique_key}))
                 {
                     put(&action.target->Declaration.generics.unique_map, unique_key, NULL);
                     action.target->compiler(action.target, NULL, generics_compiler_context);
@@ -388,10 +388,10 @@ int circular_acceptor(Type* type, Type* _, Type* compare) {
 
 int assign_wrapper(Wrapper* wrapper, Type* follower, ClashAccumulator* accumulator) {
     printf("assigning:\t \33[3%dm%-24.*s \33[3%dm%.*s\33[0m\n",
-           (int)((size_t)wrapper->trace.slice.data / 16) % 6 + 1,
-           (int)wrapper->trace.slice.size, wrapper->trace.slice.data,
-           (int)((size_t)follower->trace.slice.data / 16) % 6 + 1,
-           (int)follower->trace.slice.size, follower->trace.slice.data);
+           (int)((size_t)wrapper->trace.source.data / 16) % 6 + 1,
+           (int)wrapper->trace.source.size, wrapper->trace.source.data,
+           (int)((size_t)follower->trace.source.data / 16) % 6 + 1,
+           (int)follower->trace.source.size, follower->trace.source.data);
 
     if (wrapper->flags & tfNumeric && !(follower->flags & tfNumeric)
         && follower->compiler != (void*)&comp_Wrapper)
@@ -456,8 +456,8 @@ int assign_wrapper(Wrapper* wrapper, Type* follower, ClashAccumulator* accumulat
 
 int clash_acceptor(Type* type, Type* follower, ClashAccumulator* accumulator) {
     printf("\33[90mclash:\t\t %-24.*s %.*s\33[0m\n",
-           (int)type->trace.slice.size, type->trace.slice.data,
-           (int)follower->trace.slice.size, follower->trace.slice.data);
+           (int)type->trace.source.size, type->trace.source.data,
+           (int)follower->trace.source.size, follower->trace.source.data);
 
     if (type->compiler == (void*)&comp_Wrapper &&
         !(type->Wrapper.anchor && follower->compiler == (void*)&comp_Wrapper))

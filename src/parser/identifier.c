@@ -10,7 +10,7 @@ typedef struct {
 
 IdentifierInfo new_identifier(Token base_identifier, Parser* parser) {
     unsigned long identifier_flags = 0;
-    if (streq(base_identifier.trace.slice, str("extern")))
+    if (streq(base_identifier.trace.source, str("extern")))
     {
         identifier_flags |= fExternal;
         base_identifier = expect(parser->tokenizer, TokenIdentifier);
@@ -23,7 +23,7 @@ IdentifierInfo new_identifier(Token base_identifier, Parser* parser) {
             .Identifier = {
                 .compiler = (void*)&comp_Identifier,
                 .flags = identifier_flags,
-                .base = base_identifier.trace.slice,
+                .base = base_identifier.trace.source,
                 .parent = last(parser->stack)->parent,
             }
         }),
@@ -77,7 +77,7 @@ compound_start:
     }
 
     info.trace = stretch(info.trace, next_trace);
-    info.identifier->base = next_trace.slice;
+    info.identifier->base = next_trace.source;
     info.identifier->parent = (void*)parent_struct;
 
     goto compound_start;

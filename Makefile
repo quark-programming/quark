@@ -1,13 +1,13 @@
-out = qc
-SRCS := $(wildcard src/*.c) $(wildcard src/*/*.c)
-CFLAGS = -Wall -g -ggdb -Wno-missing-braces -Wno-char-subscripts
+OUT = qc
+SRCS := $(shell find . -name "*.c")
+CFLAGS = -I./src/include -Wall -g -ggdb -Wno-missing-braces -Wno-char-subscripts
 
 # TODO: a release build target
 build: $(SRCS)
-	$(CC) $(CFLAGS) src/main.c -o $(out)
+	$(CC) $(CFLAGS) $(SRCS) -o $(OUT)
 
 build-debug: $(SRCS)
-	$(CC) $(CFLAGS) src/main.c -o $(out)
+	$(CC) $(CFLAGS) src/main.c -o $(OUT) -g
 
 all: build
 
@@ -17,4 +17,4 @@ test: build
 	./test/main
 
 clean:
-	rm $(out)
+	rm $(OUT)

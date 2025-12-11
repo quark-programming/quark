@@ -147,7 +147,7 @@ GenericsCollection collect_generics(Parser* parser) {
         push(&base_generics, (void*)base_generic);
         push(&declaration_setters, &base_generic->anchor->declaration);
 
-        put(scope, identifier.trace.slice, (void*)new_node((Node)
+        put(scope, identifier.trace.source, (void*)new_node((Node)
                 {
                     .
                     VariableDeclaration = {
@@ -234,7 +234,7 @@ strs filter_unique_generics_variants(TypeLists variants, str base) {
         if (get(variants_set, (Trace)
                 {
                     .
-                    slice = identifier
+                    source = identifier
                 }
             )
         )

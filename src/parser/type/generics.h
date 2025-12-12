@@ -11,4 +11,10 @@ typedef struct Generics {
     TypeVector base_type_arguments;
 } Generics;
 
+typedef struct GenericReference {
+    TYPE_FIELDS;
+    Declaration* generics_declaration;
+    size_t index;
+} GenericReference;
+
 #endif

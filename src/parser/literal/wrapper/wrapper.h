@@ -28,6 +28,7 @@ typedef struct Action {
 enum {
     WrapperVariable = NodeWrapper + 1,
     WrapperAuto,
+    WrapperSurround,
 };
 
 typedef struct Wrapper {
@@ -46,6 +47,11 @@ typedef struct Wrapper {
             Type* parent_base_generic;
             struct GenericType* replacement_generic;
         } Auto;
+
+        struct {
+            String prefix;
+            String postfix;
+        } Surround;
     };
 } Wrapper;
 

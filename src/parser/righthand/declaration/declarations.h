@@ -5,7 +5,7 @@
 
 #define DECLARATION_FIELDS \
     NODE_FIELDS; \
-    struct Identifier* identifier; \
+    struct Identifier identifier; \
     union Node* const_value; \
     struct Generics generics; \
     bool is_inline : 1, \

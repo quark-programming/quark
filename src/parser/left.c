@@ -296,7 +296,7 @@ Node* left(Parser* parser) {
                         self->identifier->declaration = (void*)self;
                         put(last(parser->stack), token.trace.source, (void*)self);
 
-                        Wrapper* variable = variable_of((void*)self, token.trace, fIgnoreStatment);
+                        Wrapper* variable = variable_of((void*)self, token.trace, fIgnoreStatement);
                         variable->self_argument = 1;
                         return (void*)variable;
                     }

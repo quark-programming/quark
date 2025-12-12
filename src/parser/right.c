@@ -131,7 +131,7 @@ Wrapper* declaration(Node* type, Token identifier, Parser* parser) {
         {
             Node* const argument = argument_declarations.data[i];
             if (argument->compiler == (void*)&comp_Wrapper && argument->Wrapper.variable
-                && argument_declarations.data[i]->flags & fIgnoreStatment)
+                && argument_declarations.data[i]->flags & fIgnoreStatement)
             {
                 push(&function_type->signature, argument->type);
                 VariableDeclaration* const arg_declaration = (void*)argument->Wrapper.ref;
@@ -156,7 +156,7 @@ Wrapper* declaration(Node* type, Token identifier, Parser* parser) {
 
         parser->stack.size--;
         return variable_of((void*)declaration, declaration->trace,
-                           fIgnoreStatment | fStatementTerminated * !(declaration->flags & fExternal));
+                           fIgnoreStatement | fStatementTerminated * !(declaration->flags & fExternal));
     }
 
     VariableDeclaration* declaration = (void*)new_node((Node){
@@ -179,7 +179,7 @@ Wrapper* declaration(Node* type, Token identifier, Parser* parser) {
                     declaration->trace, parser->tokenizer->messages, 0);
     }
 
-    return variable_of((void*)declaration, declaration->trace, fIgnoreStatment);
+    return variable_of((void*)declaration, declaration->trace, fIgnoreStatement);
 }
 
 Message see_declaration(Declaration* declaration, Node* node) {

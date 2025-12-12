@@ -128,7 +128,7 @@ Node* statement(Parser* parser) {
             {
                 if (next_declaration->type->compiler != (void*)&comp_Wrapper
                     || !next_declaration->type->Wrapper.variable
-                    || !(next_declaration->type->flags & fIgnoreStatment)
+                    || !(next_declaration->type->flags & fIgnoreStatement)
                     || next_declaration->type->Wrapper.ref->compiler
                     != (void*)&comp_VariableDeclaration)
                     break;
@@ -225,7 +225,7 @@ Node* statement(Parser* parser) {
     Node* expr = expression(parser);
     if (!(expr->flags & fStatementTerminated)) expect(parser->tokenizer, ';');
 
-    if (expr->flags & fIgnoreStatment)
+    if (expr->flags & fIgnoreStatement)
         return new_node((Node){
             .compiler = &comp_Ignore,
             .type = (void*)expr,

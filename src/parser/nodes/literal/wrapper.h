@@ -1,9 +1,10 @@
-#ifndef WRAPPER_H
-#define WRAPPER_H
+#ifndef NODE_WRAPPER_H
+#define NODE_WRAPPER_H
 
 #include <vector.h>
+#include <vector-string.h>
 
-#include "../../nodes.h"
+#include "../fields.h"
 
 enum {
     ActionNone,
@@ -11,7 +12,7 @@ enum {
     ActionApplyCollection,
 };
 
-typedef Vector(struct Action) ActionVector;
+typedef Vector(struct Action, ActionVector) ActionVector;
 
 typedef struct Action {
     unsigned type;
@@ -38,6 +39,10 @@ typedef struct Wrapper {
 
     union {
         struct {
+            Node* child;
+        };
+
+        struct {
             Declaration* declaration;
             Node* bound_self_argument;
         } Variable;
@@ -45,10 +50,11 @@ typedef struct Wrapper {
         struct {
             Type* ref;
             Type* parent_base_generic;
-            struct GenericType* replacement_generic;
+            struct GenericReference* replacement_generic;
         } Auto;
 
         struct {
+            Node* child;
             String prefix;
             String postfix;
         } Surround;

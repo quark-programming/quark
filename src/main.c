@@ -4,7 +4,7 @@
 
 typedef Vector(char*) Str_Vector;
 
-int in_compiler_step = 0;
+bool global_in_compiler_step = true;
 
 FunctionDeclaration* entry_declaration() {
     FunctionType* function_type =
@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
         push(&entry->body->children, body.data[i]);
     }
 
-    in_compiler_step = 1;
+    global_in_compiler_step = 1;
     str temp_line = {0};
     puts("COMPILATION START");
     entry->compiler((void*)entry, &temp_line, &compiler);

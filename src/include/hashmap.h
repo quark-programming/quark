@@ -12,16 +12,16 @@
 
 #define HashMap(V) typeof(Vector(struct { String k; V v; })(*)[MAP_SIZE])
 
-#define put(map, key, value) do { \
+#define put(map, key, value...) do { \
     if(!*(map)) { \
         *(map) = calloc(1, sizeof(**(map))); \
         assert(*(map) && "Out of Memory"); \
     } \
-    push(&(**(map))[fnv1a_u32_hash(key) % MAP_SIZE], (typeof(***(map))) { key, value }); \
+    push(&(**(map))[fnv1a_u32_hash(key) % MAP_SIZE], ((typeof(*(**(map))->data)) { key, value })); \
 } while(0)
 
-void* hashmap__get(notnull void** map, String key, size_t size);
+void* hashmap__get(void* map, String key, size_t size);
 
-#define get(map, key) ((typeof((***(map)).v)*) hashmap__get((void*)(map), key, sizeof(***(map))))
+#define get(map, key) ((typeof((*(map))->data->v)*) hashmap__get((void*)(map), key, sizeof(*(*(map))->data)))
 
 #endif

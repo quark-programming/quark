@@ -1,7 +1,7 @@
-#ifndef FUNCTION_CALL_H
-#define FUNCTION_CALL_H
+#ifndef NODE_FUNCTION_CALL_H
+#define NODE_FUNCTION_CALL_H
 
-#include "../nodes.h"
+#include "../fields.h"
 
 typedef struct FunctionCall {
     NODE_FIELDS;

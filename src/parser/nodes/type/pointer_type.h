@@ -1,7 +1,7 @@
-#ifndef POINTER_TYPE_H
-#define POINTER_TYPE_H
+#ifndef NODE_POINTER_TYPE_H
+#define NODE_POINTER_TYPE_H
 
-#include "../nodes.h"
+#include "../fields.h"
 
 typedef struct PointerType {
     NODE_FIELDS;

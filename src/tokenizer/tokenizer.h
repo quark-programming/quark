@@ -1,6 +1,7 @@
 #ifndef TOKENIZER_H
 #define TOKENIZER_H
 
+#include <helpers.h>
 #include "trace.h"
 
 enum {

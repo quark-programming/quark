@@ -1,7 +1,7 @@
-#ifndef FUNCTION_DECLARATION_H
-#define FUNCTION_DECLARATION_H
+#ifndef NODE_FUNCTION_DECLARATION_H
+#define NODE_FUNCTION_DECLARATION_H
 
-#include "../../nodes.h"
+#include "../../fields.h"
 
 typedef struct Argument {
     Type* type;

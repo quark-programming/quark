@@ -1,7 +1,7 @@
-#ifndef STRUCT_TYPE_H
-#define STRUCT_TYPE_H
+#ifndef NODE_STRUCT_TYPE_H
+#define NODE_STRUCT_TYPE_H
 
-#include "../nodes.h"
+#include "../fields.h"
 
 typedef struct StructField {
     Type* type;

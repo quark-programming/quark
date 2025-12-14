@@ -1,7 +1,7 @@
-#ifndef RETURN_STATEMENT_H
-#define RETURN_STATEMENT_H
+#ifndef NODE_RETURN_STATEMENT_H
+#define NODE_RETURN_STATEMENT_H
 
-#include "../nodes.h"
+#include "../fields.h"
 
 typedef struct ReturnStatement {
     NODE_FIELDS;

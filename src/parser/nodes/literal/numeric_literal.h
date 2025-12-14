@@ -1,9 +1,9 @@
-#ifndef NUMERIC_LITERAL_H
-#define NUMERIC_LITERAL_H
+#ifndef NODE_NUMERIC_LITERAL_H
+#define NODE_NUMERIC_LITERAL_H
 
 #include <stdint.h>
 
-#include "../nodes.h"
+#include "../fields.h"
 
 typedef struct NumericLiteral {
     NODE_FIELDS;

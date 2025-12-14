@@ -1,9 +1,9 @@
-#ifndef BINARY_OPERATION_H
-#define BINARY_OPERATION_H
+#ifndef NODE_BINARY_OPERATION_H
+#define NODE_BINARY_OPERATION_H
 
 #include <vector-string.h>
 
-#include "../nodes.h"
+#include "../fields.h"
 
 typedef struct BinaryOperation {
     NODE_FIELDS;

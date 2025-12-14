@@ -1,19 +1,13 @@
 #ifndef SCOPE_H
 #define SCOPE_H
 
-#include <hashmap.h>
+#include "../nodes/nodes.h"
+#include "../parser.h"
 
-#include "../nodes.h"
+Scope* new_scope(Declaration* parent);
 
-typedef struct Scope {
-    NODE_FIELDS;
-    HashMap(Declaration*) variables;
-    DeclarationVector hoisted_declarations;
-    Declaration* parent;
-    Node* result_value;
-    bool wrap_with_brackets : 1;
-} Scope;
+Wrapper* find_in_scope(Scope scope, Trace identifier);
 
-typedef Vector(Scope*) Stack;
+Wrapper* find_on_stack(Stack stack, Trace identifier);
 
 #endif

@@ -1,4 +1,5 @@
 OUT = qc
+# TODO: Make this platform independent
 SRCS := $(shell find . -name "*.c")
 CFLAGS = -I./src/include -Wall -g -ggdb -Wno-missing-braces -Wno-char-subscripts
 

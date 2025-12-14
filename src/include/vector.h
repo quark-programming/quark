@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define Vector(t) struct { size_t size, cap; t* data; }
+#define Vector(t, n...) struct n { size_t size, cap; t* data; }
 
 #define resv(vec, n) do { \
     if((vec)->size + n > (vec)->cap) { \

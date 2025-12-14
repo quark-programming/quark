@@ -1,20 +1,26 @@
 #ifndef GENERICS_H
 #define GENERICS_H
 
-#include <helpers.h>
+#include "../nodes/nodes.h"
+#include "../parser.h"
 
-#include "../nodes.h"
+Type* wrap_applied_generics(Type* type, TypeVector generics, Declaration* declaration);
 
-typedef struct Generics {
-    HashMap(UsableVoid) unique_combinations;
-    Vector(TypeVector) type_arguments_stack;
+void assign_generics(struct Wrapper* variable, Parser* parser);
+
+typedef Vector(Declaration**) DeclarationSetterVector;
+
+typedef struct GenericsCollection {
     TypeVector base_type_arguments;
-} Generics;
+    Scope* generic_declarations_scope;
+    DeclarationSetterVector declaration_setters;
+} GenericsCollection;
 
-typedef struct GenericReference {
-    TYPE_FIELDS;
-    Declaration* generics_declaration;
-    size_t index;
-} GenericReference;
+GenericsCollection collect_generics(Parser* parser);
+
+void assign_generics_to_declaration(Declaration* declaration, GenericsCollection collection);
+
+void close_generics_declaration(Declaration* declaration);
+
 
 #endif

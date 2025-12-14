@@ -1,4 +1,4 @@
-#include "nodes.h"
+#include "../nodes.h"
 
 NodeArena global_node_arena = { 0 };
 NodeVector global_unused_nodes = { 0 };
@@ -33,11 +33,4 @@ void unbox(Node* box) {
     if(box) {
         push(&global_unused_nodes, box);
     }
-}
-
-Type* new_type(Type type) {
-    type.flags |= fType;
-    Type* box = (void *) new_node((Node) { .Type = type });
-    box->type = box;
-    return box;
 }

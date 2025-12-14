@@ -4,8 +4,10 @@
 [Homepage](https://quar.k.vu) | [Docs](https://quar.k.vu/docs.html)
 </div>
 
-> This langauge is in early stages of development, everything is subject to change, make sure to use the
-> [latest release](https://github.com/quark-programming/quark/releases)
+> [!IMPORTANT]
+> This langauge is in early stages of development, everything is subject to change, when building the compiler make
+> sure to use the [latest release](https://github.com/quark-programming/quark/releases) You can see and submit issues
+> on the repository's [issues page](https://github.com/quark-programming/quark/issues)
 
 ## Building the Compiler
 

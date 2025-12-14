@@ -1,7 +1,7 @@
-#ifndef STRUCT_LITERAL_H
-#define STRUCT_LITERAL_H
+#ifndef NODE_STRUCT_LITERAL_H
+#define NODE_STRUCT_LITERAL_H
 
-#include "../nodes.h"
+#include "../fields.h"
 
 typedef struct StructLiteral {
     NODE_FIELDS;

@@ -3,22 +3,8 @@
 
 #include <stdint.h>
 
-#include "../tokenizer/tokenizer.h"
-
-typedef struct Compiler Compiler;
-typedef union Node Node;
-typedef union Type Type;
-typedef union Declaration Declaration;
-
-typedef Vector(Node*) NodeVector;
-typedef Vector(Type*) TypeVector;
-typedef Vector(Declaration*) DeclarationVector;
-
-#define NODE_FIELDS \
-    uint32_t id; \
-    uint32_t flags; \
-    Trace trace; \
-    Type* type
+#include "../../tokenizer/tokenizer.h"
+#include "fields.h"
 
 enum {
     NodeNone,
@@ -56,17 +42,15 @@ enum {
     fNumeric = 1 << 7,
 };
 
-#include "righthand/declaration/declarations.h"
 #include "righthand/declaration/identifier.h"
 #include "statement/scope.h"
 
-#include "type/types.h"
 #include "type/generics.h"
 #include "type/function_type.h"
 #include "type/pointer_type.h"
 #include "type/struct_type.h"
 
-#include "literal/wrapper/wrapper.h"
+#include "literal/wrapper.h"
 #include "literal/numeric_literal.h"
 #include "literal/struct_literal.h"
 #include "literal/missing.h"
@@ -136,5 +120,7 @@ extern NodeVector global_unused_nodes;
 void init_node_arena(size_t initial_size);
 
 Node* new_node(Node node);
+
+void unbox(Node* box);
 
 #endif //NODES_H

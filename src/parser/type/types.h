@@ -36,4 +36,11 @@ OpenedType open_type_with_acceptor(Type* type, Type* follower, int (*acceptor)(T
 
 void close_type(ActionVector actions, unsigned flags);
 
+TypeVector find_last_generic_action(ActionVector actions, Declaration* declaration);
+
+Type* make_type_standalone(Type* type);
+
+int traverse_type(Type* type, Type* follower, int (*acceptor)(Type*, Type*, void*), void* accumulator,
+                  unsigned flags);
+
 #endif

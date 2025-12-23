@@ -8,7 +8,7 @@ build: $(SRCS)
 	$(CC) $(CFLAGS) $(SRCS) -o $(OUT)
 
 build-debug: $(SRCS)
-	$(CC) $(CFLAGS) src/main.c -o $(OUT) -g
+	$(CC) $(CFLAGS) $(SRCS) -o $(OUT) -g -DEBUG
 
 all: build
 

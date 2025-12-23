@@ -18,7 +18,6 @@
 #endif
 
 char* fs_readfile(notnull const char* filename);
-size_t calculate_string_length(notnull const char* string_literal, size_t length);
 
 typedef int UsableVoid[0];
 

@@ -45,6 +45,7 @@ typedef struct Wrapper {
         struct {
             Declaration* declaration;
             Node* bound_self_argument;
+            bool is_self_literal : 1;
         } Variable;
 
         struct {
@@ -57,6 +58,7 @@ typedef struct Wrapper {
             Node* child;
             String prefix;
             String postfix;
+            bool no_parenthesis_wrap : 1;
         } Surround;
     };
 } Wrapper;

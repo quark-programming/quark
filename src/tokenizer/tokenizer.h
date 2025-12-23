@@ -36,9 +36,29 @@ enum {
 extern unsigned char const tokenizer_double_characters[128];
 extern unsigned char const tokenizer_equal_characters[128];
 
+struct Parser;
+struct Token;
+
+enum {
+    KeywordActionNone,
+    KeywordActionSelf,
+};
+
+typedef struct Keyword {
+    unsigned specific_action;
+    union Node* (*consumer)(struct Token, struct Parser*);
+} Keyword;
+
 typedef struct Token {
     Trace trace;
     unsigned char type;
+
+    union {
+        struct {
+            Keyword keyword;
+            bool is_keyword : 1;
+        } identifier;
+    };
 } Token;
 
 typedef struct Tokenizer {

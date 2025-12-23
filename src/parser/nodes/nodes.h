@@ -10,7 +10,7 @@ enum {
     NodeNone,
 
     NodeWrapper = 1 << 2,
-    NodeFunctionType,
+    NodeFunctionType = 1 << 3,
     NodePointerType,
     NodeGenericReference,
     NodeStructType,
@@ -74,6 +74,8 @@ union Type {
     StructType StructType;
 
     Wrapper Wrapper;
+    External External;
+    Missing Missing;
 };
 
 union Declaration {

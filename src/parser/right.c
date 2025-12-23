@@ -5,19 +5,6 @@ NodeList collect_until(Parser* parser, Node* (*supplier)(Parser*),
 Node* right(Node* lefthand, Parser* parser, unsigned char precedence);
 Node* statement(Parser* parser);
 
-enum {
-    RightBinary,
-    RightAltBinary,
-    RightDeclaration,
-    RightAssignment,
-    RightIncDec,
-    RightCall,
-    RightFieldAccess,
-    RightCompare,
-    RightIndex,
-    RightOptional,
-};
-
 typedef struct {
     unsigned char precedence : 4,
         type : 4;

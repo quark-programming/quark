@@ -41,6 +41,11 @@ FunctionDeclaration* entry_declaration() {
 }
 
 char* library_path = ".";
+char* helps =
+    " -l: library path    '-l /path/to/dir'\n"
+    " -o: output c        '-o hello.c'\n"
+    " hint: ./qc main.qk -o main.c -l ../dir \n"
+    "";
 
 int main(int argc, char** argv) {
     char* name = clname(argc, argv);
@@ -53,6 +58,8 @@ int main(int argc, char** argv) {
     while ((flag = clflag()))
         switch (flag)
         {
+        case 'h': printf("%s\n", helps);
+            return 0;
         case -1: push(&input_files, clarg());
             break;
         case 'o': output_file = clarg();
@@ -62,8 +69,9 @@ int main(int argc, char** argv) {
         default: panicf("unknown flag '-%c'\n", flag);
         }
 
-    if (input_files.size == 0)
-        panicf("no input files provided\n");
+    if (input_files.size == 0) {
+        printf("%s\n", helps); return 0;
+    }
 
     char* input_content = fs_readfile(input_files.data[0]);
     if (!input_content)

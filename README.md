@@ -19,6 +19,7 @@ $ make build out=PATH
 # Compiling a Quark File (`.qk`) to C:
 
 ```sh
+$ ./qc -h
 $ ./qc <path> -o <out-path>
 ```
 

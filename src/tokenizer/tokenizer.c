@@ -72,6 +72,11 @@ Token create_token(Trace trace) {
         return (Token) { trace, TokenRightArrow };
     }
 
+    if(trace.source.data[0] == '=' && trace.source.data[1] == '>') {
+        trace.col += trace.source.size = 2;
+        return (Token) { trace, TokenDoubleRightArrow };
+    }
+
     if(trace.source.data[0] == '/' && trace.source.data[1] == '/') {
         while(*++trace.source.data && *trace.source.data != '\n');
         return create_token(trace);

@@ -20,13 +20,10 @@ Declaration* fetch_operator_override(Type* type, const String override) {
     return find_in_scope_unwrapped(*overrides_scope, override);
 }
 
-Node* operator_override(Type* type, Node* self, Node* argument, const String override, const Trace trace,
-                        Parser* parser) {
+Node* operator_override_n(Type* type, Node* self, NodeVector arguments, const String override, const Trace trace,
+                          Parser* parser) {
     Declaration* const operator_override = fetch_operator_override(type, override);
     if(!operator_override) return NULL;
-
-    NodeVector arguments = { 0 };
-    push(&arguments, argument);
 
     Wrapper* override_variable = variable_of(operator_override, trace, 0);
     OpenedType const opened_lefthand = open_type(type, 0);
@@ -39,10 +36,18 @@ Node* operator_override(Type* type, Node* self, Node* argument, const String ove
     return call_function((void*) override_variable, arguments, parser);
 }
 
+Node* operator_override(Type* type, Node* self, Node* argument, const String override, const Trace trace,
+                        Parser* parser) {
+    NodeVector arguments = { 0 };
+    push(&arguments, argument);
+    return operator_override_n(type, self, arguments, override, trace, parser);
+}
+
 Node* call_function(Node* function, NodeVector arguments, Parser* const parser) {
     const OpenedType opened_function_type = open_type(function->type, 0);
     FunctionType* const function_type = (void*) opened_function_type.type;
 
+    // TODO: Operator::call override
     if(function_type->id != NodeFunctionType) {
         push(parser->tokenizer->messages, REPORT_ERR(function->trace, String("calling a non-function value")));
         close_type(opened_function_type.actions, 0);

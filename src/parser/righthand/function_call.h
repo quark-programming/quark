@@ -5,6 +5,9 @@
 
 Declaration* fetch_operator_override(Type* type, String override);
 
+Node* operator_override_n(Type* type, Node* self, NodeVector arguments, const String override, const Trace trace,
+                          Parser* parser);
+
 Node* operator_override(Type* type, Node* self, Node* argument, const String override, const Trace trace,
                         Parser* parser);
 

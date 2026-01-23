@@ -11,7 +11,7 @@ typedef struct Scope {
     NODE_FIELDS;
     NodeVector children;
     DeclarationHashMap variables;
-    DeclarationVector hoisted_declarations;
+    // DeclarationVector hoisted_declarations;
     Declaration* parent;
     Node* result_value;
     bool wrap_with_brackets : 1;

@@ -21,6 +21,7 @@ void comp_Variable(void* void_self, String* line, Compiler* compiler) {
             strf(line, ")");
         }
     } else {
+        compile(self->Variable.declaration, line, compiler);
         compile_identifier(self->Variable.declaration->identifier, line);
     }
 
@@ -29,6 +30,7 @@ void comp_Variable(void* void_self, String* line, Compiler* compiler) {
 
 void comp_Auto(void* void_self, String* line, Compiler* compiler) {
     Wrapper* const self = void_self;
+    // TODO: remove boolean result from apply_action
     const bool applied_action = apply_action(self->action, 0);
 
     if(!self->Auto.ref) {

@@ -31,7 +31,7 @@ void comp_VariableDeclaration(void* void_self, String* line, Compiler* compiler)
     VariableDeclaration* const self = void_self;
 
     if((self->generics.base_type_arguments.size && !self->generics.type_arguments_stack.size)
-       || self->identifier.is_external)
+       || self->identifier.is_external || self->skip_compilation)
         return;
 
     if(self->const_value && self->const_value->flags & fType) {
@@ -40,8 +40,6 @@ void comp_VariableDeclaration(void* void_self, String* line, Compiler* compiler)
         close_type(opened.actions, 0);
         return;
     }
-
-    if(self->is_inline) return;
 
     String decl_line = new_line(compiler);
     line = &decl_line;

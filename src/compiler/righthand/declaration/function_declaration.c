@@ -43,8 +43,8 @@ void comp_FunctionDeclaration(void* void_self, String* line, Compiler* compiler)
     (void) line;
     FunctionDeclaration* self = void_self;
 
-    if(self->identifier.is_external || (self->generics.base_type_arguments.size
-                                        && !self->generics.type_arguments_stack.size))
+    if(self->identifier.is_external || self->skip_compilation
+       || (self->generics.base_type_arguments.size && !self->generics.type_arguments_stack.size))
         return;
 
     function_declaration_compiler_hoisted(self, compiler, true);

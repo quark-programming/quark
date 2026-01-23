@@ -5,6 +5,8 @@
 
 #include "../../tokenizer/tokenizer.h"
 
+// TODO: remove bit lengths from booleans
+
 #define NODE_FIELDS \
     NodeID id; \
     uint32_t flags; \
@@ -19,8 +21,7 @@
     struct Identifier identifier; \
     union Node* const_value; \
     struct Generics generics; \
-    bool is_inline : 1, \
-         observerd : 1
+    bool skip_compilation;
 
 typedef struct Compiler Compiler;
 typedef union Node Node;

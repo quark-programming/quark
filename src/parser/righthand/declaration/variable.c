@@ -17,7 +17,6 @@ Node* parse_variable_declaration(Type* type, IdentifierInfo info, Parser* parser
     });
     declaration->identifier.parent_declaration = (void*) declaration;
 
-    push(&info.declaration_scope->hoisted_declarations, (void*) declaration);
     put(&info.declaration_scope->variables, info.identifier.base, (void*) declaration);
 
     if(type->flags & fConst && try(parser->tokenizer, '=', 0)) {
@@ -42,11 +41,10 @@ Node* create_temp_variable(Node* const value, Parser* const parser, NodeVector* 
                 .base = strf(0, "__qv%u", id++),
                 .parent_scope = (void*) last(parser->stack),
             },
-            .observerd = true,
         },
     });
     declaration->VariableDeclaration.identifier.parent_declaration = declaration;
-    push(&last(parser->stack)->hoisted_declarations, declaration);
+    push(collector, (void*) declaration);
 
     Node* const variable = new_node((Node) {
         .External = {

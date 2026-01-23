@@ -4,6 +4,7 @@
 #include "literal/wrapper.h"
 #include "righthand/righthand.h"
 #include "righthand/declaration/function_declaration.h"
+#include "righthand/declaration/struct_declaration.h"
 #include "righthand/declaration/variable_declaration.h"
 #include "statement/scope.h"
 #include "statement/statement.h"
@@ -36,6 +37,7 @@ void compile(void* void_node, String* line, Compiler* compiler) {
         [NodeStructType] = &comp_StructType,
         [NodeStructLiteral] = &comp_StructLiteral,
         [NodeCast] = &comp_Cast,
+        [NodeStructDeclaration] = &comp_StructDeclaration,
     };
 
     Node* const node = void_node;

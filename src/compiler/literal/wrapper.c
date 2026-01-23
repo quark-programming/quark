@@ -8,6 +8,7 @@ void comp_Variable(void* void_self, String* line, Compiler* compiler) {
     const bool applied_action = apply_action(self->action, 0);
 
     Node* const const_value = self->Variable.declaration->const_value;
+    compile(self->Variable.declaration, line, compiler);
     if(const_value && const_value->flags & fConstExpr) {
         if(!(self->flags & fType)) {
             strf(line, "((");
@@ -21,7 +22,6 @@ void comp_Variable(void* void_self, String* line, Compiler* compiler) {
             strf(line, ")");
         }
     } else {
-        compile(self->Variable.declaration, line, compiler);
         compile_identifier(self->Variable.declaration->identifier, line);
     }
 

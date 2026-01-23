@@ -17,7 +17,7 @@ typedef struct StructType {
     TYPE_FIELDS;
     Vector(StructField) fields;
     struct Scope* static_body;
-    struct VariableDeclaration* parent;
+    struct StructDeclaration* parent;
     ScopeHashMap reference_structures;
 } StructType;
 

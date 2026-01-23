@@ -89,9 +89,9 @@ Node* keyword_struct(const Token token, Parser* parser) {
     // TODO: create a flag that only allows type to compile if it is pointed to (in reference()) this will prevent
     //  circular types and allow structs to reference themselves within themselves
 
-    VariableDeclaration* declaration = (void*) new_node((Node) {
-        .VariableDeclaration = {
-            .id = NodeVariableDeclaration,
+    StructDeclaration* declaration = (void*) new_node((Node) {
+        .StructDeclaration = {
+            .id = NodeStructDeclaration,
             .flags = fConst | fType,
             .trace = type->trace,
             .type = (void*) type,
@@ -127,7 +127,6 @@ Node* keyword_struct(const Token token, Parser* parser) {
         unbox((void*) field_decl);
         unbox((void*) next_declaration->type);
         unbox(next_declaration);
-        pop(&type->static_body->hoisted_declarations);
     }
 
     NodeVector declarations = { 0 };
@@ -143,7 +142,6 @@ Node* keyword_struct(const Token token, Parser* parser) {
     close_generics_declaration((void*) declaration);
     type->static_body->children = declarations;
 
-    push(&last(parser->stack)->hoisted_declarations, (void*) declaration);
     return new_node((Node) { NodeNone });
 }
 

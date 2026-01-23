@@ -9,7 +9,7 @@
 #include "parser/keywords.h"
 #include "compiler/righthand/declaration/identifier.h"
 
-#define QUARK_VERSION "0.4.feat-lambda-1"
+#define QUARK_VERSION "0.4 (chore/unused-declarations)"
 #define QUARK_STABILITY "dev"
 
 FunctionDeclaration* entry_declaration() {
@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
     populate_keyword_table();
     populate_global_c_keywords();
 
-    push(&entry->body->children, eval_w("lib::std", "import lib::std;", &parser, &statement));
+    // push(&entry->body->children, eval_w("lib::std", "import lib::std;", &parser, &statement));
     const NodeVector body = collect_until(&parser, &statement, 0, 0);
     resv(&entry->body->children, body.size);
     for(size_t i = 0; i < body.size; i++) {

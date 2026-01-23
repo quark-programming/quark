@@ -21,7 +21,7 @@
     struct Identifier identifier; \
     union Node* const_value; \
     struct Generics generics; \
-    bool skip_compilation;
+    uint8_t compilation_state;
 
 typedef struct Compiler Compiler;
 typedef union Node Node;

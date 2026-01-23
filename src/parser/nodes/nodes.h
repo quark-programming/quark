@@ -31,12 +31,19 @@ typedef enum : uint32_t {
     NodeFunctionCall,
     NodeVariableDeclaration,
     NodeFunctionDeclaration,
+    NodeStructDeclaration,
 
     NodeScope,
     NodeStatementWrapper,
     NodeReturnStatement,
     NodeControlStatement,
 } NodeID;
+
+enum {
+    CompilationUnused,
+    CompilationSkip,
+    CompilationIntermediate,
+};
 
 enum {
     fType = 1 << 0,
@@ -68,6 +75,7 @@ enum {
 #include "righthand/function_call.h"
 #include "righthand/declaration/variable_declaration.h"
 #include "righthand/declaration/function_declaration.h"
+#include "righthand/declaration/struct_declaration.h"
 
 #include "statement/statement_wrapper.h"
 #include "statement/return_statement.h"
@@ -91,6 +99,7 @@ union Declaration {
 
     FunctionDeclaration FunctionDeclaration;
     VariableDeclaration VariableDeclaration;
+    StructDeclaration StructDeclaration;
 };
 
 union Node {
@@ -112,6 +121,7 @@ union Node {
     FunctionCall FunctionCall;
     VariableDeclaration VariableDeclaration;
     FunctionDeclaration FunctionDeclaration;
+    StructDeclaration StructDeclaration;
 
     StatementWrapper StatementWrapper;
     ReturnStatement ReturnStatement;

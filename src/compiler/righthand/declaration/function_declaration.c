@@ -25,7 +25,7 @@ static void function_declaration_compiler_hoisted(FunctionDeclaration* const sel
         }
     }
     strf(&declaration_line, hoisted ? ");" : ") {");
-    push(&compiler->sections.data[(size_t) hoisted ? (size_t) hoisted : section].lines, declaration_line);
+    push(&compiler->sections.data[!hoisted * section].lines, declaration_line);
 
     if(hoisted) {
         compiler->open_section = previous_section;
@@ -43,10 +43,11 @@ void comp_FunctionDeclaration(void* void_self, String* line, Compiler* compiler)
     (void) line;
     FunctionDeclaration* self = void_self;
 
-    if(self->identifier.is_external || self->skip_compilation
+    if(self->identifier.is_external || self->compilation_state == CompilationSkip
        || (self->generics.base_type_arguments.size && !self->generics.type_arguments_stack.size))
         return;
 
     function_declaration_compiler_hoisted(self, compiler, true);
+    self->compilation_state = CompilationSkip;
     function_declaration_compiler_hoisted(self, compiler, false);
 }

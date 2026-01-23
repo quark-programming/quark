@@ -1,7 +1,7 @@
 #include "wrapper.h"
 
+// TODO: handle generics here
 Wrapper* variable_of(Declaration* declaration, const Trace trace, unsigned long flags) {
-    declaration->observerd = true;
     flags |= fConstExpr | fMutable | (declaration->flags & fType);
 
     return (void*) new_node((Node) {

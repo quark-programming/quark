@@ -95,6 +95,7 @@ static void parse_function_arguments(FunctionType* function_type, FunctionDeclar
                 .VariableDeclaration = {
                     .id = NodeVariableDeclaration,
                     .type = argument.type,
+                    .compilation_state = CompilationSkip,
                     .identifier = {
                         .base = argument.identifier,
                         .parent_scope = (void*) parser->stack.data[0],
@@ -142,7 +143,6 @@ Node* parse_function_declaration(Type* return_type, IdentifierInfo info, Parser*
     push(&parser->stack, declaration->body);
     traverse_type(return_type, NULL, &recycle_missing_generics, parser, TraverseGenerics);
 
-    push(&info.declaration_scope->hoisted_declarations, (void*) declaration);
     put(&info.declaration_scope->variables, info.identifier.base, (void*) declaration);
 
     parse_function_arguments(function_type, declaration, parser, false);
@@ -193,8 +193,6 @@ Node* parse_function_lambda(Type* return_type, Parser* parser) {
         pop(&parser->stack);
         return (void*) function_type;
     }
-
-    push(&parser->stack.data[parser->stack.size - 2]->hoisted_declarations, (void*) declaration);
 
     Token operator;
     switch((operator = next(parser->tokenizer)).type) {

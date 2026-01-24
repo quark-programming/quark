@@ -48,7 +48,7 @@ static int stringify_acceptor(Type* type, Type* follower, void* void_accumulator
 
         case NodeStructType:
             strf(accumulator->string, accumulator->flags & StringifyAlphaNumeric ? "struct_%.*s" : "struct %.*s",
-                 PRINT(type->StructType.parent->identifier.base));
+                 FMT(type->StructType.parent->identifier.base));
 
             if(type->StructType.parent->generics.base_type_arguments.size) {
                 stringify_generics(accumulator->string, last(type->StructType.parent->generics.type_arguments_stack),

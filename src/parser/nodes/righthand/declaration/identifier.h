@@ -9,7 +9,6 @@ typedef struct Identifier {
     Declaration* parent_scope;
     Declaration* parent_declaration;
     StructType* reference_structure;
-    unsigned function_declaration_counter;
     bool is_external : 1;
 } Identifier;
 

@@ -25,6 +25,6 @@ bool streq(String a, String b);
 
 uint32_t fnv1a_u32_hash(String string);
 
-#define PRINT(string) (int) (string).size, (string).data
+#define FMT(string) (int) (string).size, (string).data
 
 #endif // VECTOR_STRING_H

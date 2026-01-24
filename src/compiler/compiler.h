@@ -8,10 +8,10 @@ typedef struct {
     String indent;
 } CompilerSection;
 
-typedef Vector(CompilerSection) CompilerSections;
+typedef Vector(CompilerSection) CompilerSectionVector;
 
 struct Compiler {
-    CompilerSections sections;
+    CompilerSectionVector sections;
     size_t open_section;
     MessageVector* messages;
 };

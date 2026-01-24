@@ -17,13 +17,18 @@ Node* parse_variable_declaration(Type* type, IdentifierInfo info, Parser* parser
     });
     declaration->identifier.parent_declaration = (void*) declaration;
 
-    push(&info.declaration_scope->hoisted_declarations, (void*) declaration);
     put(&info.declaration_scope->variables, info.identifier.base, (void*) declaration);
 
     if(type->flags & fConst && try(parser->tokenizer, '=', 0)) {
         declaration->const_value = righthand_expression(lefthand_expression(parser), parser, 14);
         clash_types(declaration->type, declaration->const_value->type, declaration->trace,
                     parser->tokenizer->messages, 0);
+    }
+
+    FunctionDeclaration* const parent = (void*) last(parser->stack)->parent;
+    if(parent->id == NodeFunctionDeclaration || parent->id == NodeEntryFunctionDeclaration) {
+        push(&parent->variable_declarations, declaration);
+        declaration->compilation_state = CompilationHoisted;
     }
 
     return (void*) variable_of((void*) declaration, declaration->trace, fIgnoreStatement);
@@ -42,11 +47,10 @@ Node* create_temp_variable(Node* const value, Parser* const parser, NodeVector* 
                 .base = strf(0, "__qv%u", id++),
                 .parent_scope = (void*) last(parser->stack),
             },
-            .observerd = true,
         },
     });
     declaration->VariableDeclaration.identifier.parent_declaration = declaration;
-    push(&last(parser->stack)->hoisted_declarations, declaration);
+    push(collector, (void*) declaration);
 
     Node* const variable = new_node((Node) {
         .External = {

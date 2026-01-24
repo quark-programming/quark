@@ -2,7 +2,7 @@
 
 #include "../../../parser/type/stringify_type.h"
 
-StringHashSet global_c_keywords = 0;
+DeclarationHashMap global_declaration_space = 0;
 
 void populate_global_c_keywords() {
     // https://en.cppreference.com/w/c/keyword.html
@@ -16,75 +16,84 @@ void populate_global_c_keywords() {
     };
 
     for(int i = 0; i < sizeof(keywords) / sizeof(char*); i++) {
-        put(&global_c_keywords, ((String) { strlen(keywords[i]), 0, keywords[i] }));
+        put(&global_declaration_space, ((String) { strlen(keywords[i]), 0, keywords[i] }), NULL);
     }
 }
 
 DeclarationHashMap global_function_identifiers = 0;
 
-void compile_identifier_base(const String base, String* line) {
-    strf(line, "%.*s", PRINT(base));
-
-    if(get(global_c_keywords, base)) {
-        strf(line, "_");
+static void prevent_keyword(String* const identifier_builder) {
+    Declaration** defined_declaration = get(global_declaration_space, *identifier_builder);
+    if(defined_declaration && !*defined_declaration) {
+        strf(identifier_builder, "_");
     }
 }
 
-void compile_identifier(const Identifier identifier, String* line) {
-    String result = { 0 };
+void build_simple_identifier(const String identifier, String* const application) {
+    String identifier_builder = { 0 };
 
-    if(!identifier.is_external) {
+    strf(&identifier_builder, "%.*s", FMT(identifier));
+    prevent_keyword(&identifier_builder);
+
+    strf(application, "%.*s", FMT(identifier_builder));
+    free(identifier_builder.data);
+}
+
+static void build_identifier_base(const Identifier identifier, String* const identifier_builder) {
+    if(!identifier.is_external && !(identifier.parent_declaration->id == NodeVariableDeclaration
+                                    && identifier.parent_declaration->VariableDeclaration.compilation_state ==
+                                    CompilationHoisted)) {
         if(identifier.parent_scope && identifier.parent_scope->id == NodeFunctionDeclaration) {
             const Identifier parent_ident = identifier.parent_scope->FunctionDeclaration.identifier;
-            compile_identifier(parent_ident, &result);
-            strf(&result, "__");
+            build_identifier_base(parent_ident, identifier_builder);
+            strf(identifier_builder, "__");
         }
 
         if(identifier.parent_scope && identifier.parent_scope->id == NodeStructType
            && !(identifier.parent_declaration->id == NodeVariableDeclaration
                 && !(identifier.parent_declaration->type->flags & fType))) {
             const Identifier parent_ident = ((StructType*) (void*) identifier.parent_scope)->parent->identifier;
-            compile_identifier(parent_ident, &result);
-            strf(&result, "__");
+            build_identifier_base(parent_ident, identifier_builder);
+            strf(identifier_builder, "__");
         }
 
         if(identifier.reference_structure) {
             const Identifier parent_ident = identifier.reference_structure->parent->identifier;
-            compile_identifier(parent_ident, &result);
-            strf(&result, "__");
+            build_identifier_base(parent_ident, identifier_builder);
+            strf(identifier_builder, "__");
         }
     }
 
-    // TODO: change `PRINT` macro to `FMT` or `STRFMT`
-    compile_identifier_base(identifier.base, &result);
+    strf(identifier_builder, "%.*s", FMT(identifier.base));
 
     if(identifier.parent_declaration->generics.type_arguments_stack.size && !identifier.is_external) {
-        stringify_generics(&result, last(identifier.parent_declaration->generics.type_arguments_stack),
+        stringify_generics(identifier_builder, last(identifier.parent_declaration->generics.type_arguments_stack),
                            StringifyAlphaNumeric);
     }
+}
 
-    if(identifier.function_declaration_counter) strf(&result, "%u", identifier.function_declaration_counter);
+void build_full_identifier(const Identifier identifier, String* const application) {
+    String identifier_builder = { 0 };
 
-    if(!identifier.is_external && !identifier.function_declaration_counter
-       && identifier.parent_declaration->id == NodeFunctionDeclaration) {
-        const size_t initial_size = result.size;
-        unsigned counter = 0;
-        Declaration** existing_declaration;
+    build_identifier_base(identifier, &identifier_builder);
+    prevent_keyword(&identifier_builder);
 
-        while(((existing_declaration = get(global_function_identifiers, result)))
-              && *existing_declaration != identifier.parent_declaration) {
-            result.size = initial_size;
-            strf(&result, "%u", ++counter);
-        }
+    strf(application, "%.*s", FMT(identifier_builder));
+    free(identifier_builder.data);
+}
 
-        if(counter) {
-            identifier.parent_declaration->identifier.function_declaration_counter = counter;
-        }
+bool resolve_identifier(const Identifier identifier, String* const identifier_builder) {
+    build_identifier_base(identifier, identifier_builder);
 
-        if(!existing_declaration) {
-            put(&global_function_identifiers, result, identifier.parent_declaration);
-        }
+    Declaration** defined_declaration;
+    while(((defined_declaration = get(global_declaration_space, *identifier_builder)))
+          && *defined_declaration != identifier.parent_declaration) {
+        strf(identifier_builder, "_");
     }
 
-    strf(line, "%.*s", PRINT(result));
+    if(!defined_declaration) {
+        put(&global_declaration_space, *identifier_builder, identifier.parent_declaration);
+    }
+
+    return defined_declaration;
 }

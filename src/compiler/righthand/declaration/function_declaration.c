@@ -3,7 +3,7 @@
 #include "identifier.h"
 
 static void function_declaration_compiler_hoisted(FunctionDeclaration* const self, Compiler* compiler,
-                                                  const bool hoisted) {
+                                                  String identifier, const bool hoisted) {
     const size_t previous_section = compiler->open_section;
     const size_t section = compiler->open_section = compiler->sections.size;
     push(&compiler->sections, (CompilerSection) { 0 });
@@ -11,8 +11,7 @@ static void function_declaration_compiler_hoisted(FunctionDeclaration* const sel
     String declaration_line = new_line(compiler);
 
     compile(self->type->FunctionType.signature.data[0], &declaration_line, compiler);
-    strf(&declaration_line, " ");
-    compile_identifier(self->identifier, &declaration_line);
+    strf(&declaration_line, " %.*s", FMT(identifier));
 
     strf(&declaration_line, "(");
     for(size_t i = 0; i < self->arguments.size; i++) {
@@ -21,15 +20,19 @@ static void function_declaration_compiler_hoisted(FunctionDeclaration* const sel
         compile(self->arguments.data[i].type, &declaration_line, compiler);
         if(!hoisted) {
             strf(&declaration_line, " ");
-            compile_identifier_base(self->arguments.data[i].identifier, &declaration_line);
+            build_simple_identifier(self->arguments.data[i].identifier, &declaration_line);
         }
     }
     strf(&declaration_line, hoisted ? ");" : ") {");
-    push(&compiler->sections.data[(size_t) hoisted ? (size_t) hoisted : section].lines, declaration_line);
+    push(&compiler->sections.data[!hoisted * section].lines, declaration_line);
 
     if(hoisted) {
         compiler->open_section = previous_section;
         return;
+    }
+
+    for(size_t i = 0; i < self->variable_declarations.size; i++) {
+        compile(self->variable_declarations.data[i], &declaration_line, compiler);
     }
 
     compile(self->body, &declaration_line, compiler);
@@ -47,6 +50,11 @@ void comp_FunctionDeclaration(void* void_self, String* line, Compiler* compiler)
                                         && !self->generics.type_arguments_stack.size))
         return;
 
-    function_declaration_compiler_hoisted(self, compiler, true);
-    function_declaration_compiler_hoisted(self, compiler, false);
+    String identifier = { 0 };
+    if(!resolve_identifier(self->identifier, &identifier)) {
+        function_declaration_compiler_hoisted(self, compiler, identifier, true);
+        function_declaration_compiler_hoisted(self, compiler, identifier, false);
+    }
+
+    free(identifier.data);
 }

@@ -9,7 +9,7 @@
 #include "parser/keywords.h"
 #include "compiler/righthand/declaration/identifier.h"
 
-#define QUARK_VERSION "0.4.feat-lambda-1"
+#define QUARK_VERSION "0.4 (chore/unused-declarations)"
 #define QUARK_STABILITY "dev"
 
 FunctionDeclaration* entry_declaration() {
@@ -19,7 +19,7 @@ FunctionDeclaration* entry_declaration() {
 
     FunctionDeclaration* declaration = (void*) new_node((Node) {
         .FunctionDeclaration = {
-            .id = NodeFunctionDeclaration,
+            .id = NodeEntryFunctionDeclaration,
             .type = (void*) function_type,
             .identifier = { .base = String("main") },
             .body = new_scope(NULL),
@@ -27,6 +27,7 @@ FunctionDeclaration* entry_declaration() {
     });
     declaration->identifier.parent_declaration = (void*) declaration;
     function_type->declaration = declaration;
+    declaration->body->parent = (void*) declaration;
 
     return declaration;
 }
@@ -146,7 +147,7 @@ int main(int argc, char** argv) {
 
     for(size_t i = 0; i < compiler.sections.size; i++) {
         for(size_t j = 0; j < compiler.sections.data[i].lines.size; j++) {
-            fprintf(out, "%.*s\n", PRINT(compiler.sections.data[i].lines.data[j]));
+            fprintf(out, "%.*s\n", FMT(compiler.sections.data[i].lines.data[j]));
         }
         if(i) fprintf(out, "\n");
     }

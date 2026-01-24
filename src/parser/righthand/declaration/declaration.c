@@ -8,7 +8,7 @@ Message see_declaration(Declaration* declaration, Trace trace) {
     if(!declaration) {
         return REPORT_INFO((Trace) { 0 }, String("declaration not found"));
     }
-    return REPORT_INFO(declaration->trace, strf(0, "declaration of '\33[35m%.*s\33[0m'", PRINT(trace.source)));
+    return REPORT_INFO(declaration->trace, strf(0, "declaration of '\33[35m%.*s\33[0m'", FMT(trace.source)));
 }
 
 Node* parse_declaration(Node* type, Token identifier, Parser* parser) {

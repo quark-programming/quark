@@ -3,7 +3,7 @@
 void check_assignable(Node* node, MessageVector* messages) {
     if(node->flags & fMutable && !(node->type->flags & fConst)) return;
     push(messages, REPORT_ERR(node->trace,
-        strf(0, "'\33[35m%.*s\33[0m' is not assignable", PRINT(node->trace.source))));
+        strf(0, "'\33[35m%.*s\33[0m' is not assignable", FMT(node->trace.source))));
 }
 
 Node* parse_postfix_assignment(Node* lefthand, Parser* parser) {

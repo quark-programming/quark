@@ -17,7 +17,7 @@ Node* keyword_import(const Token token, Parser* parser) {
 
     do {
         const Trace section = expect(parser->tokenizer, TokenIdentifier).trace;
-        strf(&sub_path, "/%.*s", PRINT(section.source));
+        strf(&sub_path, "/%.*s", FMT(section.source));
         full_trace = stretch(full_trace, section);
     } while(try(parser->tokenizer, TokenDoubleColon, NULL));
     expect(parser->tokenizer, ';');
@@ -26,7 +26,7 @@ Node* keyword_import(const Token token, Parser* parser) {
 
     String import_path = { 0 };
     for(size_t i = 0; i < global_library_paths.size; i++) {
-        strf(&import_path, "%s%.*s%c", global_library_paths.data[i], PRINT(sub_path), 0);
+        strf(&import_path, "%s%.*s%c", global_library_paths.data[i], FMT(sub_path), 0);
         char* input_content = fs_readfile(import_path.data);
 
         if(!input_content) {
@@ -45,7 +45,7 @@ Node* keyword_import(const Token token, Parser* parser) {
     }
 
     push(parser->tokenizer->messages,
-         REPORT_ERR(full_trace, strf(0, "unable to open or read '%.*s'", PRINT(import_path))));
+         REPORT_ERR(full_trace, strf(0, "unable to open or read '%.*s'", FMT(import_path))));
     return new_node((Node) { NodeNone });
 }
 
@@ -89,9 +89,9 @@ Node* keyword_struct(const Token token, Parser* parser) {
     // TODO: create a flag that only allows type to compile if it is pointed to (in reference()) this will prevent
     //  circular types and allow structs to reference themselves within themselves
 
-    VariableDeclaration* declaration = (void*) new_node((Node) {
-        .VariableDeclaration = {
-            .id = NodeVariableDeclaration,
+    StructDeclaration* declaration = (void*) new_node((Node) {
+        .StructDeclaration = {
+            .id = NodeStructDeclaration,
             .flags = fConst | fType,
             .trace = type->trace,
             .type = (void*) type,
@@ -127,7 +127,6 @@ Node* keyword_struct(const Token token, Parser* parser) {
         unbox((void*) field_decl);
         unbox((void*) next_declaration->type);
         unbox(next_declaration);
-        pop(&type->static_body->hoisted_declarations);
     }
 
     NodeVector declarations = { 0 };
@@ -143,7 +142,6 @@ Node* keyword_struct(const Token token, Parser* parser) {
     close_generics_declaration((void*) declaration);
     type->static_body->children = declarations;
 
-    push(&last(parser->stack)->hoisted_declarations, (void*) declaration);
     return new_node((Node) { NodeNone });
 }
 

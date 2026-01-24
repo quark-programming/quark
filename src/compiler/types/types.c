@@ -13,7 +13,7 @@ void comp_FunctionType(void* void_self, String* line, Compiler* compiler) {
     FunctionType* self = void_self;
 
     String identifier = strf(0, "__Function__");
-    compile_identifier(self->declaration->identifier, &identifier);
+    resolve_identifier(self->declaration->identifier, &identifier);
 
     bool* type_definition_state = get(self->type_definitions, identifier);
 
@@ -22,7 +22,7 @@ void comp_FunctionType(void* void_self, String* line, Compiler* compiler) {
 
         String typedef_line = strf(0, "typedef ");
         compile(self->signature.data[0], &typedef_line, compiler);
-        strf(&typedef_line, " (*%.*s)(", PRINT(identifier));
+        strf(&typedef_line, " (*%.*s)(", FMT(identifier));
 
         for(size_t i = 1; i < self->signature.size; i++) {
             if(i > 1) strf(&typedef_line, ", ");
@@ -38,7 +38,7 @@ void comp_FunctionType(void* void_self, String* line, Compiler* compiler) {
         return;
     }
 
-    strf(line, "%.*s", PRINT(identifier));
+    strf(line, "%.*s", FMT(identifier));
 }
 
 void comp_GenericReference(void* void_self, String* line, Compiler* compiler) {
@@ -51,6 +51,6 @@ void comp_StructType(void* void_self, String* line, Compiler* compiler) {
     StructType* self = void_self;
 
     strf(line, "struct ");
-    compile_identifier(self->parent->identifier, line);
+    resolve_identifier(self->parent->identifier, line);
 }
 

@@ -3,15 +3,14 @@
 
 #include "../../compiler.h"
 
-typedef HashMap(UsableVoid) StringHashSet;
-
-extern StringHashSet global_c_keywords;
-extern DeclarationHashMap global_function_identifiers;
-
-void compile_identifier_base(String base, String* line);
-
-void compile_identifier(Identifier identifier, String* line);
+extern DeclarationHashMap global_declaration_space;
 
 void populate_global_c_keywords();
+
+void build_simple_identifier(String identifier, String* application);
+
+void build_full_identifier(Identifier identifier, String* application);
+
+bool resolve_identifier(Identifier identifier, String* identifier_builder);
 
 #endif

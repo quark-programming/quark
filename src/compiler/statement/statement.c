@@ -25,10 +25,10 @@ void comp_ControlStatement(void* void_self, String* line, Compiler* compiler) {
     ControlStatement* const self = void_self;
 
     String block = new_line(compiler);
-    strf(&block, "%.*s(", PRINT(self->keyword));
+    strf(&block, "%.*s(", FMT(self->keyword));
 
     for (size_t i = 0; i < self->conditions.size; i++) {
-        if (i) strf(&block, ";");
+        if (i) strf(&block, "; ");
         compile(self->conditions.data[i], &block, compiler);
     }
 

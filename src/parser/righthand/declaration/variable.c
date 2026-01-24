@@ -25,6 +25,12 @@ Node* parse_variable_declaration(Type* type, IdentifierInfo info, Parser* parser
                     parser->tokenizer->messages, 0);
     }
 
+    FunctionDeclaration* const parent = (void*) last(parser->stack)->parent;
+    if(parent->id == NodeFunctionDeclaration || parent->id == NodeEntryFunctionDeclaration) {
+        push(&parent->variable_declarations, declaration);
+        declaration->compilation_state = CompilationHoisted;
+    }
+
     return (void*) variable_of((void*) declaration, declaration->trace, fIgnoreStatement);
 }
 

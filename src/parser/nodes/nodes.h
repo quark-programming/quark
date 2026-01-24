@@ -31,6 +31,7 @@ typedef enum : uint32_t {
     NodeFunctionCall,
     NodeVariableDeclaration,
     NodeFunctionDeclaration,
+    NodeEntryFunctionDeclaration,
     NodeStructDeclaration,
 
     NodeScope,
@@ -43,6 +44,7 @@ enum {
     CompilationUnused,
     CompilationSkip,
     CompilationIntermediate,
+    CompilationHoisted,
 };
 
 enum {

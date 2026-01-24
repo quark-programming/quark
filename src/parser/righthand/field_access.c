@@ -43,7 +43,7 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
 
     if(struct_type->id != NodeStructType) {
         push(parser->tokenizer->messages, REPORT_ERR(lefthand->trace,
-                 strf(0, "'\33[35m%.*s\33[0m' is not a structure", PRINT(lefthand->trace.source))));
+                 strf(0, "'\33[35m%.*s\33[0m' is not a structure", FMT(lefthand->trace.source))));
         close_type(opened.actions, 0);
         return lefthand;
     }
@@ -73,7 +73,7 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
 
         push(parser->tokenizer->messages,
              REPORT_ERR(field_token.trace, strf(0, "no field named '\33[35m%.*s\33[0m' on struct '\33[35m%.*s\33[0m'",
-                 PRINT(field_token.trace.source), PRINT(lefthand->trace.source))));
+                 FMT(field_token.trace.source), FMT(lefthand->trace.source))));
         push(parser->tokenizer->messages, see_declaration((void*) struct_type, lefthand->trace));
         return lefthand;
     }

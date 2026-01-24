@@ -6,24 +6,27 @@ void comp_StructDeclaration(void* void_self, String* line, Compiler* compiler) {
     StructDeclaration* const self = void_self;
     StructType* const struct_type = (void*) self->type;
 
-    if(self->identifier.is_external || self->compilation_state == CompilationSkip) return;
+    if(self->identifier.is_external) return;
 
-    String typedef_line = strf(0, "struct ");
-    compile_identifier(self->identifier, &typedef_line);
+    String identifier = { 0 };
+    if(resolve_identifier(self->identifier, &identifier)) {
+        if(self->compilation_state == CompilationIntermediate) {
+            push(&compiler->sections.data[0].lines, strf(0, "struct %.*s;", FMT(identifier)));
+            self->compilation_state = CompilationUnused;
+        }
 
-    if(self->compilation_state == CompilationIntermediate) {
-        push(&compiler->sections.data[0].lines, typedef_line);
-        self->compilation_state = CompilationUnused;
+        free(identifier.data);
         return;
     }
 
+    String typedef_line = strf(0, "struct %.*s", FMT(identifier));
     self->compilation_state = CompilationIntermediate;
 
     strf(&typedef_line, " { ");
     for(size_t i = 0; i < struct_type->fields.size; i++) {
         compile(struct_type->fields.data[i].type, &typedef_line, compiler);
         strf(&typedef_line, " ");
-        compile_identifier_base(struct_type->fields.data[i].identifier, &typedef_line);
+        build_simple_identifier(struct_type->fields.data[i].identifier, &typedef_line);
         strf(&typedef_line, "; ");
     }
     strf(&typedef_line, "};");

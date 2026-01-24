@@ -9,7 +9,7 @@ Trace stretch(Trace a, const Trace b) {
 bool print_message(const Message message) {
     if(!message.trace.filename) {
         // TODO: see #1
-        printf("\33[1m%s%s:\33[0m %.*s\n", message.highlight, message.label, PRINT(message.content));
+        printf("\33[1m%s%s:\33[0m %.*s\n", message.highlight, message.label, FMT(message.content));
         return 0;
     }
 
@@ -29,7 +29,7 @@ bool print_message(const Message message) {
     // TODO: see #1
     printf("\33[1m%s:%u:%u: %s%s:\33[0m %.*s\n%4d | %s\n     : %s%.*s\33[0m\n",
            message.trace.filename, message.trace.row, message.trace.col,
-           message.highlight, message.label, PRINT(message.content),
+           message.highlight, message.label, FMT(message.content),
            message.trace.row, line_start,
            message.highlight, (int) sizeof(underline), underline);
 

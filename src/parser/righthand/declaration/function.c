@@ -39,8 +39,9 @@ static Argument create_self_literal(const Trace trace, StructType* const parent_
     } else {
         Wrapper* wrapper = variable_of((void*) parent_struct->parent, trace, 0);
         apply_type_arguments(wrapper, parser);
-        type = wrapper->type;
-        unbox((void*) wrapper);
+        type = (void*) wrapper;
+        // type = wrapper->type;
+        // unbox((void*) wrapper);
     }
 
     const Argument argument = {
@@ -87,7 +88,7 @@ static void parse_function_arguments(FunctionType* function_type, FunctionDeclar
         if(!(argument.type->flags & fType)) {
             push(parser->tokenizer->messages,
                  REPORT_ERR(argument.type->trace, strf(0, "'\33[35m%.*s\33[0m' is not a type",
-                     PRINT(argument.type->trace.source))));
+                     FMT(argument.type->trace.source))));
         }
 
         if(argument.identifier.size) {
@@ -95,7 +96,7 @@ static void parse_function_arguments(FunctionType* function_type, FunctionDeclar
                 .VariableDeclaration = {
                     .id = NodeVariableDeclaration,
                     .type = argument.type,
-                    .compilation_state = CompilationSkip,
+                    .compilation_state = CompilationHoisted,
                     .identifier = {
                         .base = argument.identifier,
                         .parent_scope = (void*) parser->stack.data[0],

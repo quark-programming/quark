@@ -10,10 +10,13 @@ typedef struct Argument {
 
 typedef Vector(Argument) ArgumentVector;
 
+typedef Vector(VariableDeclaration*) VariableDeclarationVector;
+
 typedef struct FunctionDeclaration {
     DECLARATION_FIELDS;
     ArgumentVector arguments;
     struct Scope* body;
+    VariableDeclarationVector variable_declarations;
 } FunctionDeclaration;
 
 #endif

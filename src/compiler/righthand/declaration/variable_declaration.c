@@ -7,11 +7,8 @@ void comp_VariableDeclaration(void* void_self, String* line, Compiler* compiler)
     VariableDeclaration* const self = void_self;
 
     if((self->generics.base_type_arguments.size && !self->generics.type_arguments_stack.size)
-       || self->identifier.is_external || self->compilation_state == CompilationSkip
-       || (self->const_value && self->const_value->flags & fType))
+       || self->identifier.is_external || (self->const_value && self->const_value->flags & fType))
         return;
-
-    self->compilation_state = CompilationSkip;
 
     // if(self->const_value && self->const_value->flags & fType) {
     //     const OpenedType opened = open_type((void*) self->const_value, 0);
@@ -25,7 +22,7 @@ void comp_VariableDeclaration(void* void_self, String* line, Compiler* compiler)
 
     compile(self->type, line, compiler);
     strf(line, self->type->flags & fConst ? " const " : " ");
-    compile_identifier(self->identifier, line);
+    build_full_identifier(self->identifier, line);
 
     if(self->const_value) {
         strf(line, " = ");

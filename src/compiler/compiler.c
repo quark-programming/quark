@@ -12,7 +12,7 @@
 
 String new_line(Compiler* const compiler) {
     const String indent = compiler->sections.data[compiler->open_section].indent;
-    return strf(0, "%.*s", PRINT(indent));
+    return strf(0, "%.*s", FMT(indent));
 }
 
 void compile(void* void_node, String* line, Compiler* compiler) {
@@ -31,6 +31,7 @@ void compile(void* void_node, String* line, Compiler* compiler) {
         [NodePointerType] = &comp_PointerType,
         [NodeFunctionType] = &comp_FunctionType,
         [NodeFunctionDeclaration] = &comp_FunctionDeclaration,
+        [NodeEntryFunctionDeclaration] = &comp_FunctionDeclaration,
         [NodeStatementWrapper] = &comp_StatementWrapper,
         [NodeReturnStatement] = &comp_ReturnStatement,
         [NodeControlStatement] = &comp_ControlStatement,

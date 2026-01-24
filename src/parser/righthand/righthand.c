@@ -8,6 +8,7 @@
 #include "../lefthand/lefthand.h"
 #include "../lefthand/reference.h"
 #include "declaration/declaration.h"
+#include "declaration/function.h"
 
 // https://en.cppreference.com/w/c/language/operator_precedence.html
 RighthandOperator global_righthand_operator_table[128] = {
@@ -91,7 +92,9 @@ Node* righthand_expression(Node* lefthand, Parser* parser, const unsigned char p
                 break;
 
             case RightCall:
-                lefthand = parse_function_call(lefthand, parser);
+                lefthand = lefthand->flags & fType
+                               ? parse_function_lambda((void*) lefthand, parser)
+                               : parse_function_call(lefthand, parser);
                 break;
 
             case RightFieldAccess:

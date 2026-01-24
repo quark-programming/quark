@@ -10,6 +10,7 @@ enum {
     TokenString,
     TokenCharacter,
     TokenRightArrow,
+    TokenDoubleRightArrow,
 
     TokenDoubleColon,
     TokenDoublePlus,

@@ -9,8 +9,8 @@
 #include "parser/keywords.h"
 #include "compiler/righthand/declaration/identifier.h"
 
-#define QUARK_VERSION "0.4.1"
-#define QUARK_STABILITY "untested"
+#define QUARK_VERSION "0.4.feat-lambda-1"
+#define QUARK_STABILITY "dev"
 
 FunctionDeclaration* entry_declaration() {
     FunctionType* function_type = (void*) new_type((Type) { NodeFunctionType });
@@ -100,6 +100,8 @@ int main(int argc, char** argv) {
 
     push(&compiler.sections, (CompilerSection) { 0 });
     push(&compiler.sections, (CompilerSection) { 0 });
+
+    push(&compiler.sections.data[0].lines, strf(0, "// Quark Version %s", QUARK_VERSION));
 
     for(size_t i = 0; i < include_paths.size; i++) {
         push(&compiler.sections.data[0].lines, strf(0, "#include \"%s\"", include_paths.data[i]));

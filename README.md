@@ -9,7 +9,9 @@
 > sure to use the [latest release](https://github.com/quark-programming/quark/releases) You can see and submit issues
 > on the repository's [issues page](https://github.com/quark-programming/quark/issues)
 
+<div align="center">
 <img alt="Quark Language Screenshot" src="assets/screenshot-1.png" />
+</div>
 
 ## Building the Compiler
 

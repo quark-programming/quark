@@ -36,10 +36,10 @@ const char* help_message =
         " \33[1musage:\33[0m %s [input_files,] [flags,]\n"
         "        %s main.qk -o main.c\n"
         " \33[1mflags:\33[0m\n"
-        "   -h    <no arguments>      prints help/usage menu\n"
-        "   -v    <no arguments>      prints the current version of Quark\n"
-        "   -o    /path/to/output.c   specifies compiled output path\n"
-        "   -l    /path/to/library/   specifies the parent directory of `lib::std`\n";
+        "   -h    <no arguments>       prints help/usage menu\n"
+        "   -v    <no arguments>       prints the current version of Quark\n"
+        "   -o    /path/to/output.c    specifies compiled output path\n"
+        "   -l    /path/to/library/    specifies the parent directory of `lib::std`\n";
 
 int main(int argc, char** argv) {
     char* name = clname(argc, argv);

@@ -9,7 +9,7 @@
 #include "parser/keywords.h"
 #include "compiler/righthand/declaration/identifier.h"
 
-#define QUARK_VERSION "0.4 (chore/unused-declarations)"
+#define QUARK_VERSION "0.4 (feature/modules)"
 #define QUARK_STABILITY "dev"
 
 FunctionDeclaration* entry_declaration() {

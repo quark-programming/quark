@@ -11,8 +11,8 @@
 #include "types/types.h"
 
 String new_line(Compiler* const compiler) {
-    const String indent = compiler->sections.data[compiler->open_section].indent;
-    return strf(0, "%.*s", FMT(indent));
+    const String indent = compiler->sections[compiler->open_section].indent;
+    return strf(0, "%.*s", fmtof(indent)).as_owned;
 }
 
 void compile(void* void_node, String* line, Compiler* compiler) {

@@ -1,26 +1,12 @@
 #include "clargs.h"
 
-int global_argc;
-char** global_argv;
-
-char* clname(const int argc, char** argv) {
-    global_argc = argc - 1;
-    global_argv = argv + 1;
-    return *argv;
+int clflag(int* argc, char*** argv) {
+    if(!--*argc) return 0;
+    return *(*argv)[1] == '-' ? (*++*argv)[1] : -1;
 }
 
-int clflag() {
-    if(!global_argc) return 0;
-    if(**global_argv == '-') {
-        global_argc--;
-        return (*global_argv++)[1];
-    }
-    return -1;
-}
-
-char* clarg() {
-    if(!global_argc--) {
-        panicf("expected an argument\n");
-    }
-    return *global_argv++;
+char* clarg(int* argc, char*** argv) {
+    if(***argv == '-' && (**argv)[2]) return **argv + 2;
+    if(!(*argc -= ***argv == '-')) panicf("expected an argument\n");
+    return *++*argv;
 }

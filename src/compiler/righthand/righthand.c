@@ -7,9 +7,7 @@ void comp_BinaryOperation(void* void_self, String* line, Compiler* compiler) {
 
     strf(line,
          self->operator.data[0] == '.' || (self->operator.data[0] == '-' && self->operator.data[1] == '>')
-             ? "%.*s"
-             : " %.*s ",
-         (int) self->operator.size, self->operator.data);
+         ? "%.*s" : " %.*s ", fmtof(self->operator));
 
     compile(self->right, line, compiler);
 }
@@ -19,9 +17,9 @@ void comp_FunctionCall(void* void_self, String* line, Compiler* compiler) {
 
     compile(self->function, line, compiler);
     strf(line, "(");
-    for(size_t i = 0; i < self->arguments.size; i++) {
-        if(i) strf(line, ", ");
-        compile(self->arguments.data[i], line, compiler);
+    for(size_t i = 0; i < len(self->arguments); i++) {
+        strf(line, i ? ", " : "");
+        compile(self->arguments[i], line, compiler);
     }
     strf(line, ")");
 }

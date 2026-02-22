@@ -3,42 +3,42 @@
 #include "identifier.h"
 
 static void function_declaration_compiler_hoisted(FunctionDeclaration* const self, Compiler* compiler,
-                                                  String identifier, const bool hoisted) {
+                                                  str identifier, const bool hoisted) {
     const size_t previous_section = compiler->open_section;
-    const size_t section = compiler->open_section = compiler->sections.size;
-    push(&compiler->sections, (CompilerSection) { 0 });
+    const u32 section = compiler->open_section = len(compiler->sections);
+    push(&compiler->sections, { 0 });
 
     String declaration_line = new_line(compiler);
 
-    compile(self->type->FunctionType.signature.data[0], &declaration_line, compiler);
-    strf(&declaration_line, " %.*s", FMT(identifier));
+    compile(self->type->FunctionType.signature[0], &declaration_line, compiler);
+    strf(&declaration_line, " %.*s", fmtof(identifier));
 
     strf(&declaration_line, "(");
-    for(size_t i = 0; i < self->arguments.size; i++) {
+    for(size_t i = 0; i < len(self->arguments); i++) {
         if(i) strf(&declaration_line, ", ");
 
-        compile(self->arguments.data[i].type, &declaration_line, compiler);
+        compile(self->arguments[i].type, &declaration_line, compiler);
         if(!hoisted) {
             strf(&declaration_line, " ");
-            build_simple_identifier(self->arguments.data[i].identifier, &declaration_line);
+            build_simple_identifier(self->arguments[i].identifier, &declaration_line);
         }
     }
     strf(&declaration_line, hoisted ? ");" : ") {");
-    push(&compiler->sections.data[!hoisted * section].lines, declaration_line);
+    push(&compiler->sections[!hoisted * section].lines, declaration_line);
 
     if(hoisted) {
         compiler->open_section = previous_section;
         return;
     }
 
-    for(size_t i = 0; i < self->variable_declarations.size; i++) {
-        compile(self->variable_declarations.data[i], &declaration_line, compiler);
+    for(size_t i = 0; i < len(self->variable_declarations); i++) {
+        compile(self->variable_declarations[i], &declaration_line, compiler);
     }
 
     compile(self->body, &declaration_line, compiler);
 
     String terminator_line = new_line(compiler);
-    push(&compiler->sections.data[section].lines, strf(&terminator_line, "}"));
+    push(&compiler->sections[section].lines, strf(&terminator_line, "}").as_owned);
     compiler->open_section = previous_section;
 }
 
@@ -46,15 +46,15 @@ void comp_FunctionDeclaration(void* void_self, String* line, Compiler* compiler)
     (void) line;
     FunctionDeclaration* self = void_self;
 
-    if(self->identifier.is_external || (self->generics.base_type_arguments.size
-                                        && !self->generics.type_arguments_stack.size))
+    if(self->identifier.is_external || (self->generics.base_type_arguments
+                                        && !len(self->generics.type_arguments_stack)))
         return;
 
     String identifier = { 0 };
     if(!resolve_identifier(self->identifier, &identifier)) {
-        function_declaration_compiler_hoisted(self, compiler, identifier, true);
-        function_declaration_compiler_hoisted(self, compiler, identifier, false);
+        function_declaration_compiler_hoisted(self, compiler, as_str(identifier), true);
+        function_declaration_compiler_hoisted(self, compiler, as_str(identifier), false);
     }
 
-    free(identifier.data);
+    free(vbase(identifier));
 }

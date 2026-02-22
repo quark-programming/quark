@@ -46,8 +46,8 @@ Node* statement(Parser* parser) {
     });
 }
 
-NodeVector collect_until(Parser* parser, Node* (*supplier)(Parser*), const char separator, const char terminator) {
-    NodeVector collection = { 0 };
+Vec(Node*) collect_until(Parser* parser, Node* (*supplier)(Parser*), const char separator, const char terminator) {
+    Vec(Node*) collection = NULL;
 
     while(parser->tokenizer->current.type && parser->tokenizer->current.type != terminator) {
         push(&collection, supplier(parser));

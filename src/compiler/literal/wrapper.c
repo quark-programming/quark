@@ -28,8 +28,8 @@ void comp_Variable(void* void_self, String* line, Compiler* compiler) {
     } else {
         String identifier = { 0 };
         resolve_identifier(self->Variable.declaration->identifier, &identifier);
-        strf(line, "%.*s", FMT(identifier));
-        free(identifier.data);
+        strf(line, "%.*s", fmtof(identifier));
+        free(vbase(identifier));
     }
 
     if(applied_action) remove_action(self->action, 0);
@@ -53,9 +53,9 @@ void comp_Surround(void* void_self, String* line, Compiler* compiler) {
     Wrapper* const self = void_self;
     const bool applied_action = apply_action(self->action, 0);
 
-    strf(line, "%.*s", FMT(self->Surround.prefix));
+    strf(line, "%.*s", fmtof(self->Surround.prefix));
     compile(self->Surround.child, line, compiler);
-    strf(line, "%.*s", FMT(self->Surround.postfix));
+    strf(line, "%.*s", fmtof(self->Surround.postfix));
 
     if(applied_action) remove_action(self->action, 0);
 }

@@ -6,6 +6,6 @@
 
 Node* reference(Node* node, Trace trace);
 
-Node* dereference(Node* node, Trace trace, MessageVector* messages);
+Node* dereference(Node* node, Trace trace, Vec(Message)* messages);
 
 #endif

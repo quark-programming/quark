@@ -1,19 +1,13 @@
 #ifndef CLARGS_H
 #define CLARGS_H
 
+#include <wrap.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "helpers.h"
 
-#define panicf(fmt...) (fprintf(stderr, "\33[31;1merror:\33[0m " fmt), exit(EXIT_FAILURE))
+int clflag(int* argc, char*** argv);
 
-extern int global_argc;
-extern char** global_argv;
-
-char* clname(int argc, char** argv);
-
-int clflag();
-
-char* clarg();
+char* clarg(int* argc, char*** argv);
 
 #endif

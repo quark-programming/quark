@@ -43,17 +43,17 @@ Node* keyword_typeof(const Token token, Parser* parser) {
 
 Node* keyword_sizeof(const Token token, Parser* parser) {
     expect(parser->tokenizer, '(');
-    NodeVector arguments = { 0 };
-    push(&arguments, expression(parser));
 
     static Type usize_type = {
         .External = {
             .id = NodeExternal,
             .flags = fNumeric | fType,
             .type = &usize_type,
-            .data = String("size_t"),
+            .data = str("size_t"),
         },
     };
+
+    Vec(Node*) const arguments = vec(expression(parser));
 
     return new_node((Node) {
         .FunctionCall = {
@@ -62,7 +62,7 @@ Node* keyword_sizeof(const Token token, Parser* parser) {
             .function = new_node((Node) {
                 .External = {
                     .id = NodeExternal,
-                    .data = String("sizeof"),
+                    .data = str("sizeof"),
                 }
             }),
             .arguments = arguments,
@@ -78,8 +78,7 @@ Node* keyword_const(const Token token, Parser* parser) {
     Type* type = (void*) righthand_expression(lefthand_expression(parser), parser, 13);
 
     if(!(type->flags & fType)) {
-        push(parser->tokenizer->messages, REPORT_ERR(type->trace,
-                 String("expected a type after '\33[35mconst\33[0m'")));
+        push(parser->tokenizer->messages, MERROR(type->trace, str("expected a type after '\33[35mconst\33[0m'")));
         type = type->type;
     }
 
@@ -105,7 +104,7 @@ Node* keyword_extern(const Token token, Parser* parser) {
         expect(parser->tokenizer, '>');
     } else {
         flags |= fType;
-        if(streq(parser->tokenizer->current.trace.source, String("int"))) {
+        if(streq(parser->tokenizer->current.trace.source, str("int"))) {
             flags |= fNumeric;
             next(parser->tokenizer);
         }
@@ -117,10 +116,10 @@ Node* keyword_extern(const Token token, Parser* parser) {
     }
 
     const Trace trace = stretch(token.trace, external_token.trace);
-    String data = external_token.trace.source;
+    str data = external_token.trace.source;
     if(external_token.type == TokenString) {
         data.data++;
-        data.size -= 2;
+        data.len -= 2;
     }
 
     Node* external = new_node((Node) {

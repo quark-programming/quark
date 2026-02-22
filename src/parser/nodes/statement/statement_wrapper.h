@@ -8,6 +8,4 @@ typedef struct StatementWrapper {
     Node* expression;
 } StatementWrapper;
 
-#include "../nodes.h"
-
 #endif

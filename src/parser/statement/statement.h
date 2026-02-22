@@ -4,12 +4,10 @@
 #include "../nodes/nodes.h"
 #include "../parser.h"
 
-NodeVector collect_until(Parser* parser, Node* (*supplier)(Parser*), char separator, char terminator);
+Vec(Node*) collect_until(Parser* parser, Node* (*supplier)(Parser*), char separator, char terminator);
 
 Node* statement(Parser* parser);
 
-typedef Vector(char*) CStringVector;
-
-extern CStringVector global_library_paths;
+extern Vec(char*) global_library_paths;
 
 #endif

@@ -12,10 +12,10 @@ enum {
 
 typedef struct ClashAccumulator {
     Trace trace;
-    MessageVector* messages;
+    Vec(Message)* messages;
     unsigned flags;
 } ClashAccumulator;
 
-int clash_types(Type* a, Type* b, Trace trace, MessageVector* messages, unsigned flags);
+int clash_types(Type* a, Type* b, Trace trace, Vec(Message)* messages, unsigned flags);
 
 #endif

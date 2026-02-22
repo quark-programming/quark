@@ -35,8 +35,8 @@ size_t calculate_string_length(const char* string_literal, const size_t length) 
 }
 
 Node* string_literal(const Token token, Parser* parser) {
-    const String string_data = token.trace.source;
-    const size_t actual_length = calculate_string_length(string_data.data, string_data.size);
+    const str string_data = token.trace.source;
+    const size_t actual_length = calculate_string_length(string_data.data, string_data.len);
 
     static Type* char_pointer_type = NULL;
     if(!char_pointer_type) char_pointer_type = (void*) eval(NULL, "char*", parser);
@@ -44,20 +44,19 @@ Node* string_literal(const Token token, Parser* parser) {
     static Type referenceable_size_t_type = {
         .External = {
             .id = NodeExternal,
-            .data = String("size_t"),
+            .data = str("size_t"),
         }
     };
 
     static Type* string_slice_type = NULL;
     if(!string_slice_type) string_slice_type = (void*) eval(NULL, "str", parser);
 
-    static StringVector empty_field_names = { 0 };
-    if(!empty_field_names.size) {
-        push(&empty_field_names, (String) { 0 });
-        push(&empty_field_names, (String) { 0 });
+    static Vec(str) empty_field_names = NULL;
+    if(!empty_field_names) {
+        push(&empty_field_names, { 0 }, { 0 });
     }
 
-    NodeVector field_values = { 0 };
+    Vec(Node*) field_values = { 0 };
 
     Node* data_field = new_node((Node) {
         .External = {

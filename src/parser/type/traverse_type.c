@@ -4,38 +4,36 @@
 
 static int traverse_generics(Declaration* const declaration, int (*acceptor)(Type*, Type*, void*), void* accumulator,
                              const unsigned flags) {
-    if(!(flags & TraverseGenerics) || !declaration->generics.type_arguments_stack.size) return 0;
+    if(!(flags & TraverseGenerics) || !len(declaration->generics.type_arguments_stack)) return 0;
 
-    const TypeVector generics = last(declaration->generics.type_arguments_stack);
-    for(size_t i = 0; i < generics.size; i++) {
-        const int result = traverse_type(generics.data[i], NULL, acceptor, accumulator,
-                                         flags);
+    Vec(Type*) const generics = last(declaration->generics.type_arguments_stack);
+    for(size_t i = 0; i < len(generics); i++) {
+        const int result = traverse_type(generics[i], NULL, acceptor, accumulator, flags);
         if(result) return result;
     }
 
     return 0;
 }
 
-static int try_compare_same_declarations(Declaration* type_declaration, const ActionVector type_actions,
-                                         Declaration* follower_declaration, const ActionVector follower_actions,
+static int try_compare_same_declarations(Declaration* type_declaration, Vec(Action) const type_actions,
+                                         Declaration* follower_declaration, Vec(Action) const follower_actions,
                                          int (*acceptor)(Type*, Type*, void*), void* accumulator,
                                          const unsigned flags) {
     if(type_declaration != follower_declaration) return 0;
 
-    TypeVector type_generics = find_last_generic_action(type_actions, type_declaration);
-    TypeVector follower_generics = find_last_generic_action(follower_actions, follower_declaration);
+    Vec(Type*) type_generics = find_last_generic_action(type_actions, type_declaration);
+    Vec(Type*) follower_generics = find_last_generic_action(follower_actions, follower_declaration);
 
     // TODO: may be incorrect
-    if(!type_generics.size && type_declaration->generics.base_type_arguments.size) {
-        type_generics = type_declaration->generics.type_arguments_stack.data[0];
+    if(!len(type_generics) && type_declaration->generics.base_type_arguments) {
+        type_generics = type_declaration->generics.type_arguments_stack[0];
     }
-    if(!follower_generics.size && follower_declaration->generics.base_type_arguments.size) {
-        follower_generics = follower_declaration->generics.type_arguments_stack.data[0];
+    if(!len(follower_generics) && follower_declaration->generics.base_type_arguments) {
+        follower_generics = follower_declaration->generics.type_arguments_stack[0];
     }
 
-    for(size_t i = 0; i < type_generics.size; i++) {
-        const int result = traverse_type(type_generics.data[i], follower_generics.data[i], acceptor, accumulator,
-                                         flags);
+    for(size_t i = 0; i < len(type_generics); i++) {
+        const int result = traverse_type(type_generics[i], follower_generics[i], acceptor, accumulator, flags);
         if(result) return result;
     }
 
@@ -77,16 +75,16 @@ int traverse_type(Type* type, Type* follower, int (*acceptor)(Type*, Type*, void
                                            flags);
                 if(result) break;
 
-                if(open_follower.type && open_follower.type->StructType.fields.size != open_type.type->StructType.fields
-                   .size) {
+                if(open_follower.type
+                   && len(open_follower.type->StructType.fields) != len(open_type.type->StructType.fields)) {
                     result = 1;
                     break;
                 }
 
-                for(size_t i = 0; !result && i < open_type.type->StructType.fields.size; i++) {
-                    result = traverse_type(open_type.type->StructType.fields.data[i].type,
+                for(size_t i = 0; !result && i < len(open_type.type->StructType.fields); i++) {
+                    result = traverse_type(open_type.type->StructType.fields[i].type,
                                            open_follower.type
-                                               ? open_follower.type->StructType.fields.data[i].type
+                                               ? open_follower.type->StructType.fields[i].type
                                                : 0,
                                            acceptor, accumulator, flags);
                 }

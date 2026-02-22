@@ -29,7 +29,7 @@ Node* parse_binary_operation(Node* lefthand, const RighthandOperator operator, P
     char* override_name;
     if((override_name = global_righthand_override_table[operator_token.type])) {
         Node* override = operator_override(lefthand->type, lefthand, righthand,
-                                                  (String) { strlen(override_name), 0, override_name }, trace, parser);
+                                                  (str) { strlen(override_name), override_name }, trace, parser);
         if(override) return override;
     }
 
@@ -45,7 +45,7 @@ Node* parse_binary_operation(Node* lefthand, const RighthandOperator operator, P
                     .id = NodeExternal,
                     .type = &boolean_type,
                     .flags = fType | fNumeric,
-                    .data = String("bool"),
+                    .data = str("bool"),
                 },
             };
 
@@ -57,7 +57,7 @@ Node* parse_binary_operation(Node* lefthand, const RighthandOperator operator, P
             static Declaration* range_declaration = NULL;
 
             if(!range_declaration) {
-                range_declaration = find_on_stack_unwrapped(parser->stack, String("Range"));
+                range_declaration = find_on_stack_unwrapped(parser->stack, str("Range"));
 
                 if(!range_declaration) {
                     panicf("[fatal] Unable to find declaration for '\33[35mRange\33[0m'");
@@ -72,9 +72,9 @@ Node* parse_binary_operation(Node* lefthand, const RighthandOperator operator, P
                 },
             });
 
-            push(&struct_literal->field_names, String("start"));
+            push(&struct_literal->field_names, str("start"));
             push(&struct_literal->field_values, lefthand);
-            push(&struct_literal->field_names, String("end"));
+            push(&struct_literal->field_names, str("end"));
             push(&struct_literal->field_values, righthand);
 
             return (void*) struct_literal;

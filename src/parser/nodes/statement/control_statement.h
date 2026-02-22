@@ -5,8 +5,8 @@
 
 typedef struct ControlStatement {
     NODE_FIELDS;
-    String keyword;
-    NodeVector conditions;
+    str keyword;
+    Vec(Node*) conditions;
     Scope* body;
 } ControlStatement;
 

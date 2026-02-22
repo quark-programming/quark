@@ -1,7 +1,7 @@
 #ifndef TOKENIZER_H
 #define TOKENIZER_H
 
-#include <helpers.h>
+#include <wrap.h>
 #include "trace.h"
 
 enum {
@@ -71,19 +71,19 @@ typedef struct Token {
 
 typedef struct Tokenizer {
     Token current;
-    MessageVector* messages;
+    Vec(Message)* messages;
 } Tokenizer;
 
-bool char_within_range(char ch, notnull const char* ranges);
+bool char_within_range(char ch, const char* ranges);
 
 Token create_token(Trace trace);
 
-Tokenizer new_tokenizer(notnull const char* filename, notnull char* data, notnull MessageVector* messages);
+Tokenizer new_tokenizer(const char* filename, char* data, Vec(Message)* messages);
 
-Token next(notnull Tokenizer* tokenizer);
+Token next(Tokenizer* tokenizer);
 
-Token expect(notnull Tokenizer* tokenizer, unsigned char type);
+Token expect(Tokenizer* tokenizer, unsigned char type);
 
-bool try(notnull Tokenizer* tokenizer, unsigned char type, Token* result);
+bool try(Tokenizer* tokenizer, unsigned char type, Token* result);
 
 #endif

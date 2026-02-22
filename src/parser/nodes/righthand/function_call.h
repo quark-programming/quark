@@ -6,7 +6,7 @@
 typedef struct FunctionCall {
     NODE_FIELDS;
     Node* function;
-    NodeVector arguments;
+    Vec(Node*) arguments;
 } FunctionCall;
 
 #endif

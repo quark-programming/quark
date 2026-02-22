@@ -4,7 +4,7 @@
 
 IdentifierInfo new_identifier(Token base_identifier, Parser* parser, const unsigned flags) {
     bool is_external = false;
-    if(streq(base_identifier.trace.source, String("extern"))) {
+    if(streq(base_identifier.trace.source, str("extern"))) {
         is_external = true;
         base_identifier = expect(parser->tokenizer, TokenIdentifier);
     }
@@ -37,8 +37,8 @@ compound_start:
             info.identifier.reference_structure = (void*) info.declaration_scope->parent;
 
             StructType* const wrapped_structure = (void*) initial_declaration_scope->parent;
-            String const reference_identifier = info.identifier.reference_structure->parent->identifier.base;
-            Scope* reference_declarations;
+            str const reference_identifier = info.identifier.reference_structure->parent->identifier.base;
+            Scope* reference_declarations = NULL;
 
             if(!((reference_declarations = get(wrapped_structure->reference_structures, reference_identifier)))) {
                 Scope scope = { .id = NodeScope };

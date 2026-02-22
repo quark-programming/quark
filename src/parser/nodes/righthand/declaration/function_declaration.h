@@ -5,18 +5,14 @@
 
 typedef struct Argument {
     Type* type;
-    String identifier;
+    str identifier;
 } Argument;
-
-typedef Vector(Argument) ArgumentVector;
-
-typedef Vector(VariableDeclaration*) VariableDeclarationVector;
 
 typedef struct FunctionDeclaration {
     DECLARATION_FIELDS;
-    ArgumentVector arguments;
+    Vec(Argument) arguments;
     struct Scope* body;
-    VariableDeclarationVector variable_declarations;
+    Vec(VariableDeclaration*) variable_declarations;
 } FunctionDeclaration;
 
 #endif

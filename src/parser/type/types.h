@@ -1,20 +1,18 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include <vector.h>
-
 #include "../nodes/nodes.h"
 
 Type* new_type(Type type);
 
 typedef struct OpenedType {
-    ActionVector actions;
+    Vec(Action) actions;
     Type* type;
 } OpenedType;
 
 extern bool global_in_compiler_step;
 extern Compiler* global_compiler_context;
-extern ActionVector global_actions;
+extern Vec(Action) global_actions;
 
 enum {
     TraverseIntermediate     = 1 << 0,
@@ -34,9 +32,9 @@ OpenedType open_type_with_acceptor(Type* type, Type* follower, int (*acceptor)(T
 
 #define open_type(type, flags) open_type_with_acceptor(type, NULL, NULL, NULL, flags)
 
-void close_type(ActionVector actions, unsigned flags);
+void close_type(Vec(Action) actions, unsigned flags);
 
-TypeVector find_last_generic_action(ActionVector actions, Declaration* declaration);
+Vec(Type*) find_last_generic_action(Vec(Action) actions, Declaration* declaration);
 
 Type* make_type_standalone(Type* type);
 

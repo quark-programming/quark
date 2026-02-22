@@ -4,16 +4,13 @@
 #include "../nodes/nodes.h"
 #include "../parser.h"
 
-Type* wrap_applied_generics(Type* type, TypeVector generics, Declaration* declaration);
+Type* wrap_applied_generics(Type* type, Vec(Type*) generics, Declaration* declaration);
 
 void apply_type_arguments(Wrapper* variable, Parser* parser);
 
-// typedef Vector(Declaration**) DeclarationSetterVector;
-
 typedef struct GenericsCollection {
-    TypeVector base_type_arguments;
+    Vec(Type*) base_type_arguments;
     Scope* generic_declarations_scope;
-    // DeclarationSetterVector declaration_setters;
 } GenericsCollection;
 
 GenericsCollection collect_generics(Parser* parser);

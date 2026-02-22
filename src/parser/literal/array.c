@@ -12,10 +12,10 @@ Declaration* fetch_slice_declaration(Parser* parser) {
     static Declaration* declaration = NULL;
 
     if(!declaration) {
-        declaration = find_on_stack_unwrapped(parser->stack, String("Slice"));
+        declaration = find_on_stack_unwrapped(parser->stack, str("Slice"));
 
         if(!declaration) {
-            panicf("[fatal] failed to find declaration for '\33[35mSlice<T>\33[0m'");
+            panicf("[fatal] failed to find declaration for Slice<T>");
         }
     }
 
@@ -23,21 +23,21 @@ Declaration* fetch_slice_declaration(Parser* parser) {
 }
 
 Node* parse_array_literal(const Trace trace_start, Parser* parser) {
-    const NodeVector field_values = collect_until(parser, &expression, ',', ']');
+    Vec(Node*) const field_values = collect_until(parser, &expression, ',', ']');
 
-    if(field_values.data && field_values.data[0]->flags & fType) {
-        Wrapper* slice = variable_of(fetch_slice_declaration(parser), field_values.data[0]->trace, 0);
+    if(field_values && field_values[0]->flags & fType) {
+        Wrapper* slice = variable_of(fetch_slice_declaration(parser), field_values[0]->trace, 0);
 
-        TypeVector generics = { 0 };
-        push(&generics, (void*) field_values.data[0]);
+        Vec(Type*) generics = { 0 };
+        push(&generics, (void*) field_values[0]);
         slice->action = (Action) { ActionApplyGenerics, generics, slice->Variable.declaration };
 
         return (void*) slice;
     }
 
-    StringVector field_names = { 0 };
-    resv(&field_names, field_values.size);
-    memset(field_names.data, 0, field_values.size * sizeof(String));
+    Vec(str) field_names = NULL;
+    resv(&field_names, len(field_values));
+    memset(field_names, 0, len(field_values) * sizeof(str));
 
     Type* array_type = new_type((Type) {
         .Wrapper = {
@@ -46,19 +46,17 @@ Node* parse_array_literal(const Trace trace_start, Parser* parser) {
         },
     });
 
-    for(size_t i = 0; i < field_values.size; i++) {
-        clash_types(array_type, field_values.data[i]->type, field_values.data[i]->trace, parser->tokenizer->messages,
-                    0);
+    for(u32 i = 0; i < len(field_values); i++) {
+        clash_types(array_type, field_values[i]->type, field_values[i]->trace, parser->tokenizer->messages, 0);
     }
 
-    static StringVector empty_field_names = { 0 };
-    if(!empty_field_names.size) {
-        resv(&empty_field_names, 2);
-        memset(empty_field_names.data, 0, sizeof(String[2]));
+    static Vec(str) empty_field_names = NULL;
+    if(!empty_field_names) {
+        push(&empty_field_names, { 0 }, { 0 });
     }
 
     Node* slice = eval("array", "Slice {}", parser);
-    slice->StructLiteral.type->Wrapper.action.generics.data[0] = array_type;
+    slice->StructLiteral.type->Wrapper.action.generics[0] = array_type;
     slice->StructLiteral.field_names = empty_field_names;
 
     Node* data_literal = new_node((Node) {
@@ -67,7 +65,7 @@ Node* parse_array_literal(const Trace trace_start, Parser* parser) {
             .type = new_type((Type) {
                 .Wrapper = {
                     .id = WrapperSurround,
-                    .Surround = { (void*) array_type, {}, String("[]") },
+                    .Surround = { (void*) array_type, {}, str("[]") },
                 },
             }),
             .field_names = field_names,
@@ -79,7 +77,7 @@ Node* parse_array_literal(const Trace trace_start, Parser* parser) {
     Node* array_size = new_node((Node) {
             .NumericLiteral = {
                 .id = NodeNumericLiteral,
-                .value = (int64_t) field_values.size,
+                .value = (i64) len(field_values),
             },
         }
     );

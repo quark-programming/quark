@@ -2,7 +2,7 @@
 
 #include "../../../parser/type/stringify_type.h"
 
-DeclarationHashMap global_declaration_space = 0;
+Map(Declaration*) global_declaration_space = NULL;
 
 void populate_global_c_keywords() {
     // https://en.cppreference.com/w/c/keyword.html
@@ -16,27 +16,27 @@ void populate_global_c_keywords() {
     };
 
     for(int i = 0; i < sizeof(keywords) / sizeof(char*); i++) {
-        put(&global_declaration_space, ((String) { strlen(keywords[i]), 0, keywords[i] }), NULL);
+        put(&global_declaration_space, ((str) { strlen(keywords[i]), keywords[i] }), NULL);
     }
 }
 
-DeclarationHashMap global_function_identifiers = 0;
+Map(Declaration*) global_function_identifiers = 0;
 
 static void prevent_keyword(String* const identifier_builder) {
-    Declaration** defined_declaration = get(global_declaration_space, *identifier_builder);
+    Declaration** defined_declaration = get(global_declaration_space, as_str(*identifier_builder));
     if(defined_declaration && !*defined_declaration) {
         strf(identifier_builder, "_");
     }
 }
 
-void build_simple_identifier(const String identifier, String* const application) {
+void build_simple_identifier(const str identifier, String* const application) {
     String identifier_builder = { 0 };
 
-    strf(&identifier_builder, "%.*s", FMT(identifier));
+    strf(&identifier_builder, "%.*s", fmtof(identifier));
     prevent_keyword(&identifier_builder);
 
-    strf(application, "%.*s", FMT(identifier_builder));
-    free(identifier_builder.data);
+    strf(application, "%.*s", fmtof(identifier_builder));
+    free(vbase(identifier_builder));
 }
 
 static void build_identifier_base(const Identifier identifier, String* const identifier_builder) {
@@ -64,9 +64,9 @@ static void build_identifier_base(const Identifier identifier, String* const ide
         }
     }
 
-    strf(identifier_builder, "%.*s", FMT(identifier.base));
+    strf(identifier_builder, "%.*s", fmtof(identifier.base));
 
-    if(identifier.parent_declaration->generics.type_arguments_stack.size && !identifier.is_external) {
+    if(len(identifier.parent_declaration->generics.type_arguments_stack) && !identifier.is_external) {
         stringify_generics(identifier_builder, last(identifier.parent_declaration->generics.type_arguments_stack),
                            StringifyAlphaNumeric);
     }
@@ -78,21 +78,21 @@ void build_full_identifier(const Identifier identifier, String* const applicatio
     build_identifier_base(identifier, &identifier_builder);
     prevent_keyword(&identifier_builder);
 
-    strf(application, "%.*s", FMT(identifier_builder));
-    free(identifier_builder.data);
+    strf(application, "%.*s", fmtof(identifier_builder));
+    free(vbase(identifier_builder));
 }
 
 bool resolve_identifier(const Identifier identifier, String* const identifier_builder) {
     build_identifier_base(identifier, identifier_builder);
 
     Declaration** defined_declaration;
-    while(((defined_declaration = get(global_declaration_space, *identifier_builder)))
+    while(((defined_declaration = get(global_declaration_space, as_str(*identifier_builder))))
           && *defined_declaration != identifier.parent_declaration) {
         strf(identifier_builder, "_");
     }
 
     if(!defined_declaration) {
-        put(&global_declaration_space, *identifier_builder, identifier.parent_declaration);
+        put(&global_declaration_space, as_str(*identifier_builder), identifier.parent_declaration);
     }
 
     return defined_declaration;

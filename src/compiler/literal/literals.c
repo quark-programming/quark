@@ -12,14 +12,14 @@ void comp_Missing(void* void_self, String* line, Compiler* compiler) {
     Missing* const self = void_self;
 
     push(compiler->messages,
-         REPORT_ERR(self->trace, strf(0, "cannot find '\33[35m%.*s\33[0m' in scope", FMT(self->trace.source))));
+         MERROR(self->trace, strf(0, "cannot find '\33[35m%.*s\33[0m' in scope", fmtof(self->trace.source))));
 }
 
 void comp_External(void* void_self, String* line, Compiler* compiler) {
     (void) compiler;
     External* const self = void_self;
 
-    strf(line, "%.*s", FMT(self->data));
+    strf(line, "%.*s", fmtof(self->data));
 }
 
 void comp_StructLiteral(void* void_self, String* line, Compiler* compiler) {
@@ -29,12 +29,12 @@ void comp_StructLiteral(void* void_self, String* line, Compiler* compiler) {
     compile(self->type, line, compiler);
     strf(line, ") {");
 
-    for(size_t i = 0; i < self->field_values.size; i++) {
+    for(size_t i = 0; i < len(self->field_values); i++) {
         strf(line, i ? ", " : " ");
-        if(self->field_names.data[i].size) {
-            strf(line, ".%.*s = ", FMT(self->field_names.data[i]));
+        if(self->field_names[i].len) {
+            strf(line, ".%.*s = ", fmtof(self->field_names[i]));
         }
-        compile(self->field_values.data[i], line, compiler);
+        compile(self->field_values[i], line, compiler);
     }
     strf(line, " }");
 }

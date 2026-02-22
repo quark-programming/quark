@@ -1,15 +1,13 @@
 #ifndef FIELDS_H
 #define FIELDS_H
 
-#include <vector.h>
-
+#include <helpers.h>
+#include <wrap.h>
 #include "../../tokenizer/tokenizer.h"
-
-// TODO: remove bit lengths from booleans
 
 #define NODE_FIELDS \
     NodeID id; \
-    uint32_t flags; \
+    u32 flags; \
     Trace trace; \
     Type* type
 
@@ -27,9 +25,5 @@ typedef struct Compiler Compiler;
 typedef union Node Node;
 typedef union Type Type;
 typedef union Declaration Declaration;
-
-typedef Vector(Node*) NodeVector;
-typedef Vector(Type*) TypeVector;
-typedef Vector(Declaration*) DeclarationVector;
 
 #endif

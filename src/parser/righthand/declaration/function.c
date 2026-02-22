@@ -34,7 +34,7 @@ static Argument create_self_literal(const Trace trace, StructType* const parent_
 
     if(parent_struct->id != NodeStructType) {
         push(parser->tokenizer->messages,
-             REPORT_ERR(trace, String("Cannot create self literal outside of a struct declaration")));
+             MERROR(trace, str("Cannot create self literal outside of a struct declaration")));
         type = new_type((Type) { .Wrapper = { WrapperAuto, 0, trace } });
     } else {
         Wrapper* wrapper = variable_of((void*) parent_struct->parent, trace, 0);
@@ -46,7 +46,7 @@ static Argument create_self_literal(const Trace trace, StructType* const parent_
 
     const Argument argument = {
         .type = is_ref ? (void*) reference((void*) type, trace) : type,
-        .identifier = String("self"),
+        .identifier = str("self"),
     };
 
     return argument;
@@ -62,14 +62,14 @@ static void parse_function_arguments(FunctionType* function_type, FunctionDeclar
         if(parser->tokenizer->current.type == '&') {
             const Token snapshot = next(parser->tokenizer);
             if(parser->tokenizer->current.type == TokenIdentifier
-               && streq(parser->tokenizer->current.trace.source, String("self"))) {
+               && streq(parser->tokenizer->current.trace.source, str("self"))) {
                 argument = create_self_literal(stretch(snapshot.trace, next(parser->tokenizer).trace),
                                                (void*) declaration->identifier.parent_scope, parser, true);
             } else {
                 parser->tokenizer->current = snapshot;
             }
         } else if(parser->tokenizer->current.type == TokenIdentifier
-                  && streq(parser->tokenizer->current.trace.source, String("self"))) {
+                  && streq(parser->tokenizer->current.trace.source, str("self"))) {
             argument = create_self_literal(next(parser->tokenizer).trace, (void*) declaration->identifier.parent_scope,
                                            parser, false);
         }
@@ -87,11 +87,11 @@ static void parse_function_arguments(FunctionType* function_type, FunctionDeclar
 
         if(!(argument.type->flags & fType)) {
             push(parser->tokenizer->messages,
-                 REPORT_ERR(argument.type->trace, strf(0, "'\33[35m%.*s\33[0m' is not a type",
-                     FMT(argument.type->trace.source))));
+                 MERROR(argument.type->trace, strf(0, "'\33[35m%.*s\33[0m' is not a type",
+                     fmtof(argument.type->trace.source))));
         }
 
-        if(argument.identifier.size) {
+        if(argument.identifier.len) {
             Declaration* const argument_declaration = (void*) new_node((Node) {
                 .VariableDeclaration = {
                     .id = NodeVariableDeclaration,
@@ -99,7 +99,7 @@ static void parse_function_arguments(FunctionType* function_type, FunctionDeclar
                     .compilation_state = CompilationHoisted,
                     .identifier = {
                         .base = argument.identifier,
-                        .parent_scope = (void*) parser->stack.data[0],
+                        .parent_scope = (void*) parser->stack[0],
                     },
                 }
             });
@@ -190,7 +190,7 @@ Node* parse_function_lambda(Type* return_type, Parser* parser) {
     push(&parser->stack, declaration->body);
     parse_function_arguments(function_type, declaration, parser, true);
 
-    if(!last(declaration->arguments).identifier.size) {
+    if(!last(declaration->arguments).identifier.len) {
         pop(&parser->stack);
         return (void*) function_type;
     }
@@ -215,7 +215,7 @@ Node* parse_function_lambda(Type* return_type, Parser* parser) {
         }
 
         default:
-            push(parser->tokenizer->messages, REPORT_ERR(operator.trace, String("Expected either '=>' or '{'")));
+            push(parser->tokenizer->messages, MERROR(operator.trace, str("Expected either '=>' or '{'")));
     }
 
     pop(&parser->stack);

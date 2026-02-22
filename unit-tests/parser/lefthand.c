@@ -5,7 +5,7 @@
 #include "parser/statement/scope.h"
 
 int test_lefthand() {
-    MessageVector messages = { 0 };
+    Vec(Message) messages = { 0 };
     Parser parser = { 0 };
     push(&parser.stack, new_scope(NULL));
 
@@ -17,25 +17,25 @@ int test_lefthand() {
 
         Wrapper* reference = (void*) lefthand_expression(&parser);
         assert_eq(reference->id, WrapperSurround);
-        assert_eq(streq(reference->Surround.prefix, String("(&")), true);
+        assert_eq(streq(reference->Surround.prefix, str("(&")), true);
         assert_eq(reference->type->id, NodePointerType);
 
         unbox(statement(&parser));
 
         Wrapper* dereference = (void*) lefthand_expression(&parser);
         assert_eq(dereference->id, WrapperSurround);
-        assert_eq(streq(dereference->Surround.prefix, String("(*")), true);
+        assert_eq(streq(dereference->Surround.prefix, str("(*")), true);
         assert_eq(dereference->type->id != NodePointerType, true);
 
         unbox(lefthand_expression(&parser));
-        assert_eq(messages.size, 1);
+        assert_eq(len(messages), 1);
         pop(&messages);
         unbox(lefthand_expression(&parser));
         // TODO: references should only work with `fMutable` or some other flag
         // assert_eq(messages.size, 1);
         // pop(&messages);
 
-        assert_eq(messages.size, 0);
+        assert_eq(len(messages), 0);
         assert_eq(tokenizer.current.type, 0);
     }
 
@@ -53,7 +53,7 @@ int test_lefthand() {
         assert_eq((bool) (const_node->flags & fConst), true);
         unbox((void*) const_node);
 
-        assert_eq(messages.size, 0);
+        assert_eq(len(messages), 0);
         assert_eq(tokenizer.current.type, 0);
     }
 
@@ -63,12 +63,12 @@ int test_lefthand() {
 
         BinaryOperation* operation = (void*) righthand_expression(lefthand_expression(&parser), &parser, 15);
         assert_eq(operation->id, NodeBinaryOperation);
-        assert_eq(streq(operation->operator, String("*")), true);
+        assert_eq(streq(operation->operator, str("*")), true);
 
         assert_eq(operation->left->id, WrapperSurround);
         assert_eq(operation->left->Wrapper.Surround.child->id, NodeBinaryOperation);
 
-        assert_eq(messages.size, 0);
+        assert_eq(len(messages), 0);
         assert_eq(tokenizer.current.type, 0);
     }
 

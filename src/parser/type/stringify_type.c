@@ -3,21 +3,21 @@
 #include "traverse_type.h"
 #include "types.h"
 
-void stringify_generics(String* string, const TypeVector generics, const unsigned flags) {
-    if(!generics.size) return;
+void stringify_generics(String* string, Vec(Type*) const generics, const unsigned flags) {
+    if(!len(generics)) return;
 
     if(!(flags & StringifyAlphaNumeric)) {
         strf(string, "<");
     }
 
-    for(size_t i = 0; i < generics.size; i++) {
+    for(size_t i = 0; i < len(generics); i++) {
         if(flags & StringifyAlphaNumeric) {
             strf(string, "__");
         } else if(i) {
             strf(string, ", ");
         }
 
-        stringify_type(generics.data[i], string, flags);
+        stringify_type(generics[i], string, flags);
     }
 
     if(!(flags & StringifyAlphaNumeric)) {
@@ -39,7 +39,7 @@ static int stringify_acceptor(Type* type, Type* follower, void* void_accumulator
             return 0;
 
         case NodeExternal:
-            strf(accumulator->string, "%.*s", (int) type->External.data.size, type->External.data.data);
+            strf(accumulator->string, "%.*s", fmtof(type->External.data));
             return 0;
 
         case NodePointerType:
@@ -48,9 +48,9 @@ static int stringify_acceptor(Type* type, Type* follower, void* void_accumulator
 
         case NodeStructType:
             strf(accumulator->string, accumulator->flags & StringifyAlphaNumeric ? "struct_%.*s" : "struct %.*s",
-                 FMT(type->StructType.parent->identifier.base));
+                 fmtof(type->StructType.parent->identifier.base));
 
-            if(type->StructType.parent->generics.base_type_arguments.size) {
+            if(type->StructType.parent->generics.base_type_arguments) {
                 stringify_generics(accumulator->string, last(type->StructType.parent->generics.type_arguments_stack),
                                    accumulator->flags);
             }

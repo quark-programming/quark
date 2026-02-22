@@ -5,7 +5,7 @@
 #include "../unit-tests.h"
 
 int test_literal() {
-    MessageVector messages = { 0 };
+    Vec(Message) messages = { 0 };
 
     test("numeric literals") {
         Tokenizer tokenizer = new_tokenizer("TEST LITERAL", "45 56", &messages);
@@ -22,7 +22,7 @@ int test_literal() {
         unbox((void*) node);
 
         assert_eq(tokenizer.current.type, 0);
-        assert_eq(messages.size, 0);
+        assert_eq(len(messages), 0);
     }
 
     test("auto type literals") {
@@ -42,7 +42,7 @@ int test_literal() {
         unbox((void*) node);
 
         assert_eq(tokenizer.current.type, 0);
-        assert_eq(messages.size, 0);
+        assert_eq(len(messages), 0);
     }
 
     test("external literal") {
@@ -52,23 +52,23 @@ int test_literal() {
         External* node = (void*) lefthand_expression(&parser);
         assert_eq(node->id, NodeExternal);
         assert_eq(node->flags & fType && !(node->flags & fNumeric), true);
-        assert_eq(streq(node->data, String("x")), true);
+        assert_eq(streq(node->data, str("x")), true);
         unbox((void*) node);
 
         node = (void*) lefthand_expression(&parser);
         assert_eq(node->id, NodeExternal);
         assert_eq(node->flags & fType && node->flags & fNumeric, true);
-        assert_eq(streq(node->data, String("x")), true);
+        assert_eq(streq(node->data, str("x")), true);
         unbox((void*) node);
 
         node = (void*) lefthand_expression(&parser);
         assert_eq(node->id, NodeExternal);
         assert_eq((bool) (node->flags & fType), false);
-        assert_eq(streq(node->data, String("x")), true);
+        assert_eq(streq(node->data, str("x")), true);
         unbox((void*) node);
 
         assert_eq(tokenizer.current.type, 0);
-        assert_eq(messages.size, 0);
+        assert_eq(len(messages), 0);
     }
 
     test("structure literal") {
@@ -82,11 +82,11 @@ int test_literal() {
 
         Node* node = (void*) lefthand_expression(&parser);
         assert_eq(node->id, NodeStructLiteral);
-        assert_eq(streq(node->type->Wrapper.Variable.declaration->identifier.base, String("S")), true);
+        assert_eq(streq(node->type->Wrapper.Variable.declaration->identifier.base, str("S")), true);
         unbox((void*) node);
 
         assert_eq(tokenizer.current.type, 0);
-        assert_eq(messages.size, 0);
+        assert_eq(len(messages), 0);
     }
 
     test("array literal") {
@@ -98,11 +98,11 @@ int test_literal() {
 
         StructLiteral* node = (void*) lefthand_expression(&parser);
         assert_eq(node->id, NodeStructLiteral);
-        assert_eq(node->field_values.size, 2);
-        assert_eq(node->field_values.data[0]->id, NodeStructLiteral);
-        assert_eq(node->field_values.data[1]->StructLiteral.field_values.size, 3);
+        assert_eq(len(node->field_values), 2);
+        assert_eq(node->field_values[0]->id, NodeStructLiteral);
+        assert_eq(len(node->field_values[0]->StructLiteral.field_values), 3);
         assert_eq(node->type->id, WrapperVariable);
-        assert_eq((bool) (node->type->Wrapper.action.generics.data[0]->flags & fNumeric), true);
+        assert_eq((bool) (node->type->Wrapper.action.generics[0]->flags & fNumeric), true);
     }
 
     test("typeof()") {

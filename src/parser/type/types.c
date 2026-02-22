@@ -5,7 +5,7 @@
 
 bool global_in_compiler_step = false;
 Compiler* global_compiler_context = NULL;
-ActionVector global_actions = { 0 };
+Vec(Action) global_actions = { 0 };
 
 Type* new_type(Type type) {
     type.flags |= fType;
@@ -15,20 +15,12 @@ Type* new_type(Type type) {
 }
 
 // TODO: possibly move actions to their own file
+// TODO: remove return value if useless
 bool apply_action(const Action action, const unsigned flags) {
     switch(action.type) {
         case ActionNone: return false;
 
         case ActionApplyGenerics: {
-            // for(size_t i = 0; i < action.generics.size; i++) {
-            //     if(action.generics.data[i]->id == WrapperAuto
-            //        && action.generics.data[i]->Wrapper.Auto.replacement_generic
-            //        && action.generics.data[i]->Wrapper.Auto.replacement_generic->generics_declaration
-            //        == action.target) {
-            //         return false;
-            //     }
-            // }
-
             push(&action.target->generics.type_arguments_stack, action.generics);
 
             if(!(flags & ActionKeepGlobalState)) {
@@ -39,13 +31,13 @@ bool apply_action(const Action action, const unsigned flags) {
             if(global_in_compiler_step && !recursion_stop && !(flags & ActionNoChildCompilation)) {
                 recursion_stop = true;
 
-                String unique_key = { 0 };
+                String unique_key = NULL;
                 stringify_generics(&unique_key, action.generics, StringifyAlphaNumeric);
 
                 recursion_stop = false;
 
-                if(!get(action.target->generics.unique_combinations, unique_key)) {
-                    put(&action.target->generics.unique_combinations, unique_key);
+                if(!get(action.target->generics.unique_combinations, as_str(unique_key))) {
+                    put(&action.target->generics.unique_combinations, as_str(unique_key));
                     compile(action.target, NULL, global_compiler_context);
                 }
             }
@@ -54,8 +46,8 @@ bool apply_action(const Action action, const unsigned flags) {
         }
 
         case ActionApplyCollection:
-            for(size_t i = 0; i < action.collection.size; i++) {
-                apply_action(action.collection.data[i], flags);
+            for(size_t i = 0; i < len(action.collection); i++) {
+                apply_action(action.collection[i], flags);
             }
             break;
 
@@ -79,8 +71,8 @@ void remove_action(const Action action, const unsigned flags) {
             break;
 
         case ActionApplyCollection:
-            for(size_t i = action.collection.size; i > 0; i--) {
-                remove_action(action.collection.data[i - 1], flags);
+            for(size_t i = len(action.collection); i > 0; i--) {
+                remove_action(action.collection[i - 1], flags);
             }
             break;
 
@@ -98,21 +90,13 @@ Type* peek_type(Type* type, Action* action, const unsigned flags) {
 
     switch(type->id) {
         case WrapperAuto:
-            // if(global_in_compiler_step && type->Wrapper.Auto.replacement_generic) {
-            //     return peek_type((void*) type->Wrapper.Auto.replacement_generic, action, flags);
-            // }
-
-            // if(global_in_compiler_step && type->Wrapper.Auto.test_against) {
-            //
-            // }
-
             if(!type->Wrapper.Auto.ref && type->Wrapper.Auto.test_against
                && type->Wrapper.Auto.test_against->id == NodeGenericReference) {
                 GenericReference* const reference = &type->Wrapper.Auto.test_against->GenericReference;
-                const TypeVectorVector stack = reference->generics_declaration->generics.type_arguments_stack;
+                Vec(Vec(Type*)) const stack = reference->generics_declaration->generics.type_arguments_stack;
 
-                for(size_t i = stack.size - 1; i > 0; i--) {
-                    Type* const type_argument = stack.data[i - 1].data[reference->index];
+                for(size_t i = len(stack) - 1; i > 0; i--) {
+                    Type* const type_argument = stack[i - 1][reference->index];
 
                     if(type_argument->id == WrapperAuto && type_argument->Wrapper.Auto.test_against
                        && type_argument->Wrapper.Auto.test_against->id == NodeGenericReference
@@ -122,10 +106,6 @@ Type* peek_type(Type* type, Action* action, const unsigned flags) {
 
                     return type_argument;
                 }
-
-                // return reference->generics_declaration->generics.type_arguments_stack.data[
-                //             reference->generics_declaration->generics.type_arguments_stack.size - 2]
-                //         .data[reference->index];
             }
 
             return type->Wrapper.Auto.ref ? type->Wrapper.Auto.ref : type;
@@ -135,7 +115,7 @@ Type* peek_type(Type* type, Action* action, const unsigned flags) {
 
         case NodeGenericReference:
             return last(type->GenericReference.generics_declaration->generics.type_arguments_stack)
-                    .data[type->GenericReference.index];
+                    [type->GenericReference.index];
 
         default: return type;
     }
@@ -160,25 +140,25 @@ OpenedType open_type_with_acceptor(Type* type, Type* follower, int (*acceptor)(T
     return opened_type;
 }
 
-void close_type(const ActionVector actions, const unsigned flags) {
-    for(size_t i = actions.size; i > 0; i--) {
-        remove_action(actions.data[i - 1], flags);
+void close_type(Vec(Action) const actions, const unsigned flags) {
+    for(size_t i = len(actions); i > 0; i--) {
+        remove_action(actions[i - 1], flags);
     }
-    free(actions.data);
+    free(vbase(actions));
 }
 
-TypeVector find_last_generic_action(const ActionVector actions, Declaration* const declaration) {
-    for(size_t i = actions.size; i > 0; i--) {
-        switch(actions.data[i - 1].type) {
+Vec(Type*) find_last_generic_action(Vec(Action) const actions, Declaration* const declaration) {
+    for(size_t i = len(actions); i > 0; i--) {
+        switch(actions[i - 1].type) {
             case ActionApplyGenerics:
-                if(actions.data[i - 1].target == (void*) declaration) {
-                    return actions.data[i - 1].generics;
+                if(actions[i - 1].target == (void*) declaration) {
+                    return actions[i - 1].generics;
                 }
                 break;
 
             case ActionApplyCollection: {
-                const TypeVector found = find_last_generic_action(actions.data[i - 1].collection, declaration);
-                if(found.size) return found;
+                Vec(Type*) const found = find_last_generic_action(actions[i - 1].collection, declaration);
+                if(len(found)) return found;
                 break;
             }
 
@@ -186,16 +166,16 @@ TypeVector find_last_generic_action(const ActionVector actions, Declaration* con
         }
     }
 
-    return (TypeVector) { 0 };
+    return NULL;
 }
 
 Type* make_type_standalone(Type* type) {
-    if(!global_actions.size) return type;
+    if(!len(global_actions)) return type;
 
-    ActionVector actions = { 0 };
-    resv(&actions, global_actions.size);
-    memcpy(actions.data, global_actions.data, global_actions.size * sizeof(Action));
-    actions.size = global_actions.size;
+    Vec(Action) actions = NULL;
+    resv(&actions, len(global_actions));
+    memcpy(actions, global_actions, len(global_actions) * sizeof(Action));
+    len(actions) = len(global_actions);
 
     return new_type((Type) {
         .Wrapper = {

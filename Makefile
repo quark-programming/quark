@@ -41,7 +41,7 @@ else
 endif
 
 # ========= Flags =========
-CFLAGS  := -Isrc/include -Isrc -Wall -Wno-missing-braces -Wno-char-subscripts
+CFLAGS  := -Isrc/include -Isrc/lib -Isrc -Wall -Wno-missing-braces -Wno-char-subscripts -DWRAPSETIMPL
 LDFLAGS :=
 
 # ========= Directories =========
@@ -123,7 +123,7 @@ endif
 
 # ========= unit-tests =========
 build-test-c: dirs
-	$(CC) $(CFLAGS) -g $(UT_SRCS) $(SRCS) $(LDFLAGS) -o $(UT_BUILD)/unit-tests$(EXE)
+	$(CC) $(CFLAGS) $(UT_SRCS) $(SRCS) $(LDFLAGS) -g -ggdb -DEBUG -o $(UT_BUILD)/unit-tests$(EXE)
 
 test-c: build-test-c
 	@echo ------ unit-tests ------

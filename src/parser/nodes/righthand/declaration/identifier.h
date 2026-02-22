@@ -5,11 +5,11 @@
 #include "parser/nodes/type/struct_type.h"
 
 typedef struct Identifier {
-    String base;
+    str base;
     Declaration* parent_scope;
     Declaration* parent_declaration;
     StructType* reference_structure;
-    bool is_external : 1;
+    bool is_external;
 } Identifier;
 
 #endif

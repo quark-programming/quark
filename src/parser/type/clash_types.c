@@ -26,9 +26,9 @@ static int clash_autos(Wrapper* wrapper, Type* follower, ClashAccumulator* accum
 #ifdef EBUG
     printf("assigning:\t \33[3%dm%-24.*s \33[3%dm%.*s\33[0m\n",
            (int) ((size_t) wrapper->trace.source.data / 16) % 6 + 1,
-           (int) wrapper->trace.source.size, wrapper->trace.source.data,
+           fmtof(wrapper->trace.source),
            (int) ((size_t) follower->trace.source.data / 16) % 6 + 1,
-           (int) follower->trace.source.size, follower->trace.source.data);
+           fmtof(follower->trace.source));
 #endif
 
     if((void*) wrapper == follower) {
@@ -79,46 +79,7 @@ static int clash_autos(Wrapper* wrapper, Type* follower, ClashAccumulator* accum
         return TestCircular;
     }
 
-    // if(wrapper->Auto.parent_base_generic) {
-    //     const int result = clash_types(wrapper->Auto.parent_base_generic, follower, accumulator->trace,
-    //                                    accumulator->messages,
-    //                                    ClashPassive | accumulator->flags);
-    //     if(result) return result + 1;
-    // }
-
     if(!(accumulator->flags & ClashPassive)) assign_auto_ref(wrapper, follower);
-
-    // if(!(accumulator->flags & ClashPassive)) {
-    //     if(follower->id == WrapperAuto && follower->Wrapper.Auto.replacement_generic) {
-    //         if(traverse_type(follower, NULL, (void*) &circular_acceptor, wrapper->Auto.parent_base_generic,
-    //                          TraverseGenerics & TraverseIntermediate)) {
-    //             wrapper->Auto.replacement_generic = follower->Wrapper.Auto.replacement_generic;
-    //             return 1;
-    //         }
-    //
-    //         const OpenedType anchor = open_type((void*) follower->Wrapper.Auto.replacement_generic, 0);
-    //         wrapper->Auto.ref = make_type_standalone(anchor.type);
-    //         close_type(anchor.actions, 0);
-    //     } else {
-    //         wrapper->Auto.ref = make_type_standalone(follower);
-    //     }
-    //
-    //     if(wrapper->flags & fNumeric && !(follower->flags & fNumeric)) {
-    //         follower->flags = wrapper->flags;
-    //     } else {
-    //         wrapper->flags = follower->flags;
-    //     }
-    //
-    //     if(follower->id == WrapperAuto) {
-    //         if(wrapper->Auto.parent_base_generic) {
-    //             follower->Wrapper.Auto.parent_base_generic = wrapper->Auto.parent_base_generic;
-    //         }
-    //
-    //         if(wrapper->Auto.replacement_generic) {
-    //             follower->Wrapper.Auto.replacement_generic = wrapper->Auto.replacement_generic;
-    //         }
-    //     }
-    // }
 
     return 1;
 }
@@ -126,8 +87,7 @@ static int clash_autos(Wrapper* wrapper, Type* follower, ClashAccumulator* accum
 static int clash_acceptor(Type* type, Type* follower, void* void_accumulator) {
 #ifdef EBUG
     printf("\33[90mclash:\t\t %-24.*s %.*s\33[0m\n",
-           (int) type->trace.source.size, type->trace.source.data,
-           (int) follower->trace.source.size, follower->trace.source.data);
+           fmtof(type->trace.source), fmtof(follower->trace.source));
 #endif
 
     ClashAccumulator* const accumulator = void_accumulator;
@@ -156,12 +116,12 @@ static int clash_acceptor(Type* type, Type* follower, void* void_accumulator) {
     return TestMismatch;
 }
 
-int clash_types(Type* a, Type* b, const Trace trace, MessageVector* messages, const unsigned flags) {
+int clash_types(Type* a, Type* b, const Trace trace, Vec(Message)* messages, const unsigned flags) {
     ClashAccumulator accumulator = { trace, messages, flags };
     const int result = traverse_type(a, b, &clash_acceptor, &accumulator, 0);
 
     if(result && !(flags & ClashPassive)) {
-        String message = strf(0, "type mismatch between '\33[35m");
+        String message = strf(0, "type mismatch between '\33[35m").as_owned;
         stringify_type(a, &message, 0);
 
         strf(&message, "\33[0m' and '\33[35m");
@@ -171,7 +131,7 @@ int clash_types(Type* a, Type* b, const Trace trace, MessageVector* messages, co
                            ? "\33[0m' (types are circularly referencing each other)"
                            : "\33[0m'");
 
-        push(messages, REPORT_ERR(trace, message));
+        push(messages, MERROR(trace, as_str(message)));
     }
 
     return result;

@@ -5,9 +5,9 @@
 
 typedef struct FunctionType {
     TYPE_FIELDS;
-    TypeVector signature;
+    Vec(Type*) signature;
     struct FunctionDeclaration* declaration;
-    HashMap(bool) type_definitions;
+    Map(bool) type_definitions;
 } FunctionType;
 
 #endif

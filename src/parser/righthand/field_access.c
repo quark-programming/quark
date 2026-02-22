@@ -11,13 +11,13 @@
 #include "declaration/variable.h"
 
 Node* parse_field_access(Node* lefthand, Parser* parser) {
-    const String operator_token = next(parser->tokenizer).trace.source;
+    const str operator_token = next(parser->tokenizer).trace.source;
 
     if(*operator_token.data == '.' && try(parser->tokenizer, '(', NULL)) {
         Type* cast = (void*) expression(parser);
 
         if(!(cast->flags & fType)) {
-            push(parser->tokenizer->messages, REPORT_ERR(cast->trace, String("cast is not a type")));
+            push(parser->tokenizer->messages, MERROR(cast->trace, str("cast is not a type")));
             cast = cast->type;
         }
 
@@ -42,15 +42,15 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
     const Token field_token = expect(parser->tokenizer, TokenIdentifier);
 
     if(struct_type->id != NodeStructType) {
-        push(parser->tokenizer->messages, REPORT_ERR(lefthand->trace,
-                 strf(0, "'\33[35m%.*s\33[0m' is not a structure", FMT(lefthand->trace.source))));
+        push(parser->tokenizer->messages, MERROR(lefthand->trace,
+                 strf(0, "'\33[35m%.*s\33[0m' is not a structure", fmtof(lefthand->trace.source))));
         close_type(opened.actions, 0);
         return lefthand;
     }
 
     ssize_t found_index = -1;
-    for(ssize_t i = 0; i < struct_type->fields.size; i++) {
-        if(streq(field_token.trace.source, struct_type->fields.data[i].identifier)) {
+    for(ssize_t i = 0; i < len(struct_type->fields); i++) {
+        if(streq(field_token.trace.source, struct_type->fields[i].identifier)) {
             found_index = i;
         }
     }
@@ -63,7 +63,7 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
             child->Variable.bound_self_argument = lefthand;
             child->type = make_type_standalone(child->type);
 
-            if(global_actions.size) {
+            if(len(global_actions)) {
                 child->action = child->type->Wrapper.action;
             }
 
@@ -72,13 +72,13 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
         }
 
         push(parser->tokenizer->messages,
-             REPORT_ERR(field_token.trace, strf(0, "no field named '\33[35m%.*s\33[0m' on struct '\33[35m%.*s\33[0m'",
-                 FMT(field_token.trace.source), FMT(lefthand->trace.source))));
+             MERROR(field_token.trace, strf(0, "no field named '\33[35m%.*s\33[0m' on struct '\33[35m%.*s\33[0m'",
+                 fmtof(field_token.trace.source), fmtof(lefthand->trace.source))));
         push(parser->tokenizer->messages, see_declaration((void*) struct_type, lefthand->trace));
         return lefthand;
     }
 
-    Type* field_type = make_type_standalone(struct_type->fields.data[found_index].type);
+    Type* field_type = make_type_standalone(struct_type->fields[found_index].type);
     close_type(opened.actions, 0);
 
     return new_node((Node) {
@@ -103,7 +103,7 @@ Node* parse_indexing(Node* lefthand, Parser* parser) {
 
     const OpenedType opened_index = open_type(index->type, 0);
     if(opened_index.type->id == NodeStructType
-       && streq(opened_index.type->StructType.parent->identifier.base, String("Range"))) {
+       && streq(opened_index.type->StructType.parent->identifier.base, str("Range"))) {
         close_type(opened_index.actions, 0);
 
         Declaration* const slice_declaration = fetch_slice_declaration(parser);
@@ -116,7 +116,7 @@ Node* parse_indexing(Node* lefthand, Parser* parser) {
             },
         });
 
-        TypeVector generics = { 0 };
+        Vec(Type*) generics = { 0 };
         push(&generics, (void*) dereference((void*) lefthand->type, trace, parser->tokenizer->messages));
         struct_literal->type->Wrapper.action = (Action) { ActionApplyGenerics, generics, slice_declaration };
 
@@ -130,17 +130,17 @@ Node* parse_indexing(Node* lefthand, Parser* parser) {
                     .BinaryOperation = {
                         .id = NodeBinaryOperation,
                         .left = temp_index,
-                        .operator = String("."),
-                        .right = new_node((Node) { .External = { NodeExternal, .data = String("end") } }),
+                        .operator = str("."),
+                        .right = new_node((Node) { .External = { NodeExternal, .data = str("end") } }),
                     },
                 }),
-                .operator = String("-"),
+                .operator = str("-"),
                 .right = new_node((Node) {
                     .BinaryOperation = {
                         .id = NodeBinaryOperation,
                         .left = temp_index,
-                        .operator = String("."),
-                        .right = new_node((Node) { .External = { NodeExternal, .data = String("start") } }),
+                        .operator = str("."),
+                        .right = new_node((Node) { .External = { NodeExternal, .data = str("start") } }),
                     },
                 }),
             },
@@ -150,23 +150,23 @@ Node* parse_indexing(Node* lefthand, Parser* parser) {
             .BinaryOperation = {
                 .id = NodeBinaryOperation,
                 .left = new_node((Node) {
-                    .Wrapper = { WrapperSurround, .Surround = { lefthand, String("("), String(")") } }
+                    .Wrapper = { WrapperSurround, .Surround = { lefthand, str("("), str(")") } }
                 }),
-                .operator = String("+"),
+                .operator = str("+"),
                 .right = new_node((Node) {
                     .BinaryOperation = {
                         .id = NodeBinaryOperation,
                         .left = temp_index,
-                        .operator = String("."),
-                        .right = new_node((Node) { .External = { NodeExternal, .data = String("start") } }),
+                        .operator = str("."),
+                        .right = new_node((Node) { .External = { NodeExternal, .data = str("start") } }),
                     }
                 }),
             },
         });
 
-        push(&struct_literal->field_names, String("size"));
+        push(&struct_literal->field_names, str("size"));
         push(&struct_literal->field_values, size_node);
-        push(&struct_literal->field_names, String("data"));
+        push(&struct_literal->field_names, str("data"));
         push(&struct_literal->field_values, data_node);
 
         collector->result_value = (void*) struct_literal;
@@ -176,7 +176,7 @@ Node* parse_indexing(Node* lefthand, Parser* parser) {
     }
     close_type(opened_index.actions, 0);
 
-    Node* const override = operator_override(lefthand->type, lefthand, index, String("index"), index->trace, parser);
+    Node* const override = operator_override(lefthand->type, lefthand, index, str("index"), index->trace, parser);
     if(override) return override;
 
     Node* const offset = new_node((Node) {
@@ -189,12 +189,12 @@ Node* parse_indexing(Node* lefthand, Parser* parser) {
                         .id = NodeBinaryOperation,
                         .type = lefthand->type,
                         .left = lefthand,
-                        .operator = String("+"),
+                        .operator = str("+"),
                         .right = index,
                     }
                 }),
-                .prefix = String("("),
-                .postfix = String(")"),
+                .prefix = str("("),
+                .postfix = str(")"),
             },
         },
     });

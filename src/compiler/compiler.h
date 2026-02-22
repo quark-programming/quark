@@ -4,16 +4,14 @@
 #include "../parser/nodes/nodes.h"
 
 typedef struct {
-    StringVector lines;
+    Vec(String) lines;
     String indent;
 } CompilerSection;
 
-typedef Vector(CompilerSection) CompilerSectionVector;
-
 struct Compiler {
-    CompilerSectionVector sections;
+    Vec(CompilerSection) sections;
     size_t open_section;
-    MessageVector* messages;
+    Vec(Message)* messages;
 };
 
 String new_line(Compiler* compiler);

@@ -7,6 +7,6 @@
 
 Node* parse_variable_declaration(Type* type, IdentifierInfo info, Parser* parser);
 
-Node* create_temp_variable(Node* value, Parser* parser, NodeVector* collector);
+Node* create_temp_variable(Node* value, Parser* parser, Vec(Node*)* collector);
 
 #endif

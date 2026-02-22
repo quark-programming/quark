@@ -6,7 +6,7 @@
 void comp_VariableDeclaration(void* void_self, String* line, Compiler* compiler) {
     VariableDeclaration* const self = void_self;
 
-    if((self->generics.base_type_arguments.size && !self->generics.type_arguments_stack.size)
+    if((self->generics.base_type_arguments && !len(self->generics.type_arguments_stack))
        || self->identifier.is_external || (self->const_value && self->const_value->flags & fType))
         return;
 
@@ -28,10 +28,10 @@ void comp_VariableDeclaration(void* void_self, String* line, Compiler* compiler)
         strf(line, " = ");
         compile(self->const_value, line, compiler);
     } else if(self->type->flags & fConst) {
-        push(compiler->messages, REPORT_ERR(self->trace,
-                 String("expected declaration with '\33[35mconst\33[0m' type to have a value")));
+        push(compiler->messages, MERROR(self->trace,
+                 str("expected declaration with '\33[35mconst\33[0m' type to have a value")));
     }
 
     strf(line, ";");
-    push(&compiler->sections.data[compiler->open_section].lines, decl_line);
+    push(&compiler->sections[compiler->open_section].lines, decl_line);
 }

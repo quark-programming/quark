@@ -1,13 +1,11 @@
 #ifndef NODES_H
 #define NODES_H
 
-#include <stdint.h>
-#include <vector.h>
-
+#include <wrap.h>
 #include "../../tokenizer/tokenizer.h"
 #include "fields.h"
 
-typedef enum : uint32_t {
+typedef enum : u32 {
     NodeNone,
 
     NodeWrapper = 1 << 2,
@@ -58,6 +56,7 @@ enum {
 };
 
 #include "righthand/declaration/identifier.h"
+#include "statement/module.h"
 #include "statement/scope.h"
 
 #include "type/generics.h"
@@ -134,11 +133,8 @@ union Node {
     Declaration Declaration;
 };
 
-typedef Vector(Node) AbsoluteNodeVector;
-typedef Vector(AbsoluteNodeVector) NodeArena;
-
-extern NodeArena global_node_arena;
-extern NodeVector global_unused_nodes;
+extern Vec(Vec(Node)) global_node_arena;
+extern Vec(Node*) global_unused_nodes;
 
 void init_node_arena(size_t initial_size);
 

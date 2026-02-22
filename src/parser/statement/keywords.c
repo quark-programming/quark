@@ -7,34 +7,34 @@
 #include "../type/clash_types.h"
 #include "../type/types.h"
 
-CStringVector global_library_paths = { 0 };
+Vec(char*) global_library_paths = NULL;
 
 // TODO: (organizational) move some of these functions out of this file
 
 Node* keyword_import(const Token token, Parser* parser) {
-    String sub_path = { 0 };
+    String sub_path = NULL;
     Trace full_trace = token.trace;
 
     do {
         const Trace section = expect(parser->tokenizer, TokenIdentifier).trace;
-        strf(&sub_path, "/%.*s", FMT(section.source));
+        strf(&sub_path, "/%.*s", fmtof(section.source));
         full_trace = stretch(full_trace, section);
     } while(try(parser->tokenizer, TokenDoubleColon, NULL));
     expect(parser->tokenizer, ';');
 
     strf(&sub_path, ".qk");
 
-    String import_path = { 0 };
-    for(size_t i = 0; i < global_library_paths.size; i++) {
-        strf(&import_path, "%s%.*s%c", global_library_paths.data[i], FMT(sub_path), 0);
-        char* input_content = fs_readfile(import_path.data);
+    String import_path = NULL;
+    for(size_t i = 0; i < len(global_library_paths); i++) {
+        strf(&import_path, "%s%.*s%c", global_library_paths[i], fmtof(sub_path), 0);
+        char* input_content = fs_readfile(import_path);
 
         if(!input_content) {
-            import_path.size = 0;
+            len(import_path) = 0;
             continue;
         }
 
-        Tokenizer import_tokenizer = new_tokenizer(import_path.data, input_content, parser->tokenizer->messages);
+        Tokenizer import_tokenizer = new_tokenizer(import_path, input_content, parser->tokenizer->messages);
         Tokenizer* const tokenizer = parser->tokenizer;
         parser->tokenizer = &import_tokenizer;
 
@@ -45,7 +45,7 @@ Node* keyword_import(const Token token, Parser* parser) {
     }
 
     push(parser->tokenizer->messages,
-         REPORT_ERR(full_trace, strf(0, "unable to open or read '%.*s'", FMT(import_path))));
+         MERROR(full_trace, strf(0, "unable to open or read '%.*s'", fmtof(import_path))));
     return new_node((Node) { NodeNone });
 }
 
@@ -56,10 +56,10 @@ Node* keyword_return(const Token token, Parser* parser) {
 
     if(last(parser->stack)->parent->id != NodeFunctionDeclaration) {
         push(parser->tokenizer->messages,
-             REPORT_ERR(value ? stretch(trace_start, value->trace) : trace_start, String(
-                 "return statement needs to be inside of a function")));
+             MERROR(value ? stretch(trace_start, value->trace) : trace_start,
+                 str("return statement needs to be inside of a function")));
     } else if(value) {
-        clash_types(last(parser->stack)->parent->FunctionDeclaration.type->FunctionType.signature.data[0], value->type,
+        clash_types(last(parser->stack)->parent->FunctionDeclaration.type->FunctionType.signature[0], value->type,
                     value->trace, parser->tokenizer->messages, 0);
     }
 
@@ -129,7 +129,7 @@ Node* keyword_struct(const Token token, Parser* parser) {
         unbox(next_declaration);
     }
 
-    NodeVector declarations = { 0 };
+    Vec(Node*) declarations = { 0 };
     if(!try(parser->tokenizer, '}', NULL)) {
         push(&declarations, next_declaration);
 
@@ -148,10 +148,10 @@ Node* keyword_struct(const Token token, Parser* parser) {
 Node* keywords_control(const Token keyword, Parser* parser) {
     expect(parser->tokenizer, '(');
 
-    const NodeVector conditions = collect_until(parser, &expression, ';', ')');
-    if(conditions.size != (keyword.identifier.keyword.specific_action - KeywordControlSingleCond) * 2 + 1) {
-        push(parser->tokenizer->messages, REPORT_ERR(stretch(conditions.data[0]->trace, last(conditions)->trace),
-                 String("too many or too little conditions (separated by ';') in control statement")));
+    Vec(Node*) const conditions = collect_until(parser, &expression, ';', ')');
+    if(len(conditions) != (keyword.identifier.keyword.specific_action - KeywordControlSingleCond) * 2 + 1) {
+        push(parser->tokenizer->messages, MERROR(stretch(conditions[0]->trace, last(conditions)->trace),
+                 str("too many or too little conditions (separated by ';') in control statement")));
     }
 
     Node* body_node = statement(parser);

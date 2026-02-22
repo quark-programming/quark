@@ -12,7 +12,7 @@ Node* parse_struct_literal(Type* const wrapped_struct_type, Parser* parser) {
     // TODO: error message if not struct
     if(struct_type->id != NodeStructType) {
         push(parser->tokenizer->messages,
-             REPORT_ERR(wrapped_struct_type->trace, String("creating structure literal with a non-structure type")));
+             MERROR(wrapped_struct_type->trace, str("creating structure literal with a non-structure type")));
 
         close_type(opened.actions, 0);
         return (void*) wrapped_struct_type;
@@ -33,15 +33,15 @@ Node* parse_struct_literal(Type* const wrapped_struct_type, Parser* parser) {
                 push(&struct_literal->field_names, field_name.trace.source);
                 push(&struct_literal->field_values, expression(parser));
 
-                for(size_t i = 0; i < struct_type->fields.size; i++) {
-                    if(streq(struct_type->fields.data[i].identifier, field_name.trace.source)) {
+                for(size_t i = 0; i < len(struct_type->fields); i++) {
+                    if(streq(struct_type->fields[i].identifier, field_name.trace.source)) {
                         goto continue_;
                     }
                 }
 
-                String message = strf(0, "no field named '\33[35m%.*s\33[35m' on '\33[35m");
+                String message = strf(0, "no field named '\33[35m%.*s\33[35m' on '\33[35m").as_owned;
                 stringify_type((void*) struct_type, &message, 0);
-                push(parser->tokenizer->messages, REPORT_ERR(field_name.trace, strf(&message, "\33[0m'")));
+                push(parser->tokenizer->messages, MERROR(field_name.trace, strf(&message, "\33[0m'")));
 
                 continue_:
                     if(!try(parser->tokenizer, ',', 0)) break;
@@ -51,7 +51,7 @@ Node* parse_struct_literal(Type* const wrapped_struct_type, Parser* parser) {
             parser->tokenizer->current = field_name;
         }
 
-        push(&struct_literal->field_names, (String) { 0 });
+        push(&struct_literal->field_names, { 0 });
         push(&struct_literal->field_values, expression(parser));
 
         if(!try(parser->tokenizer, ',', 0)) break;

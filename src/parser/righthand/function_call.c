@@ -9,18 +9,18 @@
 #include "parser/literal/wrapper.h"
 #include "parser/statement/scope.h"
 
-Declaration* fetch_operator_override(Type* type, const String override) {
+Declaration* fetch_operator_override(Type* type, const str override) {
     const OpenedType open = open_type(type, 0);
     close_type(open.actions, 0);
     if(open.type->id != NodeStructType) return NULL;
 
-    Scope* const overrides_scope = get(open.type->StructType.reference_structures, String("Operator"));
+    Scope* const overrides_scope = get(open.type->StructType.reference_structures, str("Operator"));
     if(!overrides_scope) return NULL;
 
     return find_in_scope_unwrapped(*overrides_scope, override);
 }
 
-Node* operator_override_n(Type* type, Node* self, NodeVector arguments, const String override, const Trace trace,
+Node* operator_override_n(Type* type, Node* self, Vec(Node*) arguments, const str override, const Trace trace,
                           Parser* parser) {
     Declaration* const operator_override = fetch_operator_override(type, override);
     if(!operator_override) return NULL;
@@ -30,26 +30,26 @@ Node* operator_override_n(Type* type, Node* self, NodeVector arguments, const St
 
     override_variable->Variable.bound_self_argument = self;
     override_variable->type = make_type_standalone(override_variable->type);
-    if(global_actions.size) override_variable->action = override_variable->type->Wrapper.action;
+    if(len(global_actions)) override_variable->action = override_variable->type->Wrapper.action;
 
     close_type(opened_lefthand.actions, 0);
     return call_function((void*) override_variable, arguments, parser);
 }
 
-Node* operator_override(Type* type, Node* self, Node* argument, const String override, const Trace trace,
+Node* operator_override(Type* type, Node* self, Node* argument, const str override, const Trace trace,
                         Parser* parser) {
-    NodeVector arguments = { 0 };
+    Vec(Node*) arguments = { 0 };
     push(&arguments, argument);
     return operator_override_n(type, self, arguments, override, trace, parser);
 }
 
-Node* call_function(Node* function, NodeVector arguments, Parser* const parser) {
+Node* call_function(Node* function, Vec(Node*) arguments, Parser* const parser) {
     const OpenedType opened_function_type = open_type(function->type, 0);
     FunctionType* const function_type = (void*) opened_function_type.type;
 
     // TODO: Operator::call override
     if(function_type->id != NodeFunctionType) {
-        push(parser->tokenizer->messages, REPORT_ERR(function->trace, String("calling a non-function value")));
+        push(parser->tokenizer->messages, MERROR(function->trace, str("calling a non-function value")));
         close_type(opened_function_type.actions, 0);
         return function;
     }
@@ -57,38 +57,38 @@ Node* call_function(Node* function, NodeVector arguments, Parser* const parser) 
     if(function->id == WrapperVariable && function->Wrapper.Variable.bound_self_argument) {
         // TODO: vector unshift() function macro
         resv(&arguments, 1);
-        memmove(arguments.data + 1, arguments.data, arguments.size * sizeof(Node*));
-        arguments.data[0] = function->Wrapper.Variable.bound_self_argument;
-        arguments.size++;
+        memmove(arguments + 1, arguments, len(arguments) * sizeof(Node*));
+        arguments[0] = function->Wrapper.Variable.bound_self_argument;
+        len(arguments)++;
 
-        const OpenedType open_self = open_type(arguments.data[0]->type, 0);
-        if(function_type->signature.size >= 2 && function_type->signature.data[1]->id == NodePointerType
+        const OpenedType open_self = open_type(arguments[0]->type, 0);
+        if(len(function_type->signature) >= 2 && function_type->signature[1]->id == NodePointerType
            && open_self.type->id != NodePointerType) {
-            arguments.data[0] = reference(arguments.data[0], arguments.data[0]->trace);
+            arguments[0] = reference(arguments[0], arguments[0]->trace);
         }
         close_type(open_self.actions, 0);
     }
 
-    for(size_t i = 0; i < arguments.size; i++) {
-        if(i + 1 >= function_type->signature.size) {
+    for(size_t i = 0; i < len(arguments); i++) {
+        if(i + 1 >= len(function_type->signature)) {
             push(parser->tokenizer->messages,
-                 REPORT_ERR(stretch(arguments.data[i]->trace, last(arguments)->trace),
-                     String("too many arguments in function call")));
+                 MERROR(stretch(arguments[i]->trace, last(arguments)->trace),
+                     str("too many arguments in function call")));
             push(parser->tokenizer->messages,
                  see_declaration((Declaration*) function_type->declaration, function->trace));
             break;
         }
 
-        clash_types(function_type->signature.data[i + 1], arguments.data[i]->type, arguments.data[i]->trace,
+        clash_types(function_type->signature[i + 1], arguments[i]->type, arguments[i]->trace,
                     parser->tokenizer->messages, 0);
     }
 
-    if(arguments.size + 1 < function_type->signature.size) {
-        push(parser->tokenizer->messages, REPORT_ERR(function->trace, String("not enough arguments in function call")));
+    if(len(arguments) + 1 < len(function_type->signature)) {
+        push(parser->tokenizer->messages, MERROR(function->trace, str("not enough arguments in function call")));
         push(parser->tokenizer->messages, see_declaration((void*) function_type->declaration, function->trace));
     }
 
-    Type* const return_type = make_type_standalone(function_type->signature.data[0]);
+    Type* const return_type = make_type_standalone(function_type->signature[0]);
     close_type(opened_function_type.actions, 0);
 
     return new_node((Node) {
@@ -104,8 +104,6 @@ Node* call_function(Node* function, NodeVector arguments, Parser* const parser) 
 
 Node* parse_function_call(Node* function, Parser* parser) {
     next(parser->tokenizer);
-
-    NodeVector arguments = collect_until(parser, &expression, ',', ')');
-
+    Vec(Node*) arguments = collect_until(parser, &expression, ',', ')');
     return call_function(function, arguments, parser);
 }

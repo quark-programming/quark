@@ -18,17 +18,17 @@ Node* reference(Node* node, const Trace trace) {
             .id = WrapperSurround,
             .trace = trace,
             .type = (void*) reference((void*) node->type, trace),
-            .Surround = { node, String("(&"), String(")") },
+            .Surround = { node, str("(&"), str(")") },
         }
     });
 }
 
-Node* dereference(Node* node, Trace trace, MessageVector* messages) {
+Node* dereference(Node* node, Trace trace, Vec(Message)* messages) {
     if(node->flags & fType) {
         const OpenedType open = open_type((void*) node, 0);
 
         if(open.type->id != NodePointerType) {
-            push(messages, REPORT_ERR(trace, strf(0, "Cannot de-refence a non-pointer value")));
+            push(messages, MERROR(trace, strf(0, "Cannot de-refence a non-pointer value")));
             close_type(open.actions, 0);
             return node;
         }
@@ -44,7 +44,7 @@ Node* dereference(Node* node, Trace trace, MessageVector* messages) {
             .flags = fMutable,
             .trace = trace,
             .type = (void*) dereference((void*) node->type, trace, messages),
-            .Surround = { node, String("(*"), String(")") },
+            .Surround = { node, str("(*"), str(")") },
         }
     });
 }

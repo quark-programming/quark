@@ -3,11 +3,11 @@
 
 #include "../../compiler.h"
 
-extern DeclarationHashMap global_declaration_space;
+extern Map(Declaration*) global_declaration_space;
 
 void populate_global_c_keywords();
 
-void build_simple_identifier(String identifier, String* application);
+void build_simple_identifier(str identifier, String* application);
 
 void build_full_identifier(Identifier identifier, String* application);
 

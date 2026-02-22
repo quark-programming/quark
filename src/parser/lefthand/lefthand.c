@@ -19,7 +19,7 @@ Type* boolean_type() {
             .id = NodeExternal,
             .type = &boolean_type,
             .flags = fType | fNumeric,
-            .data = String("bool"),
+            .data = str("bool"),
         },
     };
     return &boolean_type;
@@ -73,7 +73,7 @@ Node* lefthand_expression(Parser* parser) {
                     .trace = expr->trace,
                     .type = expr->type,
                     .flags = expr->flags,
-                    .Surround = { expr, String("("), String(")") },
+                    .Surround = { expr, str("("), str(")") },
                 },
             });
         }
@@ -100,7 +100,7 @@ Node* lefthand_expression(Parser* parser) {
                     .id = WrapperSurround,
                     .type = boolean_type(),
                     .trace = expr->trace,
-                    .Surround = { expr, String("!") },
+                    .Surround = { expr, str("!") },
                 },
             });
         }
@@ -112,15 +112,15 @@ Node* lefthand_expression(Parser* parser) {
                     .id = WrapperSurround,
                     .type = expr->type,
                     .trace = expr->trace,
-                    .Surround = { expr, String("-") },
+                    .Surround = { expr, str("-") },
                 }
             });
         }
 
         default:
-            push(parser->tokenizer->messages, REPORT_ERR(token.trace,
+            push(parser->tokenizer->messages, MERROR(token.trace,
                      strf(0, "expected a \33[35mliteral\33[0m, but got '\33[35m%.*s\33[0m'",
-                         (int) token.trace.source.size, token.trace.source.data)));
+                         fmtof(token.trace.source))));
             return (void*) numeric_literal_from_token(token);
     }
 }

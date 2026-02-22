@@ -1,9 +1,6 @@
 #ifndef NODE_WRAPPER_H
 #define NODE_WRAPPER_H
 
-#include <vector.h>
-#include <vector-string.h>
-
 #include "../fields.h"
 
 enum {
@@ -12,14 +9,12 @@ enum {
     ActionApplyCollection,
 };
 
-typedef Vector(struct Action, ActionVector) ActionVector;
-
 typedef struct Action {
     unsigned type;
 
     union {
-        TypeVector generics;
-        ActionVector collection;
+        Vec(Type*) generics;
+        Vec(struct Action) collection;
     };
 
     Declaration* target;
@@ -38,19 +33,18 @@ typedef struct Wrapper {
         struct {
             Declaration* declaration;
             Node* bound_self_argument;
-            bool is_self_literal : 1;
+            bool is_self_literal;
         } Variable;
 
         struct {
             Type* ref;
             Type* test_against;
-            // struct GenericReference* replacement_generic;
         } Auto;
 
         struct {
             Node* child;
-            String prefix;
-            String postfix;
+            str prefix;
+            str postfix;
         } Surround;
     };
 } Wrapper;

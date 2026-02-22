@@ -7,7 +7,7 @@
 #include "../statement/statement.h"
 #include "../statement/scope.h"
 
-Type* wrap_applied_generics(Type* type, const TypeVector generics, Declaration* declaration) {
+Type* wrap_applied_generics(Type* type, Vec(Type*) const generics, Declaration* declaration) {
     return new_type((Type) {
         .Wrapper = {
             .id = WrapperAuto,
@@ -22,19 +22,19 @@ Type* wrap_applied_generics(Type* type, const TypeVector generics, Declaration* 
 void apply_type_arguments(Wrapper* variable, Parser* parser) {
     while(variable->id != WrapperVariable) variable = (void*) variable->child;
     Declaration* const declaration = variable->Variable.declaration;
-    if(!declaration->generics.base_type_arguments.size) return;
+    if(!declaration->generics.base_type_arguments) return;
 
-    const TypeVector base_generics = declaration->generics.base_type_arguments;
-    TypeVector input_generics = { 0 };
+    Vec(Type*) const base_generics = declaration->generics.base_type_arguments;
+    Vec(Type*) input_generics = NULL;
 
-    for(size_t i = 0; i < base_generics.size; i++) {
+    for(size_t i = 0; i < len(base_generics); i++) {
         Type* const type_argument = new_type((Type) {
             .Wrapper = {
                 .id = WrapperAuto,
                 .trace = variable->trace,
-                .flags = base_generics.data[i]->flags,
+                .flags = base_generics[i]->flags,
                 .Auto = {
-                    .test_against = base_generics.data[i]
+                    .test_against = base_generics[i]
                 },
             }
         });
@@ -43,24 +43,25 @@ void apply_type_arguments(Wrapper* variable, Parser* parser) {
 
     if(try(parser->tokenizer, '<', 0)) {
         global_righthand_collecting_type_arguments = true;
-        const NodeVector type_arguments = collect_until(parser, &expression, ',', '>');
+        Vec(Node*) const type_arguments = collect_until(parser, &expression, ',', '>');
         global_righthand_collecting_type_arguments = false;
-        for(size_t i = 0; i < type_arguments.size; i++) {
-            if(!(type_arguments.data[i]->flags & fType)) {
-                push(parser->tokenizer->messages, REPORT_ERR(type_arguments.data[i]->trace,
-                         String("expected a type in type arguments")));
+
+        for(size_t i = 0; i < len(type_arguments); i++) {
+            if(!(type_arguments[i]->flags & fType)) {
+                push(parser->tokenizer->messages, MERROR(type_arguments[i]->trace,
+                         str("expected a type in type arguments")));
             }
 
-            if(i >= base_generics.size) {
-                push(parser->tokenizer->messages, REPORT_ERR(stretch(type_arguments.data[i]->trace,
-                         last(type_arguments)->trace), String("too many type arguments")));
-                push(parser->tokenizer->messages, see_declaration(declaration, type_arguments.data[i]->trace));
+            if(i >= len(base_generics)) {
+                push(parser->tokenizer->messages, MERROR(stretch(type_arguments[i]->trace,
+                         last(type_arguments)->trace), str("too many type arguments")));
+                push(parser->tokenizer->messages, see_declaration(declaration, type_arguments[i]->trace));
                 break;
             }
 
-            clash_types(input_generics.data[i], (void*) type_arguments.data[i], type_arguments.data[i]->trace,
+            clash_types(input_generics[i], (void*) type_arguments[i], type_arguments[i]->trace,
                         parser->tokenizer->messages, 0);
-            input_generics.data[i]->trace = type_arguments.data[i]->trace;
+            input_generics[i]->trace = type_arguments[i]->trace;
         }
     }
 
@@ -94,55 +95,11 @@ GenericsCollection collect_generics(Parser* const parser) {
                 .flags = fType | fConst,
                 .type = base_type,
                 .const_value = (void*) base_type,
-                // .identifier = {
-                //     .base = identifier.trace.source,
-                //     .parent_scope = (void*) collection.generic_declarations_scope,
-                // },
             },
         });
-        // type_declaration->identifier.parent_declaration = type_declaration;
 
         put(&collection.generic_declarations_scope->variables, identifier.trace.source, type_declaration);
         push(&collection.base_type_arguments, base_type);
-
-        // GenericReference* generic_type = (void*) new_type((Type) {
-        //     .GenericReference = {
-        //         .id = NodeGenericReference,
-        //         .flags = fConstExpr,
-        //         .trace = identifier.trace,
-        //         .index = collection.base_type_arguments.size,
-        //     }
-        // });
-        // push(&collection.declaration_setters, &generic_type->generics_declaration);
-        //
-        // Wrapper* base_generic = (void*) new_type((Type) {
-        //     .Wrapper = {
-        //         .id = WrapperAuto,
-        //         .flags = fConstExpr,
-        //         .trace = identifier.trace,
-        //         .Auto.replacement_generic = (void*) new_type((Type) {
-        //             .GenericReference = {
-        //                 .id = NodeGenericReference,
-        //                 .flags = fConstExpr,
-        //                 .trace = identifier.trace,
-        //                 .index = collection.base_type_arguments.size,
-        //             }
-        //         }),
-        //     }
-        // });
-        // push(&collection.base_type_arguments, (void*)base_generic);
-        // push(&collection.declaration_setters, &base_generic->Auto.replacement_generic->generics_declaration);
-        //
-        // Declaration* const generic_variable_declaration = (void*) new_node((Node) {
-        //     .VariableDeclaration = {
-        //         .id = NodeVariableDeclaration,
-        //         .trace = identifier.trace,
-        //         .flags = fConst | fType,
-        //         .type = (void*) generic_type,
-        //         .const_value = (void*) generic_type,
-        //     }
-        // });
-        // put(&collection.generic_declarations_scope->variables, identifier.trace.source, generic_variable_declaration);
 
         if(!try(parser->tokenizer, ',', 0)) break;
     }
@@ -152,26 +109,19 @@ GenericsCollection collect_generics(Parser* const parser) {
 }
 
 void assign_generics_to_declaration(Declaration* declaration, const GenericsCollection collection) {
-    if(!collection.base_type_arguments.size) return;
+    if(!len(collection.base_type_arguments)) return;
     declaration->generics.base_type_arguments = collection.base_type_arguments;
     push(&declaration->generics.type_arguments_stack, collection.base_type_arguments);
-
-    // for(size_t i = 0; i < collection.declaration_setters.size; i++) {
-    //     *collection.declaration_setters.data[i] = declaration;
-    // }
 }
 
 void close_generics_declaration(Declaration* declaration) {
-    declaration->generics.type_arguments_stack.size = 0;
+    len(declaration->generics.type_arguments_stack) = 0;
 
-    const size_t base_size = declaration->generics.base_type_arguments.size;
-    declaration->generics.base_type_arguments.size = 0;
-
-    // TypeVector base_type_arguments = { 0 };
-    // resv(&base_type_arguments, declaration->generics.base_type_arguments.size);
+    const size_t base_size = len(declaration->generics.base_type_arguments);
+    len(declaration->generics.base_type_arguments) = 0;
 
     for(size_t i = 0; i < base_size; i++) {
-        Type* base_type = declaration->generics.base_type_arguments.data[i];
+        Type* base_type = declaration->generics.base_type_arguments[i];
         push(&declaration->generics.base_type_arguments, new_type(*base_type));
 
         *base_type = (Type) {

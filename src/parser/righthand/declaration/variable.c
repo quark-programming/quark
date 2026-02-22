@@ -34,7 +34,7 @@ Node* parse_variable_declaration(Type* type, IdentifierInfo info, Parser* parser
     return (void*) variable_of((void*) declaration, declaration->trace, fIgnoreStatement);
 }
 
-Node* create_temp_variable(Node* const value, Parser* const parser, NodeVector* collector) {
+Node* create_temp_variable(Node* const value, Parser* const parser, Vec(Node*)* collector) {
     static unsigned id = 0;
 
     Declaration* declaration = (void*) new_node((Node) {
@@ -69,7 +69,7 @@ Node* create_temp_variable(Node* const value, Parser* const parser, NodeVector* 
                 .BinaryOperation = {
                     .id = NodeBinaryOperation,
                     .left = variable,
-                    .operator = String("="),
+                    .operator = str("="),
                     .right = value,
                 },
             }),

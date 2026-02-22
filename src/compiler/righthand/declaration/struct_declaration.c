@@ -11,33 +11,35 @@ void comp_StructDeclaration(void* void_self, String* line, Compiler* compiler) {
     String identifier = { 0 };
     if(resolve_identifier(self->identifier, &identifier)) {
         if(self->compilation_state == CompilationIntermediate) {
-            push(&compiler->sections.data[0].lines, strf(0, "struct %.*s;", FMT(identifier)));
+            push(&compiler->sections[0].lines, strf(0, "struct %.*s;", fmtof(identifier)).as_owned);
             self->compilation_state = CompilationUnused;
         }
 
-        free(identifier.data);
+        free(vbase(identifier));
         return;
     }
 
-    String typedef_line = strf(0, "struct %.*s", FMT(identifier));
+    String typedef_line = strf(0, "struct %.*s", fmtof(identifier)).as_owned;
     self->compilation_state = CompilationIntermediate;
 
     strf(&typedef_line, " { ");
-    for(size_t i = 0; i < struct_type->fields.size; i++) {
-        compile(struct_type->fields.data[i].type, &typedef_line, compiler);
+    for(size_t i = 0; i < len(struct_type->fields); i++) {
+        compile(struct_type->fields[i].type, &typedef_line, compiler);
         strf(&typedef_line, " ");
-        build_simple_identifier(struct_type->fields.data[i].identifier, &typedef_line);
+        build_simple_identifier(struct_type->fields[i].identifier, &typedef_line);
         strf(&typedef_line, "; ");
     }
     strf(&typedef_line, "};");
 
-    push(&compiler->sections.data[0].lines, typedef_line);
+    push(&compiler->sections[0].lines, typedef_line);
     compile(struct_type->static_body, line, compiler);
 
     if(!struct_type->reference_structures) return;
-    for(size_t i = 0; i < sizeof(*struct_type->reference_structures) / sizeof(**struct_type->reference_structures); i++) {
-        for(size_t j = 0; j < (*struct_type->reference_structures)[i].size; j++) {
-            compile(&(*struct_type->reference_structures)[i].data[j].v, line, compiler);
+    // TODO: create wrap::Map entry iterator or just iterator functions in general
+    for(u32 i = 0; i < WRAPMAPSIZE; i++) {
+        unsigned char* const entry_list = (void*)(*struct_type->reference_structures)[i];
+        for(u32 j = 0; j < len((*struct_type->reference_structures)[i]); j++) {
+            compile(entry_list + j * (sizeof(str) + sizeof(Scope*)) + sizeof(str), line, compiler);
         }
     }
 

@@ -4,35 +4,32 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include <vector.h>
-#include <vector-string.h>
+#include <wrap.h>
+#include <helpers.h>
 
 typedef struct Trace {
-    String source;
+    str source;
     const char* filename;
     char* line_start;
-    unsigned row, col;
+    u32 row, col;
 } Trace;
 
 typedef struct Message {
     Trace trace;
-    const char* highlight;
-    const char* label;
-    String content;
+    str content;
+    u8 tty_color;
+    u8 label;
 } Message;
 
-typedef Vector(Message) MessageVector;
+extern const char* global_message_labels[];
 
 Trace stretch(Trace a, Trace b);
 
 bool print_message(Message message);
 
-// TODO(#1): color is normally not a bad practice but at least check if the output is a tty not a file
-//  (a user can put > at the end of the command and the escape codes go into files without being escaped so implement
-//  a helper function that checks if tty)
-#define REPORT_ERR(trace, content) ((Message) { trace, "\33[31m", "error", content })
-#define REPORT_HINT(content) ((Message) { { 0 }, "\33[36m", "hint", content })
-#define REPORT_INFO(trace, content) ((Message) { trace, "\33[36m", "info", content })
-#define REPORT_WARNING(trace, content) ((Message) { trace, "\33[33m", "warning", content })
+#define MERROR(trace, content) ((Message) { trace, content, 1, 0 })
+#define MHINT(content) ((Message) { { 0 }, content, 6, 1 })
+#define MINFO(trace, content) ((Message) { trace, content, 6, 2 })
+#define MWARN(trace, content) ((Message) { trace, content, 3, 3 })
 
 #endif

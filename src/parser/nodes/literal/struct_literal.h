@@ -5,8 +5,8 @@
 
 typedef struct StructLiteral {
     NODE_FIELDS;
-    NodeVector field_values;
-    StringVector field_names;
+    Vec(Node*) field_values;
+    Vec(str) field_names;
 } StructLiteral;
 
 #endif

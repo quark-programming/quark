@@ -22,13 +22,16 @@ FunctionDeclaration* entry_declaration() {
         .FunctionDeclaration = {
             .id = NodeEntryFunctionDeclaration,
             .type = (void*) function_type,
-            .identifier = { .base = str("main") },
+            .identifier = {
+                .base = str("main"),
+            },
             .body = new_scope(NULL),
         }
     });
     declaration->identifier.parent_declaration = (void*) declaration;
+    declaration->identifier.parent_scope = new_scope((void*) declaration);
     function_type->declaration = declaration;
-    declaration->body->parent = (void*) declaration;
+    declaration->body->declaration = (void*) declaration;
 
     return declaration;
 }
@@ -94,7 +97,16 @@ int main(int argc, char** argv) {
 
     Vec(Message) messages = { 0 };
     Tokenizer tokenizer = new_tokenizer(input_files[0], input_content, &messages);
-    Parser parser = { &tokenizer };
+    Parser parser = {
+        .tokenizer = &tokenizer,
+        .module = (void*) new_node((Node) {
+            .Module = {
+                .id = NodeModule,
+                .scope = new_scope(NULL),
+                .root = true,
+            },
+        })
+    };
 
     Compiler compiler = {
         .messages = &messages,
@@ -107,7 +119,7 @@ int main(int argc, char** argv) {
         push(&compiler.sections[0].lines, strf(0, "#include \"%s\"", include_paths[i]).as_owned);
     }
 
-    push(&parser.stack, new_scope(NULL));
+    push(&parser.stack, parser.module->scope);
 
     FunctionDeclaration* entry = entry_declaration();
     push(&parser.stack, entry->body);

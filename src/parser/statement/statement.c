@@ -21,7 +21,7 @@ Node* statement(Parser* parser) {
     }
 
     if(try(parser->tokenizer, '{', NULL)) {
-        Scope* block_scope = new_scope(last(parser->stack)->parent);
+        Scope* block_scope = new_scope(last(parser->stack)->declaration);
 
         push(&parser->stack, block_scope);
         block_scope->children = collect_until(parser, &statement, 0, '}');

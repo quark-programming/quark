@@ -4,9 +4,10 @@
 #include "../fields.h"
 
 typedef struct Module {
-    DECLARATION_FIELDS;
+    NODE_FIELDS;
     Declaration* declaration;
     Scope* scope;
+    bool root;
 } Module;
 
 #endif

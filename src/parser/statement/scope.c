@@ -5,11 +5,11 @@ Scope* new_scope(Declaration* const parent) {
     Scope* const scope = (void*) new_node((Node) {
         .Scope = {
             .id = NodeScope,
-            .parent = parent,
+            .declaration = parent,
         }
     });
 
-    if(!scope->parent) scope->parent = (void*) scope;
+    if(!scope->declaration) scope->declaration = (void*) scope;
     return scope;
 }
 

@@ -29,10 +29,10 @@ bool print_message(const Message message) {
     }
     underline[sizeof(underline) - 1] = '\0';
 
-    printf(iftty("\33[1m%s:%u:%u: \33[%um", "%s:%u:%u: ["),
+    printf(iftty("\33[1m%s:%u:%u: \33[3%um", "%s:%u:%u: ["),
            message.trace.filename, message.trace.row, message.trace.col,
            message.tty_color);
-    printf(iftty("%s:\33[0m %.*s\n%4d | %s\n     : \33[%um", "%s]: %.*s\n%4d | %s\n     : "),
+    printf(iftty("%s:\33[0m %.*s\n%4d | %s\n     : \33[3%um", "%s]: %.*s\n%4d | %s\n     : "),
            global_message_labels[message.label], fmtof(message.content),
            message.trace.row, line_start, message.tty_color);
     printf(iftty("%.*s\33[0m\n", "%.*s\n"),

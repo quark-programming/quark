@@ -2,13 +2,12 @@
 #define NODE_IDENTIFIER_H
 
 #include "../../fields.h"
-#include "parser/nodes/type/struct_type.h"
 
 typedef struct Identifier {
     str base;
-    Declaration* parent_scope;
+    struct Scope* parent_scope;
     Declaration* parent_declaration;
-    StructType* reference_structure;
+    struct StructDeclaration* trait;
     bool is_external;
 } Identifier;
 

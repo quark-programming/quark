@@ -8,7 +8,7 @@ typedef struct Scope {
     Vec(Node*) children;
     Map(Declaration*) variables;
     // DeclarationVector hoisted_declarations;
-    Declaration* parent;
+    Declaration* declaration;
     Node* result_value;
     bool wrap_with_brackets;
 } Scope;

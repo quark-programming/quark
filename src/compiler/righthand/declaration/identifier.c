@@ -43,24 +43,20 @@ static void build_identifier_base(const Identifier identifier, String* const ide
     if(!identifier.is_external && !(identifier.parent_declaration->id == NodeVariableDeclaration
                                     && identifier.parent_declaration->VariableDeclaration.compilation_state ==
                                     CompilationHoisted)) {
-        if(identifier.parent_scope && identifier.parent_scope->id == NodeFunctionDeclaration) {
-            const Identifier parent_ident = identifier.parent_scope->FunctionDeclaration.identifier;
-            build_identifier_base(parent_ident, identifier_builder);
+        if(identifier.parent_scope->declaration->id == NodeFunctionDeclaration) {
+            build_identifier_base(identifier.parent_scope->declaration->FunctionDeclaration.identifier, identifier_builder);
             strf(identifier_builder, "__");
         }
 
-        if(identifier.parent_scope && identifier.parent_scope->id == NodeStructType
-           && !(identifier.parent_declaration->id == NodeVariableDeclaration
+        if(identifier.parent_scope->declaration->id == NodeStructDeclaration
+            && !(identifier.parent_declaration->id == NodeVariableDeclaration
                 && !(identifier.parent_declaration->type->flags & fType))) {
-            const Identifier parent_ident =
-                    ((StructType*) (void*) identifier.parent_scope)->module->declaration->identifier;
-            build_identifier_base(parent_ident, identifier_builder);
+            build_identifier_base(identifier.parent_scope->declaration->identifier, identifier_builder);
             strf(identifier_builder, "__");
         }
 
-        if(identifier.reference_structure) {
-            const Identifier parent_ident = identifier.reference_structure->module->declaration->identifier;
-            build_identifier_base(parent_ident, identifier_builder);
+        if(identifier.trait) {
+            build_identifier_base(identifier.trait->identifier, identifier_builder);
             strf(identifier_builder, "__");
         }
     }

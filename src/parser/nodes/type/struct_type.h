@@ -14,6 +14,7 @@ typedef struct StructType {
     struct Module* module;
     Vec(StructField) fields;
     Map(Scope) traits;
+    bool is_trait;
 } StructType;
 
 #endif

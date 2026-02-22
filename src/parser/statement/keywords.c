@@ -54,12 +54,12 @@ Node* keyword_return(const Token token, Parser* parser) {
     Node* value = parser->tokenizer->current.type == ';' ? NULL : expression(parser);
     expect(parser->tokenizer, ';');
 
-    if(last(parser->stack)->parent->id != NodeFunctionDeclaration) {
+    if(last(parser->stack)->declaration->id != NodeFunctionDeclaration) {
         push(parser->tokenizer->messages,
              MERROR(value ? stretch(trace_start, value->trace) : trace_start,
                  str("return statement needs to be inside of a function")));
     } else if(value) {
-        clash_types(last(parser->stack)->parent->FunctionDeclaration.type->FunctionType.signature[0], value->type,
+        clash_types(last(parser->stack)->declaration->FunctionDeclaration.type->FunctionType.signature[0], value->type,
                     value->trace, parser->tokenizer->messages, 0);
     }
 
@@ -93,7 +93,6 @@ Node* keyword_struct(const Token token, Parser* parser) {
 
     type->module = module;
     if(!module->scope) module->scope = new_scope(NULL);
-    module->scope->parent = (void*) type;
 
     // TODO: create a flag that only allows type to compile if it is pointed to (in reference()) this will prevent
     //  circular types and allow structs to reference themselves within themselves
@@ -109,10 +108,11 @@ Node* keyword_struct(const Token token, Parser* parser) {
         }
     });
 
+    module->scope->declaration = (void*) declaration;
+    module->declaration = (void*) declaration;
     put(&info.declaration_scope->variables, info.identifier.base, (void*) declaration);
     assign_generics_to_declaration((void*) declaration, info.generics_collection);
     declaration->identifier.parent_declaration = (void*) declaration;
-    module->declaration = (void*) declaration;
 
     push(&parser->stack, module->scope);
     expect(parser->tokenizer, '{');
@@ -169,7 +169,7 @@ Node* keywords_control(const Token keyword, Parser* parser) {
     if(body_node->id == NodeScope) {
         body = (void*) body_node;
     } else {
-        body = new_scope(last(parser->stack)->parent);
+        body = new_scope(last(parser->stack)->declaration);
         push(&body->children, body_node);
     }
 

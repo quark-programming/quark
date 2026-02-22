@@ -29,15 +29,15 @@ static int recycle_missing_generics(Type* missing, Type* ignore, void* void_pars
     return 0;
 }
 
-static Argument create_self_literal(const Trace trace, StructType* const parent_struct, Parser* parser, bool is_ref) {
+static Argument create_self_literal(const Trace trace, Declaration* const declaration, Parser* parser, bool is_ref) {
     Type* type;
 
-    if(parent_struct->id != NodeStructType) {
+    if(declaration->id != NodeStructDeclaration) {
         push(parser->tokenizer->messages,
              MERROR(trace, str("Cannot create self literal outside of a struct declaration")));
         type = new_type((Type) { .Wrapper = { WrapperAuto, 0, trace } });
     } else {
-        Wrapper* wrapper = variable_of(parent_struct->module->declaration, trace, 0);
+        Wrapper* wrapper = variable_of(declaration, trace, 0);
         apply_type_arguments(wrapper, parser);
         type = (void*) wrapper;
     }
@@ -62,14 +62,14 @@ static void parse_function_arguments(FunctionType* function_type, FunctionDeclar
             if(parser->tokenizer->current.type == TokenIdentifier
                && streq(parser->tokenizer->current.trace.source, str("self"))) {
                 argument = create_self_literal(stretch(snapshot.trace, next(parser->tokenizer).trace),
-                                               (void*) declaration->identifier.parent_scope, parser, true);
+                                               (void*) declaration->identifier.parent_scope->declaration, parser, true);
             } else {
                 parser->tokenizer->current = snapshot;
             }
         } else if(parser->tokenizer->current.type == TokenIdentifier
                   && streq(parser->tokenizer->current.trace.source, str("self"))) {
-            argument = create_self_literal(next(parser->tokenizer).trace, (void*) declaration->identifier.parent_scope,
-                                           parser, false);
+            argument = create_self_literal(next(parser->tokenizer).trace,
+                                           (void*) declaration->identifier.parent_scope->declaration, parser, false);
         }
 
         if(!argument.type) {
@@ -133,7 +133,7 @@ Node* parse_function_declaration(Type* return_type, IdentifierInfo info, Parser*
         }
     });
     declaration->body = info.generics_collection.generic_declarations_scope ? : new_scope(NULL);
-    declaration->body->parent = (void*) declaration;
+    declaration->body->declaration = (void*) declaration;
 
     function_type->declaration = declaration;
     function_type->declaration->identifier.parent_declaration = (void*) declaration;

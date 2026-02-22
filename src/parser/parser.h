@@ -6,6 +6,7 @@
 typedef struct Parser {
     Tokenizer* tokenizer;
     Stack stack;
+    Module* module;
 } Parser;
 
 Node* eval_w(const char* filename, char* code, Parser* parser, Node* (*supplier)(Parser*));

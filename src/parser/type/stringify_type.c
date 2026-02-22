@@ -32,10 +32,10 @@ static int stringify_acceptor(Type* type, Type* follower, void* void_accumulator
     switch(type->id) {
         case WrapperAuto:
             strf(accumulator->string, type->flags & fNumeric
-                                          ? accumulator->flags & StringifyAlphaNumeric
-                                                ? "number"
-                                                : "~number"
-                                          : "auto");
+                 ? accumulator->flags & StringifyAlphaNumeric
+                 ? "number"
+                 : "~number"
+                 : "auto");
             return 0;
 
         case NodeExternal:
@@ -48,10 +48,11 @@ static int stringify_acceptor(Type* type, Type* follower, void* void_accumulator
 
         case NodeStructType:
             strf(accumulator->string, accumulator->flags & StringifyAlphaNumeric ? "struct_%.*s" : "struct %.*s",
-                 fmtof(type->StructType.parent->identifier.base));
+                 fmtof(type->StructType.module->declaration->identifier.base));
 
-            if(type->StructType.parent->generics.base_type_arguments) {
-                stringify_generics(accumulator->string, last(type->StructType.parent->generics.type_arguments_stack),
+            if(type->StructType.module->declaration->generics.base_type_arguments) {
+                stringify_generics(accumulator->string,
+                                   last(type->StructType.module->declaration->generics.type_arguments_stack),
                                    accumulator->flags);
             }
 

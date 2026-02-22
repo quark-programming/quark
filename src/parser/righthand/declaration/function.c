@@ -37,11 +37,9 @@ static Argument create_self_literal(const Trace trace, StructType* const parent_
              MERROR(trace, str("Cannot create self literal outside of a struct declaration")));
         type = new_type((Type) { .Wrapper = { WrapperAuto, 0, trace } });
     } else {
-        Wrapper* wrapper = variable_of((void*) parent_struct->parent, trace, 0);
+        Wrapper* wrapper = variable_of(parent_struct->module->declaration, trace, 0);
         apply_type_arguments(wrapper, parser);
         type = (void*) wrapper;
-        // type = wrapper->type;
-        // unbox((void*) wrapper);
     }
 
     const Argument argument = {

@@ -14,7 +14,7 @@ Declaration* fetch_operator_override(Type* type, const str override) {
     close_type(open.actions, 0);
     if(open.type->id != NodeStructType) return NULL;
 
-    Scope* const overrides_scope = get(open.type->StructType.reference_structures, str("Operator"));
+    Scope* const overrides_scope = get(open.type->StructType.traits, str("Operator"));
     if(!overrides_scope) return NULL;
 
     return find_in_scope_unwrapped(*overrides_scope, override);

@@ -32,13 +32,13 @@ void comp_StructDeclaration(void* void_self, String* line, Compiler* compiler) {
     strf(&typedef_line, "};");
 
     push(&compiler->sections[0].lines, typedef_line);
-    compile(struct_type->static_body, line, compiler);
+    compile(struct_type->module->scope, line, compiler);
 
-    if(!struct_type->reference_structures) return;
+    if(!struct_type->traits) return;
     // TODO: create wrap::Map entry iterator or just iterator functions in general
     for(u32 i = 0; i < WRAPMAPSIZE; i++) {
-        unsigned char* const entry_list = (void*)(*struct_type->reference_structures)[i];
-        for(u32 j = 0; j < len((*struct_type->reference_structures)[i]); j++) {
+        unsigned char* const entry_list = (void*)(*struct_type->traits)[i];
+        for(u32 j = 0; j < len((*struct_type->traits)[i]); j++) {
             compile(entry_list + j * (sizeof(str) + sizeof(Scope*)) + sizeof(str), line, compiler);
         }
     }

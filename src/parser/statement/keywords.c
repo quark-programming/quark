@@ -82,9 +82,18 @@ Node* keyword_struct(const Token token, Parser* parser) {
             .trace = stretch(trace_start, info.trace),
         }
     });
-    type->static_body = info.generics_collection.generic_declarations_scope;
-    if(!type->static_body) type->static_body = new_scope(NULL);
-    type->static_body->parent = (void*) type;
+
+    Module* module = (void*) new_node((Node) {
+        .Module = {
+            .id = NodeModule,
+            .type = (void*) type,
+            .scope = info.generics_collection.generic_declarations_scope,
+        },
+    });
+
+    type->module = module;
+    if(!module->scope) module->scope = new_scope(NULL);
+    module->scope->parent = (void*) type;
 
     // TODO: create a flag that only allows type to compile if it is pointed to (in reference()) this will prevent
     //  circular types and allow structs to reference themselves within themselves
@@ -103,9 +112,9 @@ Node* keyword_struct(const Token token, Parser* parser) {
     put(&info.declaration_scope->variables, info.identifier.base, (void*) declaration);
     assign_generics_to_declaration((void*) declaration, info.generics_collection);
     declaration->identifier.parent_declaration = (void*) declaration;
-    type->parent = declaration;
+    module->declaration = (void*) declaration;
 
-    push(&parser->stack, type->static_body);
+    push(&parser->stack, module->scope);
     expect(parser->tokenizer, '{');
 
     Node* next_declaration = 0;
@@ -140,7 +149,7 @@ Node* keyword_struct(const Token token, Parser* parser) {
 
     pop(&parser->stack);
     close_generics_declaration((void*) declaration);
-    type->static_body->children = declarations;
+    module->scope->children = declarations;
 
     return new_node((Node) { NodeNone });
 }

@@ -33,6 +33,7 @@ typedef enum : u32 {
     NodeStructDeclaration,
 
     NodeScope,
+    NodeModule,
     NodeStatementWrapper,
     NodeReturnStatement,
     NodeControlStatement,
@@ -56,7 +57,6 @@ enum {
 };
 
 #include "righthand/declaration/identifier.h"
-#include "statement/module.h"
 #include "statement/scope.h"
 
 #include "type/generics.h"
@@ -81,6 +81,7 @@ enum {
 #include "statement/statement_wrapper.h"
 #include "statement/return_statement.h"
 #include "statement/control_statement.h"
+#include "statement/module.h"
 
 union Type {
     struct { TYPE_FIELDS; };
@@ -128,6 +129,7 @@ union Node {
     ReturnStatement ReturnStatement;
     ControlStatement ControlStatement;
     Scope Scope;
+    Module Module;
 
     Type Type;
     Declaration Declaration;

@@ -42,13 +42,13 @@ Node* parse_optional_coalescing(Node* lefthand, Parser* parser) {
     const OpenedType lefthand_optional = open_type(lefthand->type, 0);
 
     if(lefthand_optional.type->id != NodeStructType ||
-       !streq(lefthand_optional.type->StructType.parent->identifier.base, str("Option"))) {
+       !streq(lefthand_optional.type->StructType.module->declaration->identifier.base, str("Option"))) {
         close_type(lefthand_optional.actions, 0);
         return NULL;
     }
 
     Type* const lefthand_value_type =
-            last(lefthand_optional.type->StructType.parent->generics.type_arguments_stack)[0];
+            last(lefthand_optional.type->StructType.module->declaration->generics.type_arguments_stack)[0];
     close_type(lefthand_optional.actions, 0);
 
     Scope* operation_step_collection = (void*) new_node((Node) {

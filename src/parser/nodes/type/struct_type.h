@@ -11,10 +11,9 @@ typedef struct StructField {
 
 typedef struct StructType {
     TYPE_FIELDS;
+    struct Module* module;
     Vec(StructField) fields;
-    Scope* static_body;
-    struct StructDeclaration* parent;
-    Map(Scope) reference_structures;
+    Map(Scope) traits;
 } StructType;
 
 #endif

@@ -56,7 +56,7 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
     }
 
     if(found_index < 0) {
-        Wrapper* child = find_in_scope(*struct_type->static_body, field_token.trace);
+        Wrapper* child = find_in_scope(*struct_type->module->scope, field_token.trace);
 
         if(child) {
             lefthand->type = make_type_standalone(lefthand->type);
@@ -103,7 +103,7 @@ Node* parse_indexing(Node* lefthand, Parser* parser) {
 
     const OpenedType opened_index = open_type(index->type, 0);
     if(opened_index.type->id == NodeStructType
-       && streq(opened_index.type->StructType.parent->identifier.base, str("Range"))) {
+       && streq(opened_index.type->StructType.module->declaration->identifier.base, str("Range"))) {
         close_type(opened_index.actions, 0);
 
         Declaration* const slice_declaration = fetch_slice_declaration(parser);

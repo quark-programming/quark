@@ -37,14 +37,14 @@ compound_start:
             info.identifier.reference_structure = (void*) info.declaration_scope->parent;
 
             StructType* const wrapped_structure = (void*) initial_declaration_scope->parent;
-            str const reference_identifier = info.identifier.reference_structure->parent->identifier.base;
+            str const reference_identifier = info.identifier.reference_structure->module->declaration->identifier.base;
             Scope* reference_declarations = NULL;
 
-            if(!((reference_declarations = get(wrapped_structure->reference_structures, reference_identifier)))) {
+            if(!((reference_declarations = get(wrapped_structure->traits, reference_identifier)))) {
                 Scope scope = { .id = NodeScope };
 
-                put(&wrapped_structure->reference_structures, reference_identifier, scope);
-                reference_declarations = get(wrapped_structure->reference_structures, reference_identifier);
+                put(&wrapped_structure->traits, reference_identifier, scope);
+                reference_declarations = get(wrapped_structure->traits, reference_identifier);
                 scope.parent = (void*) reference_declarations;
             }
 
@@ -58,8 +58,8 @@ compound_start:
     const Trace next_trace = expect(parser->tokenizer, TokenIdentifier).trace;
     const Action wrapper_action = info.value->action;
 
-    info.declaration_scope = parent_struct->static_body;
-    info.value = find_in_scope(*parent_struct->static_body, next_trace);
+    info.declaration_scope = parent_struct->module->scope;
+    info.value = find_in_scope(*parent_struct->module->scope, next_trace);
 
     if(info.value && wrapper_action.type) {
         info.value->action = wrapper_action;

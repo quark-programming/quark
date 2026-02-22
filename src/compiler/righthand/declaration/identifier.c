@@ -52,13 +52,14 @@ static void build_identifier_base(const Identifier identifier, String* const ide
         if(identifier.parent_scope && identifier.parent_scope->id == NodeStructType
            && !(identifier.parent_declaration->id == NodeVariableDeclaration
                 && !(identifier.parent_declaration->type->flags & fType))) {
-            const Identifier parent_ident = ((StructType*) (void*) identifier.parent_scope)->parent->identifier;
+            const Identifier parent_ident =
+                    ((StructType*) (void*) identifier.parent_scope)->module->declaration->identifier;
             build_identifier_base(parent_ident, identifier_builder);
             strf(identifier_builder, "__");
         }
 
         if(identifier.reference_structure) {
-            const Identifier parent_ident = identifier.reference_structure->parent->identifier;
+            const Identifier parent_ident = identifier.reference_structure->module->declaration->identifier;
             build_identifier_base(parent_ident, identifier_builder);
             strf(identifier_builder, "__");
         }

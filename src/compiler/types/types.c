@@ -51,5 +51,5 @@ void comp_StructType(void* void_self, String* line, Compiler* compiler) {
     StructType* self = void_self;
 
     strf(line, "struct ");
-    resolve_identifier(self->parent->identifier, line);
+    resolve_identifier(self->module->declaration->identifier, line);
 }

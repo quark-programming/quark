@@ -123,7 +123,7 @@ endif
 
 # ========= unit-tests =========
 build-test-c: dirs
-	$(CC) $(CFLAGS) $(UT_SRCS) $(SRCS) $(LDFLAGS) -g -ggdb -DEBUG -o $(UT_BUILD)/unit-tests$(EXE)
+	$(CC) $(CFLAGS) $(UT_SRCS) $(SRCS) $(LDFLAGS) -g -ggdb -o $(UT_BUILD)/unit-tests$(EXE)
 
 test-c: build-test-c
 	@echo ------ unit-tests ------

@@ -65,14 +65,15 @@ int traverse_type(Type* type, Type* follower, int (*acceptor)(Type*, Type*, void
 
             case NodeStructType:
                 if(open_follower.type) {
-                    result = try_compare_same_declarations((void*) open_type.type->StructType.parent, open_type.actions,
-                                                           (void*) open_follower.type->StructType.parent,
+                    result = try_compare_same_declarations((void*) open_type.type->StructType.module->declaration,
+                                                           open_type.actions,
+                                                           (void*) open_follower.type->StructType.module->declaration,
                                                            open_follower.actions, acceptor, accumulator, flags);
                     if(result) break;
                 }
 
-                result = traverse_generics((void*) open_type.type->StructType.parent, acceptor, accumulator,
-                                           flags);
+                result = traverse_generics((void*) open_type.type->StructType.module->declaration, acceptor,
+                                           accumulator, flags);
                 if(result) break;
 
                 if(open_follower.type

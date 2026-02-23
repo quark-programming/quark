@@ -52,6 +52,7 @@ int main(int argc, char** argv) {
     char* output_file = "out.c";
 
     Vec(char*) include_paths = vec((char*) "stdint.h", "stdio.h", "string.h", "stdlib.h", "stdbool.h");
+    push(&global_library_paths, str("."));
 
     int flag;
     while((flag = clflag(&argc, &argv))) {
@@ -68,17 +69,17 @@ int main(int argc, char** argv) {
             case 'o':
                 output_file = clarg(&argc, &argv);
                 break;
-            case 'l':
-                push(&global_library_paths, clarg(&argc, &argv));
+            case 'l': {
+                char* library_path = clarg(&argc, &argv);
+                push(&global_library_paths, (str) { strlen(library_path), library_path });
                 break;
+            }
             case 'i':
                 push(&include_paths, clarg(&argc, &argv));
                 break;
             default: panicf("unknown flag '-%c'\n hint: %s -h\n", flag, name);
         }
     }
-
-    push(&global_library_paths, ".");
 
     if(len(input_files) == 0) {
         panicf("missing input files\n hint: %s -h\n", name);
@@ -97,34 +98,23 @@ int main(int argc, char** argv) {
 
     Vec(Message) messages = { 0 };
     Tokenizer tokenizer = new_tokenizer(input_files[0], input_content, &messages);
-    Parser parser = {
-        .tokenizer = &tokenizer,
-        .module = (void*) new_node((Node) {
-            .Module = {
-                .id = NodeModule,
-                .scope = new_scope(NULL),
-                .root = true,
-            },
-        })
-    };
+    Parser parser = create_parser(&tokenizer, (str) { strlen(input_files[0]), input_files[0] });
 
     Compiler compiler = {
         .messages = &messages,
         .sections = vec((CompilerSection) {
-            .lines = vec(strf(NULL, "// Quark Version %s", QUARK_VERSION).as_owned)
-        }, { 0 })
+                        .lines = vec(strf(NULL, "// Quark Version %s", QUARK_VERSION).as_owned)
+                        }, { 0 })
     };
 
     for(size_t i = 0; i < len(include_paths); i++) {
         push(&compiler.sections[0].lines, strf(0, "#include \"%s\"", include_paths[i]).as_owned);
     }
 
-    push(&parser.stack, parser.module->scope);
-
     FunctionDeclaration* entry = entry_declaration();
     push(&parser.stack, entry->body);
 
-    push(&entry->body->children, eval_w("lib::std", "import lib::std;", &parser, &statement));
+    // push(&entry->body->children, eval_w("lib::std", "import lib::std;", &parser, &statement));
     Vec(Node*) const body = collect_until(&parser, &statement, 0, 0);
 
     resv(&entry->body->children, len(body));
@@ -132,17 +122,27 @@ int main(int argc, char** argv) {
         push(&entry->body->children, body[i]);
     }
 
-    global_in_compiler_step = true;
-    global_compiler_context = &compiler;
-    String temp_line = NULL;
-    compile(entry, &temp_line, &compiler);
-
     bool printed_error = false;
     for(size_t i = 0; i < len(messages); i++) {
         if(print_message(messages[i])) printed_error = true;
     }
 
+    for(u32 i = 0; i < len(global_missing_identifiers); i++) {
+        if(global_missing_identifiers[i]->id == NodeMissing) {
+            print_message(MERROR(global_missing_identifiers[i]->trace, strf(0,
+                                     iftty("cannot find '\33[35m%.*s\33[0m' in scope", "cannot find '%.*s' in scope"),
+                                     fmtof(global_missing_identifiers[i]->trace.source))));
+            printed_error = true;
+        }
+    }
+
     if(printed_error) return 1;
+
+    global_in_compiler_step = true;
+    global_compiler_context = &compiler;
+    String temp_line = NULL;
+    compile(entry, &temp_line, &compiler);
+
 
     FILE* out = fopen(output_file, "w+");
     if(!out) {

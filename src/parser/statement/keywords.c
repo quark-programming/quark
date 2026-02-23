@@ -1,5 +1,6 @@
 #include "keywords.h"
 
+#include "modules.h"
 #include "scope.h"
 #include "statement.h"
 #include "../righthand/righthand.h"
@@ -7,46 +8,49 @@
 #include "../type/clash_types.h"
 #include "../type/types.h"
 
-Vec(char*) global_library_paths = NULL;
+Vec(str) global_library_paths = NULL;
 
 // TODO: (organizational) move some of these functions out of this file
 
 Node* keyword_import(const Token token, Parser* parser) {
-    String sub_path = NULL;
-    Trace full_trace = token.trace;
+    Trace trace = token.trace;
+    ModuleExtension extension = ExtensionNone;
+    str import_identifier = { 0 };
 
-    do {
-        const Trace section = expect(parser->tokenizer, TokenIdentifier).trace;
-        strf(&sub_path, "/%.*s", fmtof(section.source));
-        full_trace = stretch(full_trace, section);
-    } while(try(parser->tokenizer, TokenDoubleColon, NULL));
-    expect(parser->tokenizer, ';');
+    const String import_path = build_import_path(&trace, parser, &extension, &import_identifier);
+    Parser imported_parser = find_import(import_path, trace, parser);
+    free(vbase(import_path));
 
-    strf(&sub_path, ".qk");
-
-    String import_path = NULL;
-    for(size_t i = 0; i < len(global_library_paths); i++) {
-        strf(&import_path, "%s%.*s%c", global_library_paths[i], fmtof(sub_path), 0);
-        char* input_content = fs_readfile(import_path);
-
-        if(!input_content) {
-            len(import_path) = 0;
-            continue;
-        }
-
-        Tokenizer import_tokenizer = new_tokenizer(import_path, input_content, parser->tokenizer->messages);
-        Tokenizer* const tokenizer = parser->tokenizer;
-        parser->tokenizer = &import_tokenizer;
-
-        Scope* scope = new_scope(NULL);
-        scope->children = collect_until(parser, &statement, 0, 0);
-        parser->tokenizer = tokenizer;
-        return (void*) scope;
+    if(!imported_parser.module) {
+        return new_node((Node) { NodeNone });
     }
 
-    push(parser->tokenizer->messages,
-         MERROR(full_trace, strf(0, "unable to open or read '%.*s'", fmtof(import_path))));
-    return new_node((Node) { NodeNone });
+    Vec(Node*) const import_body = imported_parser.tokenizer ? collect_until(&imported_parser, &statement, 0, 0) : NULL;
+
+    switch(extension) {
+        case ExtensionNone: {
+            imported_parser.module->flags |= fConst | fConstExpr;
+            Declaration* const module_declaration = (void*) new_node((Node) {
+                .Declaration = {
+                    .id = NodeNone,
+                    .flags = fConst | fConstExpr,
+                    .type = (void*) imported_parser.module,
+                    .const_value = (void*) imported_parser.module,
+                },
+            });
+            put(&last(parser->stack)->variables, import_identifier, module_declaration);
+            break;
+        }
+
+        default: panicf("i haven't done this yet");
+    }
+
+    return new_node((Node) {
+        .Scope = {
+            .id = NodeScope,
+            .children = import_body,
+        }
+    });
 }
 
 Node* keyword_return(const Token token, Parser* parser) {

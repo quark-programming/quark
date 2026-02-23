@@ -48,12 +48,14 @@ Node* lefthand_expression(Parser* parser) {
             const IdentifierInfo info = new_identifier(token, parser, 0);
 
             if(!info.value) {
-                return (void*) new_type((Type) {
+                Missing* const missing = (void*) new_type((Type) {
                     .Missing = {
                         .id = NodeMissing,
                         .trace = token.trace,
                     }
                 });
+                push(&global_missing_identifiers, missing);
+                return (void*) missing;
             }
 
             if(info.value->flags & fType && try(parser->tokenizer, '{', 0)) {

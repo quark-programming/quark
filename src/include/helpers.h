@@ -23,8 +23,6 @@ typedef uint64_t u64;
 typedef float f32;
 typedef double f64;
 
-char* fs_readfile(const char* filename);
-
 typedef int Void[0];
 
 #define last(vec) ((vec)[len(vec) - 1])

@@ -8,6 +8,6 @@ Vec(Node*) collect_until(Parser* parser, Node* (*supplier)(Parser*), char separa
 
 Node* statement(Parser* parser);
 
-extern Vec(char*) global_library_paths;
+extern Vec(str) global_library_paths;
 
 #endif

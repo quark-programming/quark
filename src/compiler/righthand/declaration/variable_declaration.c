@@ -10,13 +10,6 @@ void comp_VariableDeclaration(void* void_self, String* line, Compiler* compiler)
        || self->identifier.is_external || (self->const_value && self->const_value->flags & fType))
         return;
 
-    // if(self->const_value && self->const_value->flags & fType) {
-    //     const OpenedType opened = open_type((void*) self->const_value, 0);
-    //     compile_struct_declaration((void*) opened.type, line, compiler);
-    //     close_type(opened.actions, 0);
-    //     return;
-    // }
-
     String decl_line = new_line(compiler);
     line = &decl_line;
 

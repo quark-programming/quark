@@ -22,7 +22,7 @@ void compile(void* void_node, String* line, Compiler* compiler) {
         [WrapperVariable] = &comp_Variable,
         [WrapperSurround] = &comp_Surround,
         [NodeScope] = &comp_Scope,
-        [NodeMissing] = &comp_Missing,
+        // [NodeMissing] = &comp_Missing,
         [NodeExternal] = &comp_External,
         [NodeGenericReference] = &comp_GenericReference,
         [NodeVariableDeclaration] = &comp_VariableDeclaration,

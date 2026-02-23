@@ -1,4 +1,6 @@
 #include "structure.h"
+
+#include "tty.h"
 #include "../type/types.h"
 #include "../righthand/righthand.h"
 #include "../righthand/declaration/declaration.h"
@@ -39,12 +41,13 @@ Node* parse_struct_literal(Type* const wrapped_struct_type, Parser* parser) {
                     }
                 }
 
-                String message = strf(0, "no field named '\33[35m%.*s\33[35m' on '\33[35m").as_owned;
+                String message = strf(0, iftty("no field named '\33[35m%.*s\33[35m' on '\33[35m",
+                                          "no field named '%.*s' on '")).as_owned;
                 stringify_type((void*) struct_type, &message, 0);
-                push(parser->tokenizer->messages, MERROR(field_name.trace, strf(&message, "\33[0m'")));
+                push(parser->tokenizer->messages, MERROR(field_name.trace, strf(&message, iftty("\33[0m'", "'"))));
 
-                continue_:
-                    if(!try(parser->tokenizer, ',', 0)) break;
+            continue_:
+                if(!try(parser->tokenizer, ',', 0)) break;
                 continue;
             }
 

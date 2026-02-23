@@ -2,6 +2,7 @@
 #include "types.h"
 #include "stringify_type.h"
 #include "traverse_type.h"
+#include "tty.h"
 
 static int circular_acceptor(Type* const type, Type* follower, void* const compare) {
     (void) follower;
@@ -121,15 +122,16 @@ int clash_types(Type* a, Type* b, const Trace trace, Vec(Message)* messages, con
     const int result = traverse_type(a, b, &clash_acceptor, &accumulator, 0);
 
     if(result && !(flags & ClashPassive)) {
-        String message = strf(0, "type mismatch between '\33[35m").as_owned;
+        String message = strf(0, iftty("type mismatch between '\33[35m", "type mismatch between '")).as_owned;
         stringify_type(a, &message, 0);
 
-        strf(&message, "\33[0m' and '\33[35m");
+        strf(&message, iftty("\33[0m' and '\33[35m", "' and '"));
         stringify_type(b, &message, 0);
 
         strf(&message, result + 1 == TestCircular
-                           ? "\33[0m' (types are circularly referencing each other)"
-                           : "\33[0m'");
+             ? iftty("\33[0m' (types are circularly referencing each other)",
+                 "' (types are circularly referencing each other)")
+             : iftty("\33[0m'", "'"));
 
         push(messages, MERROR(trace, as_str(message)));
     }

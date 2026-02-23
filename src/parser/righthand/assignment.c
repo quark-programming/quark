@@ -1,9 +1,12 @@
 #include "assignment.h"
 
+#include "tty.h"
+
 void check_assignable(Node* node, Vec(Message)* messages) {
     if(node->flags & fMutable && !(node->type->flags & fConst)) return;
     push(messages, MERROR(node->trace,
-        strf(0, "'\33[35m%.*s\33[0m' is not assignable", fmtof(node->trace.source))));
+             strf(0, iftty("'\33[35m%.*s\33[0m' is not assignable", "'%.*s' is not assignable"),
+                 fmtof(node->trace.source))));
 }
 
 Node* parse_postfix_assignment(Node* lefthand, Parser* parser) {

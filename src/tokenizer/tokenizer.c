@@ -1,5 +1,7 @@
 #include "tokenizer.h"
 
+#include "tty.h"
+
 unsigned char const tokenizer_double_characters[128] = {
     [':'] = TokenDoubleColon, ['+'] = TokenDoublePlus, ['-'] = TokenDoubleMinus,
     ['<'] = TokenDoubleLess, ['>'] = TokenDoubleGreater, ['='] = TokenDoubleEqual,
@@ -106,7 +108,9 @@ Token next(Tokenizer* const tokenizer) {
     const Token next = tokenizer->current;
 
     if(!next.type) {
-        push(tokenizer->messages, MERROR(next.trace, str("expected a token, but got \33[35mend of file\33[0m")));
+        push(tokenizer->messages, MERROR(next.trace, str(
+                 iftty("expected a token, but got \33[35mend of file\33[0m",
+                     "expected a token, but got end of file" ))));
     } else {
         tokenizer->current = create_token(next.trace);
     }
@@ -119,7 +123,8 @@ Token expect(Tokenizer* const tokenizer, const unsigned char type) {
 
     if(expect.type != type) {
         push(tokenizer->messages, MERROR(expect.trace,
-                 strf(0, "expected type [\33[35m%c (%u)\33[0m], but got '\33[35m%.*s\33[0m'",
+                 strf(0, iftty("expected type [\33[35m%c (%u)\33[0m], but got '\33[35m%.*s\33[0m'",
+                         "expected type [%c (%u)], but got '%.*s'"),
                      type, type, (int) expect.trace.source.len, expect.trace.source.data)));
     }
 

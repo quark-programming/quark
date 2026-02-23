@@ -2,6 +2,7 @@
 
 #include "function_call.h"
 #include "righthand.h"
+#include "tty.h"
 #include "../lefthand/reference.h"
 #include "../type/types.h"
 #include "../statement/scope.h"
@@ -43,7 +44,8 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
 
     if(struct_type->id != NodeStructType) {
         push(parser->tokenizer->messages, MERROR(lefthand->trace,
-                 strf(0, "'\33[35m%.*s\33[0m' is not a structure", fmtof(lefthand->trace.source))));
+                 strf(0, iftty("'\33[35m%.*s\33[0m' is not a structure", "'%.*s' is not a structure"),
+                     fmtof(lefthand->trace.source))));
         close_type(opened.actions, 0);
         return lefthand;
     }
@@ -72,7 +74,8 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
         }
 
         push(parser->tokenizer->messages,
-             MERROR(field_token.trace, strf(0, "no field named '\33[35m%.*s\33[0m' on struct '\33[35m%.*s\33[0m'",
+             MERROR(field_token.trace, strf(0, iftty("no field named '\33[35m%.*s\33[0m' on struct '\33[35m%.*s\33[0m'",
+                     "no field named '%.*s' on struct '%.*s'"),
                  fmtof(field_token.trace.source), fmtof(lefthand->trace.source))));
         push(parser->tokenizer->messages, see_declaration((void*) struct_type, lefthand->trace));
         return lefthand;

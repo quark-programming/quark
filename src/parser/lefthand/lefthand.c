@@ -2,6 +2,7 @@
 
 #include "keywords.h"
 #include "reference.h"
+#include "tty.h"
 #include "../literal/array.h"
 #include "../literal/string.h"
 #include "../righthand/righthand.h"
@@ -119,7 +120,8 @@ Node* lefthand_expression(Parser* parser) {
 
         default:
             push(parser->tokenizer->messages, MERROR(token.trace,
-                     strf(0, "expected a \33[35mliteral\33[0m, but got '\33[35m%.*s\33[0m'",
+                     strf(0, iftty("expected a \33[35mliteral\33[0m, but got '\33[35m%.*s\33[0m'",
+                             "expected a literal, but got '%.*s'"),
                          fmtof(token.trace.source))));
             return (void*) numeric_literal_from_token(token);
     }

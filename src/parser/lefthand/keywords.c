@@ -3,6 +3,7 @@
 #include "../righthand/righthand.h"
 #include "../statement/scope.h"
 #include "lefthand.h"
+#include "tty.h"
 #include "../literal/wrapper.h"
 
 // TODO: (organizational) move some of these to parser/literal and move parser/righthand/declaration
@@ -78,7 +79,8 @@ Node* keyword_const(const Token token, Parser* parser) {
     Type* type = (void*) righthand_expression(lefthand_expression(parser), parser, 13);
 
     if(!(type->flags & fType)) {
-        push(parser->tokenizer->messages, MERROR(type->trace, str("expected a type after '\33[35mconst\33[0m'")));
+        push(parser->tokenizer->messages, MERROR(type->trace,
+            iftty(str("expected a type after '\33[35mconst\33[0m'"), str("expected a type after 'const'"))));
         type = type->type;
     }
 

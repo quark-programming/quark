@@ -2,6 +2,7 @@
 
 #include "clargs.h"
 #include "identifier.h"
+#include "tty.h"
 #include "../../statement/scope.h"
 #include "../../type/types.h"
 #include "../../type/generics.h"
@@ -85,7 +86,8 @@ static void parse_function_arguments(FunctionType* function_type, FunctionDeclar
 
         if(!(argument.type->flags & fType)) {
             push(parser->tokenizer->messages,
-                 MERROR(argument.type->trace, strf(0, "'\33[35m%.*s\33[0m' is not a type",
+                 MERROR(argument.type->trace, strf(0,
+                     iftty("'\33[35m%.*s\33[0m' is not a type", "'%.*s' is not a type"),
                      fmtof(argument.type->trace.source))));
         }
 

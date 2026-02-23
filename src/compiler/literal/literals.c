@@ -1,5 +1,7 @@
 #include "literals.h"
 
+#include "tty.h"
+
 void comp_NumericLiteral(void* void_self, String* line, Compiler* compiler) {
     (void) compiler;
     NumericLiteral* const self = void_self;
@@ -12,7 +14,8 @@ void comp_Missing(void* void_self, String* line, Compiler* compiler) {
     Missing* const self = void_self;
 
     push(compiler->messages,
-         MERROR(self->trace, strf(0, "cannot find '\33[35m%.*s\33[0m' in scope", fmtof(self->trace.source))));
+         MERROR(self->trace, strf(0, iftty("cannot find '\33[35m%.*s\33[0m' in scope", "cannot find '%.*s' in scope"),
+             fmtof(self->trace.source))));
 }
 
 void comp_External(void* void_self, String* line, Compiler* compiler) {

@@ -54,9 +54,6 @@ Node* keyword_import(const Token token, Parser* parser) {
                         put(&replace_info.declaration_scope->variables, replace_info.identifier.base,
                             info.value->Variable.declaration);
                     } else {
-                        // TODO: colon syntax to override verbose import names
-                        //  eg.
-                        //  import utils::{ print: output };
                         put(&last(parser->stack)->variables, info.identifier.base, info.value->Variable.declaration);
                     }
 

@@ -15,14 +15,20 @@ Scope* new_scope(Declaration* const parent) {
     return scope;
 }
 
+static bool declaration_found(Declaration** const possible_found) {
+    return possible_found
+           && !((*possible_found)->flags & fPrivate && (*possible_found)->identifier.parent_scope->flags & fPrivate);
+}
+
 Declaration* find_in_scope_unwrapped(const Scope scope, const str identifier) {
     Declaration** possible_found = get(scope.variables, identifier);
+    Declaration* found = declaration_found(possible_found) ? *possible_found : NULL;
 
-    for(u32 i = 0; !possible_found && i < len(scope.wildcards); i++) {
-        possible_found = get(scope.wildcards[i]->variables, identifier);
+    for(u32 i = 0; !found && i < len(scope.wildcards); i++) {
+        found = find_in_scope_unwrapped(*scope.wildcards[i], identifier);
     }
 
-    return possible_found ? *possible_found : NULL;
+    return found;
 }
 
 Wrapper* find_in_scope(const Scope scope, const Trace identifier) {

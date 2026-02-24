@@ -3,12 +3,15 @@
 #include <errno.h>
 #include <tty.h>
 
+#include "impl/std.h"
+
 #include "compiler/compiler.h"
 #include "parser/statement/scope.h"
 #include "parser/statement/statement.h"
 #include "parser/type/types.h"
 #include "parser/keywords.h"
 #include "compiler/righthand/declaration/identifier.h"
+#include "parser/statement/modules.h"
 
 #define QUARK_VERSION "0.5"
 #define QUARK_STABILITY "dev"
@@ -113,14 +116,15 @@ int main(int argc, char** argv) {
 
     FunctionDeclaration* entry = entry_declaration();
     push(&parser.stack, entry->body);
+    build_std_scope((void*) entry);
 
-    // push(&entry->body->children, eval_w("lib::std", "import lib::std;", &parser, &statement));
-    Vec(Node*) const body = collect_until(&parser, &statement, 0, 0);
+    Vec(Scope*) ready_stack = parser.stack;
+    parser.stack = vec(parser.stack[0]);
+    import_wildcard("/_qkstd.qk", str("_qkstd"), &parser, &entry->body->children);
+    free(vbase(parser.stack));
+    parser.stack = ready_stack;
 
-    resv(&entry->body->children, len(body));
-    for(size_t i = 0; i < len(body); i++) {
-        push(&entry->body->children, body[i]);
-    }
+    collect_into(&parser, &statement, 0, 0, &entry->body->children);
 
     bool printed_error = false;
     for(size_t i = 0; i < len(messages); i++) {

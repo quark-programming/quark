@@ -1,6 +1,5 @@
-T* extern malloc<T>(usize size);
-T* extern realloc<T>(T* ptr, usize size);
-void extern free<T>(T* ptr);
+import containers::slice::{ Slice };
+import operator::{ Operator };
 
 struct Vec<T> {
 	T* data;
@@ -8,6 +7,8 @@ struct Vec<T> {
 	usize capacity;
 
 	Vec<T> new() {
+        T* extern malloc<T>(usize size);
+
 		return Vec { 
 			data: malloc(sizeof(T)),
 			size: 0,
@@ -20,6 +21,8 @@ struct Vec<T> {
 	}
 
 	void reserve(&self, usize n) {
+        T* extern realloc<T>(T* ptr, usize size);
+
 		if(self->size + n <= self->capacity) return;
 
 		while(self->capacity < self->size + n) {
@@ -47,6 +50,8 @@ struct Vec<T> {
 	}
 
 	Vec<T> from([T] slice) {
+        T* extern malloc<T>(usize size);
+
 		Vec<T> vec = Vec {
 			data: malloc(sizeof(T) * slice.size),
 			size: 0,

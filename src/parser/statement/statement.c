@@ -47,13 +47,16 @@ Node* statement(Parser* parser) {
 }
 
 Vec(Node*) collect_until(Parser* parser, Node* (*supplier)(Parser*), const char separator, const char terminator) {
-    Vec(Node*) collection = NULL;
+    Vec(Node*) collector = NULL;
+    collect_into(parser, supplier, separator, terminator, &collector);
+    return collector;
+}
 
+void collect_into(Parser* parser, Node* (*supplier)(Parser*), const char separator, const char terminator,
+                  Vec(Node*)* collector) {
     while(parser->tokenizer->current.type && parser->tokenizer->current.type != terminator) {
-        push(&collection, supplier(parser));
+        push(collector, supplier(parser));
         if(separator && !try(parser->tokenizer, separator, 0)) break;
     }
     if(terminator) expect(parser->tokenizer, terminator);
-
-    return collection;
 }

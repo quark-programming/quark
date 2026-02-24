@@ -1,11 +1,14 @@
-usize extern fwrite<T>(T* ptr, usize size, usize nitems, File* stream);
-File* extern stdout;
+import containers::slice::{ str };
 
 void write_file(File* file, str message) {
+    usize extern fwrite<T>(T* ptr, usize size, usize nitems, File* stream);
+
 	fwrite(message.slice.data, message.slice.size, sizeof(char), file);
 }
 
 void print_file(File* file, str message) {
+    usize extern fwrite<T>(T* ptr, usize size, usize nitems, File* stream);
+
 	fwrite(message.slice.data, message.slice.size, sizeof(char), file);
 	const char newline = '\n';
 	fwrite(&newline, 1, sizeof(char), file);
@@ -16,26 +19,26 @@ void print(str message) {
 }
 
 void panic(str message) {
+    void extern exit(Int code);
+
 	write_file(extern<File*> stderr, "\x1b[31mpanicked: \x1b[0m");
 	print_file(extern<File*> stderr, message);
 	exit(extern<Int> EXIT_FAILURE);
 }
 
-void print_imax(iMAX number) {
-    usize extern printf(char* fmt, iMAX n);
+void print_i64(i64 number) {
+    usize extern printf(char* fmt, i64 n);
     printf("%jd\n".data(), number);
 }
 
-void print_umax(uMAX number) {
-    usize extern printf(char* fmt, uMAX n);
+void print_u64(u64 number) {
+    usize extern printf(char* fmt, u64 n);
     printf("%ju\n".data(), number);
 }
 
-void print_i64(i64 number) { print_imax(number.(iMAX)); }
-void print_u64(u64 number) { print_umax(number.(uMAX)); }
-void print_i32(i32 number) { print_imax(number.(iMAX)); }
-void print_u32(u32 number) { print_umax(number.(uMAX)); }
-void print_i16(i16 number) { print_imax(number.(iMAX)); }
-void print_u16(u16 number) { print_umax(number.(uMAX)); }
-void print_i8(i8 number) { print_imax(number.(iMAX)); }
-void print_u8(u8 number) { print_umax(number.(uMAX)); }
+void print_i32(i32 number) { print_i64(number.(i64)); }
+void print_u32(u32 number) { print_u64(number.(u64)); }
+void print_i16(i16 number) { print_i64(number.(i64)); }
+void print_u16(u16 number) { print_u64(number.(u64)); }
+void print_i8(i8 number) { print_i64(number.(i64)); }
+void print_u8(u8 number) { print_u64(number.(u64)); }

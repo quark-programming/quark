@@ -28,3 +28,12 @@ Node* parse_declaration(Node* type, Token identifier, Parser* parser) {
 
     return parse_variable_declaration((void*) type, info, parser);
 }
+
+Declaration* create_declaration_link(Declaration* link, Scope* parent_scope, const u32 flags) {
+    DeclarationLink* declaration = (void*) new_node(*(Node*)(void*) link);
+    declaration->id = NodeDeclarationLink;
+    declaration->link = link;
+    declaration->identifier.parent_scope = parent_scope;
+    declaration->flags |= flags;
+    return (void*) declaration;
+}

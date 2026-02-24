@@ -9,6 +9,7 @@
 #include "../righthand/declaration/identifier.h"
 #include "../type/clash_types.h"
 #include "../type/types.h"
+#include "parser/righthand/declaration/declaration.h"
 
 Vec(str) global_library_paths = NULL;
 
@@ -32,11 +33,13 @@ Node* keyword_import(const Token token, Parser* parser) {
 
     if(imported_parser.tokenizer) {
         import_body = collect_until(&imported_parser, &statement, 0, 0);
+        imported_parser.module->scope->flags |= fPrivate;
     }
 
     switch(extension) {
         case ExtensionNone:
-            put(&last(parser->stack)->variables, import_identifier, imported_parser.module->scope->declaration);
+            put(&last(parser->stack)->variables, import_identifier,
+                create_declaration_link(imported_parser.module->scope->declaration, last(parser->stack), fPrivate));
             break;
 
         case ExtensionWildcard:
@@ -46,16 +49,22 @@ Node* keyword_import(const Token token, Parser* parser) {
         case ExtensionVerbose:
             while(parser->tokenizer->current.type && parser->tokenizer->current.type != '}') {
                 imported_parser.tokenizer = parser->tokenizer;
+                if(!imported_parser.stack) {
+                    imported_parser.stack = vec(imported_parser.module->scope);
+                }
+
                 IdentifierInfo info = new_identifier(expect(parser->tokenizer, TokenIdentifier), &imported_parser, 0);
 
                 if(info.value) {
+                    Declaration* const declaration = create_declaration_link(info.value->Variable.declaration,
+                                                                             last(parser->stack), fPrivate);
+
                     if(try(parser->tokenizer, ':', NULL)) {
                         IdentifierInfo replace_info = new_identifier(expect(parser->tokenizer, TokenIdentifier),
                                                                      parser, IdentifierDeclaration);
-                        put(&replace_info.declaration_scope->variables, replace_info.identifier.base,
-                            info.value->Variable.declaration);
+                        put(&replace_info.declaration_scope->variables, replace_info.identifier.base, declaration);
                     } else {
-                        put(&last(parser->stack)->variables, info.identifier.base, info.value->Variable.declaration);
+                        put(&last(parser->stack)->variables, info.identifier.base, declaration);
                     }
 
                     unbox((void*) info.value);

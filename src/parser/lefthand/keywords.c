@@ -140,3 +140,16 @@ Node* keyword_extern(const Token token, Parser* parser) {
 
     return external;
 }
+
+Node* keyword_private(Token token, Parser* parser) {
+    (void) token;
+
+    Wrapper* const wrapper = (void*) expression(parser);
+    if(wrapper->id != WrapperVariable) {
+        push(parser->tokenizer->messages, MERROR(wrapper->trace, str("used private on a non-variable value")));
+        return (void*) wrapper;
+    }
+
+    wrapper->Variable.declaration->flags |= fPrivate;
+    return (void*) wrapper;
+}

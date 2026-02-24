@@ -12,6 +12,7 @@ void populate_keyword_table() {
     put(&global_keyword_table, str("sizeof"), ((Keyword) { KeywordActionNone, &keyword_sizeof }));
     put(&global_keyword_table, str("const"), ((Keyword) { KeywordActionNone, &keyword_const }));
     put(&global_keyword_table, str("extern"), ((Keyword) { KeywordActionNone, &keyword_extern }));
+    put(&global_keyword_table, str("private"), ((Keyword) { KeywordActionNone, &keyword_private }));
 
     put(&global_keyword_table, str("import"), ((Keyword) { KeywordActionStatement, &keyword_import }));
     put(&global_keyword_table, str("return"), ((Keyword) { KeywordActionStatement, &keyword_return }));

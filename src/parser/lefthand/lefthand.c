@@ -51,7 +51,7 @@ Node* lefthand_expression(Parser* parser) {
                 Missing* const missing = (void*) new_type((Type) {
                     .Missing = {
                         .id = NodeMissing,
-                        .trace = token.trace,
+                        .trace = info.trace,
                     }
                 });
                 push(&global_missing_identifiers, missing);

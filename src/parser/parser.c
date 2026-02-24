@@ -1,5 +1,7 @@
 #include "parser.h"
 
+#include "impl/std.h"
+
 Map(Module) global_modules = NULL;
 
 Scope* new_scope(Declaration* parent);
@@ -24,13 +26,13 @@ Parser create_parser(Tokenizer* tokenizer, const str filename, const bool root, 
     Declaration* const module_declaration = (void*) new_node((Node) {
         .Declaration = {
             .id = NodeNone,
+            .flags = fConst | fConstExpr,
+            .type = (void*) module,
             .identifier = {
                 .base = module_identifier,
                 .parent_declaration = &fake_entry,
                 .parent_scope = &fake_scope,
             },
-            .flags = fConst | fConstExpr,
-            .type = (void*) module,
             .const_value = (void*) module,
         },
     });
@@ -46,7 +48,7 @@ Parser create_parser(Tokenizer* tokenizer, const str filename, const bool root, 
         .tokenizer = tokenizer,
         .module = module,
         .dir_path = dir_path,
-        .stack = vec(module->scope),
+        .stack = vec(&global_std_scope, module->scope),
     };
 
     return parser;

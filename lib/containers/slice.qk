@@ -1,4 +1,4 @@
-Int extern memcmp<T, K>(T* s1, K* s2, usize n);
+import operator::{ Operator };
 
 struct Slice<T> {
 	T* data;
@@ -21,6 +21,8 @@ struct str {
 	}
 
 	bool Operator::equals(self, str string) {
+        Int extern memcmp<T, K>(T* s1, K* s2, usize n);
+
 	    return self.slice.size == string.slice.size
 	        && !memcmp(self.slice.data, string.slice.data, self.slice.size);
 	}

@@ -1,3 +1,6 @@
+import io::{ panic };
+import slice::{ str };
+
 struct Option<T> {
 	T value;
 	bool some;

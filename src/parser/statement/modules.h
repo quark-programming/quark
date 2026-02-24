@@ -13,4 +13,6 @@ String build_import_path(Trace* trace, Parser* parser, ModuleExtension* extensio
 
 Parser find_import(String relative_path, str identifier, Trace trace, Parser* parser);
 
+void import_wildcard(char* path, str identifier, Parser* parser, Vec(Node*)* collector);
+
 #endif

@@ -1,9 +1,6 @@
-import lib::types;
-import lib::constants;
+import containers::slice::*;
+import io::*;
+import containers::option::*;
 
-import lib::error;
-import lib::slice;
-import lib::io;
-import lib::containers;
-import lib::vector;
-import lib::string;
+import collections::vector::*;
+import collections::string::*;

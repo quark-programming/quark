@@ -31,6 +31,7 @@ typedef enum : u32 {
     NodeFunctionDeclaration,
     NodeEntryFunctionDeclaration,
     NodeStructDeclaration,
+    NodeDeclarationLink,
 
     NodeScope,
     NodeModule,
@@ -54,6 +55,7 @@ enum {
     fIgnoreStatement = 1 << 4,
     fStatementTerminated = 1 << 5,
     fNumeric = 1 << 6,
+    fPrivate = 1 << 7,
 };
 
 #include "righthand/declaration/identifier.h"
@@ -77,6 +79,7 @@ enum {
 #include "righthand/declaration/variable_declaration.h"
 #include "righthand/declaration/function_declaration.h"
 #include "righthand/declaration/struct_declaration.h"
+#include "righthand/declaration/link.h"
 
 #include "statement/statement_wrapper.h"
 #include "statement/return_statement.h"
@@ -102,6 +105,7 @@ union Declaration {
     FunctionDeclaration FunctionDeclaration;
     VariableDeclaration VariableDeclaration;
     StructDeclaration StructDeclaration;
+    DeclarationLink DeclarationLink;
 };
 
 union Node {

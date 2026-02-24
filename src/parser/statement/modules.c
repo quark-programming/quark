@@ -53,3 +53,10 @@ Parser find_import(String relative_path, str identifier, Trace trace, Parser* pa
     free(vbase(import_path));
     return (Parser) { 0 };
 }
+
+void import_wildcard(char* path, str identifier, Parser* parser, Vec(Node*)* collector) {
+    Parser imported_parser = find_import(path, identifier, (Trace) { 0 }, parser);
+    collect_into(&imported_parser, &statement, 0, 0, collector);
+    imported_parser.module->scope->flags = fPrivate;
+    push(&last(parser->stack)->wildcards, imported_parser.module->scope);
+}

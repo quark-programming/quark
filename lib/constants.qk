@@ -1,2 +1,0 @@
-const bool extern true = 1;
-const bool extern false = 0;

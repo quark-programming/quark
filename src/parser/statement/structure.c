@@ -1,9 +1,12 @@
 #include "structure.h"
 
+#include "scope.h"
+#include "statement.h"
 #include "tty.h"
 #include "../type/types.h"
 #include "../righthand/righthand.h"
 #include "../righthand/declaration/declaration.h"
+#include "parser/righthand/declaration/identifier.h"
 #include "parser/type/stringify_type.h"
 
 // TODO: add `Trace trace` argument for info.trace (or `IdentifierInfo info` argument)
@@ -63,4 +66,89 @@ Node* parse_struct_literal(Type* const wrapped_struct_type, Parser* parser) {
     struct_literal->trace = stretch(wrapped_struct_type->trace, expect(parser->tokenizer, '}').trace);
     close_type(opened.actions, 0);
     return (void*) struct_literal;
+}
+
+// TODO: actually implement traits u bum
+Node* parser_struct_declaration(const Token keyword, Parser* parser, bool is_trait) {
+    const Trace trace_start = keyword.trace;
+    IdentifierInfo info = new_identifier(expect(parser->tokenizer, TokenIdentifier), parser, IdentifierDeclaration);
+
+    StructType* type = (void*) new_type((Type) {
+        .StructType = {
+            .id = NodeStructType,
+            .flags = fConstExpr,
+            .trace = stretch(trace_start, info.trace),
+            .is_trait = is_trait,
+        }
+    });
+
+    Module* module = (void*) new_node((Node) {
+        .Module = {
+            .id = NodeModule,
+            .type = (void*) type,
+            .scope = info.generics_collection.generic_declarations_scope,
+        },
+    });
+
+    type->module = module;
+    if(!module->scope) module->scope = new_scope(NULL);
+
+    // TODO: create a flag that only allows type to compile if it is pointed to (in reference()) this will prevent
+    //  circular types and allow structs to reference themselves within themselves
+
+    StructDeclaration* declaration = (void*) new_node((Node) {
+        .StructDeclaration = {
+            .id = NodeStructDeclaration,
+            .flags = fConst | fType,
+            .trace = type->trace,
+            .type = (void*) type,
+            .const_value = (void*) type,
+            .identifier = info.identifier,
+        }
+    });
+
+    module->scope->declaration = (void*) declaration;
+    module->declaration = (void*) declaration;
+    put(&info.declaration_scope->variables, info.identifier.base, (void*) declaration);
+    assign_generics_to_declaration((void*) declaration, info.generics_collection);
+    declaration->identifier.parent_declaration = (void*) declaration;
+
+    push(&parser->stack, module->scope);
+    expect(parser->tokenizer, '{');
+
+    Node* next_declaration = 0;
+    // TODO: make the `NodeNone` with `.type` system more readable
+    while(parser->tokenizer->current.type && parser->tokenizer->current.type != '}'
+          && !(next_declaration = statement(parser))->id && next_declaration->type) {
+        if(next_declaration->type->id != WrapperVariable || !(next_declaration->type->flags & fIgnoreStatement)
+           || next_declaration->type->Wrapper.Variable.declaration->id != NodeVariableDeclaration)
+            break;
+
+        VariableDeclaration* const field_decl = (void*) next_declaration->type->Wrapper.Variable.declaration;
+        const StructField field = {
+            .type = field_decl->type,
+            .identifier = field_decl->identifier.base,
+        };
+
+        push(&type->fields, field);
+
+        unbox((void*) field_decl);
+        unbox((void*) next_declaration->type);
+        unbox(next_declaration);
+    }
+
+    Vec(Node*) declarations = { 0 };
+    if(!try(parser->tokenizer, '}', NULL)) {
+        push(&declarations, next_declaration);
+
+        while(parser->tokenizer->current.type && !try(parser->tokenizer, '}', NULL)) {
+            push(&declarations, statement(parser));
+        }
+    }
+
+    pop(&parser->stack);
+    close_generics_declaration((void*) declaration);
+    module->scope->children = declarations;
+
+    return new_node((Node) { NodeNone });
 }

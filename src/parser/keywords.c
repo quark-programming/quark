@@ -16,6 +16,7 @@ void populate_keyword_table() {
     put(&global_keyword_table, str("import"), ((Keyword) { KeywordActionStatement, &keyword_import }));
     put(&global_keyword_table, str("return"), ((Keyword) { KeywordActionStatement, &keyword_return }));
     put(&global_keyword_table, str("struct"), ((Keyword) { KeywordActionStatement, &keyword_struct }));
+    put(&global_keyword_table, str("trait"), ((Keyword) { KeywordActionStatement, &keyword_trait }));
     put(&global_keyword_table, str("if"), ((Keyword) { KeywordControlSingleCond, &keywords_control }));
     put(&global_keyword_table, str("while"), ((Keyword) { KeywordControlSingleCond, &keywords_control }));
     put(&global_keyword_table, str("for"), ((Keyword) { KeywordControlTripleCond, &keywords_control }));

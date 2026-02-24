@@ -11,6 +11,6 @@ typedef enum {
 
 String build_import_path(Trace* trace, Parser* parser, ModuleExtension* extension, str* top);
 
-Parser find_import(String relative_path, Trace trace, Parser* parser);
+Parser find_import(String relative_path, str identifier, Trace trace, Parser* parser);
 
 #endif

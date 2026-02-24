@@ -190,7 +190,7 @@ Node* parse_function_lambda(Type* return_type, Parser* parser) {
     push(&parser->stack, declaration->body);
     parse_function_arguments(function_type, declaration, parser, true);
 
-    if(!last(declaration->arguments).identifier.len) {
+    if(declaration->arguments && !last(declaration->arguments).identifier.len) {
         pop(&parser->stack);
         return (void*) function_type;
     }
@@ -215,6 +215,11 @@ Node* parse_function_lambda(Type* return_type, Parser* parser) {
         }
 
         default:
+            if(!declaration->arguments) {
+                pop(&parser->stack);
+                return (void*) function_type;
+            }
+
             push(parser->tokenizer->messages, MERROR(operator.trace, str("Expected either '=>' or '{'")));
     }
 

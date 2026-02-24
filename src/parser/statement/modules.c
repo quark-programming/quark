@@ -22,12 +22,11 @@ String build_import_path(Trace* trace, Parser* parser, ModuleExtension* extensio
         strf(&path, "/%.*s", fmtof(section.source));
         *trace = stretch(*trace, section);
     } while(try(parser->tokenizer, TokenDoubleColon, NULL));
-    expect(parser->tokenizer, ';');
 
     return strf(&path, ".qk").as_owned;
 }
 
-Parser find_import(String relative_path, Trace trace, Parser* parser) {
+Parser find_import(String relative_path, str identifier, Trace trace, Parser* parser) {
     global_library_paths[0] = parser->dir_path;
 
     String import_path = NULL;
@@ -46,7 +45,7 @@ Parser find_import(String relative_path, Trace trace, Parser* parser) {
         }
 
         const Tokenizer tokenizer = new_tokenizer(import_path, input_content, parser->tokenizer->messages);
-        return create_parser((void*) new_node(hard_cast(Node, tokenizer)), as_str(import_path));
+        return create_parser((void*) new_node(hard_cast(Node, tokenizer)), as_str(import_path), false, identifier);
     }
 
     push(parser->tokenizer->messages,

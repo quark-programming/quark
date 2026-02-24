@@ -3,6 +3,7 @@
 #include "modules.h"
 #include "scope.h"
 #include "statement.h"
+#include "tty.h"
 #include "../righthand/righthand.h"
 #include "../righthand/declaration/identifier.h"
 #include "../type/clash_types.h"
@@ -18,31 +19,63 @@ Node* keyword_import(const Token token, Parser* parser) {
     str import_identifier = { 0 };
 
     const String import_path = build_import_path(&trace, parser, &extension, &import_identifier);
-    Parser imported_parser = find_import(import_path, trace, parser);
+    if(extension != ExtensionVerbose) expect(parser->tokenizer, ';');
+    Parser imported_parser = find_import(import_path, import_identifier, trace, parser);
     free(vbase(import_path));
 
     if(!imported_parser.module) {
         return new_node((Node) { NodeNone });
     }
 
-    Vec(Node*) const import_body = imported_parser.tokenizer ? collect_until(&imported_parser, &statement, 0, 0) : NULL;
+    Vec(Node*) import_body = NULL;
+
+    if(imported_parser.tokenizer) {
+        import_body = collect_until(&imported_parser, &statement, 0, 0);
+    }
 
     switch(extension) {
-        case ExtensionNone: {
-            imported_parser.module->flags |= fConst | fConstExpr;
-            Declaration* const module_declaration = (void*) new_node((Node) {
-                .Declaration = {
-                    .id = NodeNone,
-                    .flags = fConst | fConstExpr,
-                    .type = (void*) imported_parser.module,
-                    .const_value = (void*) imported_parser.module,
-                },
-            });
-            put(&last(parser->stack)->variables, import_identifier, module_declaration);
+        case ExtensionNone:
+            put(&last(parser->stack)->variables, import_identifier, imported_parser.module->scope->declaration);
             break;
-        }
 
-        default: panicf("i haven't done this yet");
+        case ExtensionWildcard:
+            push(&last(parser->stack)->wildcards, imported_parser.module->scope);
+            break;
+
+        case ExtensionVerbose:
+            while(parser->tokenizer->current.type && parser->tokenizer->current.type != '}') {
+                imported_parser.tokenizer = parser->tokenizer;
+                IdentifierInfo info = new_identifier(expect(parser->tokenizer, TokenIdentifier), &imported_parser, 0);
+
+                if(info.value) {
+                    if(try(parser->tokenizer, ':', NULL)) {
+                        IdentifierInfo replace_info = new_identifier(expect(parser->tokenizer, TokenIdentifier),
+                                                                     parser, IdentifierDeclaration);
+                        put(&replace_info.declaration_scope->variables, replace_info.identifier.base,
+                            info.value->Variable.declaration);
+                    } else {
+                        // TODO: colon syntax to override verbose import names
+                        //  eg.
+                        //  import utils::{ print: output };
+                        put(&last(parser->stack)->variables, info.identifier.base, info.value->Variable.declaration);
+                    }
+
+                    unbox((void*) info.value);
+                } else {
+                    push(parser->tokenizer->messages, MERROR(info.trace,
+                             strf(0, iftty("cannot find '\33[35m%.*s\33[0m' in '\33[35m%.*s\33[0m' (%s)",
+                                     "cannot find '%.*s' in '%.*s' (%s)"),
+                                 fmtof(info.trace.source), fmtof(import_identifier),
+                                 imported_parser.dir_path.as_owned)));
+                }
+
+                if(!try(parser->tokenizer, ',', NULL)) break;
+            }
+            expect(parser->tokenizer, '}');
+            expect(parser->tokenizer, ';');
+            break;
+
+        default: unreachable();
     }
 
     return new_node((Node) {

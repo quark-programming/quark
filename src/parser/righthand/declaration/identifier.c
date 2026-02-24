@@ -62,10 +62,6 @@ compound_start:
         return info;
     }
 
-    // if(!info.value || !info.value->Variable.declaration->const_value
-    //    || info.value->Variable.declaration->const_value->id != NodeStructType
-    //    || !try(parser->tokenizer, TokenDoubleColon, NULL)) {
-
     Module* module = NULL;
     switch(info.value->Variable.declaration->const_value->id) {
         case NodeStructType:
@@ -89,7 +85,6 @@ compound_start:
         goto compound_start;
     }
 
-    info.declaration_scope = module->scope;
     info.declaration_scope = module->scope;
     info.value = find_in_scope(*module->scope, next_trace);
 

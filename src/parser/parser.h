@@ -13,7 +13,7 @@ typedef struct Parser {
 
 extern Map(Module) global_modules;
 
-Parser create_parser(Tokenizer* tokenizer, str filename);
+Parser create_parser(Tokenizer* tokenizer, str filename, bool root, str module_identifier);
 
 Node* eval_w(const char* filename, char* code, Parser* parser, Node* (*supplier)(Parser*));
 

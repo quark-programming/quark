@@ -41,19 +41,35 @@ void build_simple_identifier(const str identifier, String* const application) {
 
 static void build_identifier_base(const Identifier identifier, String* const identifier_builder) {
     if(!identifier.is_external && !(identifier.parent_declaration->id == NodeVariableDeclaration
-                                    && identifier.parent_declaration->VariableDeclaration.compilation_state ==
-                                    CompilationHoisted)) {
-        if(identifier.parent_scope->declaration->id == NodeFunctionDeclaration) {
-            build_identifier_base(identifier.parent_scope->declaration->FunctionDeclaration.identifier, identifier_builder);
-            strf(identifier_builder, "__");
+                                    && identifier.parent_declaration->compilation_state == CompilationHoisted)) {
+        switch(identifier.parent_scope->declaration->id) {
+            case NodeStructDeclaration:
+                if(identifier.parent_declaration->id == NodeVariableDeclaration
+                    && !(identifier.parent_declaration->type->flags & fType)) break;
+
+            case NodeFunctionDeclaration:
+            case NodeNone: // Module
+                build_identifier_base(identifier.parent_scope->declaration->identifier, identifier_builder);
+                strf(identifier_builder, "__");
+
+            default: ;
         }
 
-        if(identifier.parent_scope->declaration->id == NodeStructDeclaration
-            && !(identifier.parent_declaration->id == NodeVariableDeclaration
-                && !(identifier.parent_declaration->type->flags & fType))) {
-            build_identifier_base(identifier.parent_scope->declaration->identifier, identifier_builder);
-            strf(identifier_builder, "__");
-        }
+        // if(identifier.parent_scope->declaration->id == NodeFunctionDeclaration) {
+        //     build_identifier_base(identifier.parent_scope->declaration->identifier, identifier_builder);
+        //     strf(identifier_builder, "__");
+        // }
+        //
+        // if(identifier.parent_scope->declaration->id == NodeStructDeclaration
+        //     && !(identifier.parent_declaration->id == NodeVariableDeclaration
+        //         && !(identifier.parent_declaration->type->flags & fType))) {
+        //     build_identifier_base(identifier.parent_scope->declaration->identifier, identifier_builder);
+        //     strf(identifier_builder, "__");
+        // }
+        //
+        // if(identifier.parent_scope->declaration->id == NodeVariableDeclaration) {
+        //     puts("var");
+        // }
 
         if(identifier.trait) {
             build_identifier_base(identifier.trait->identifier, identifier_builder);

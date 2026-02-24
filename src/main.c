@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
 
     Vec(Message) messages = { 0 };
     Tokenizer tokenizer = new_tokenizer(input_files[0], input_content, &messages);
-    Parser parser = create_parser(&tokenizer, (str) { strlen(input_files[0]), input_files[0] });
+    Parser parser = create_parser(&tokenizer, (str) { strlen(input_files[0]), input_files[0] }, true, str(""));
 
     Compiler compiler = {
         .messages = &messages,

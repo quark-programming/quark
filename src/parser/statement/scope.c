@@ -16,12 +16,22 @@ Scope* new_scope(Declaration* const parent) {
 }
 
 Declaration* find_in_scope_unwrapped(const Scope scope, const str identifier) {
-    Declaration** const possible_found = get(scope.variables, identifier);
+    Declaration** possible_found = get(scope.variables, identifier);
+
+    for(u32 i = 0; !possible_found && i < len(scope.wildcards); i++) {
+        possible_found = get(scope.wildcards[i]->variables, identifier);
+    }
+
     return possible_found ? *possible_found : NULL;
 }
 
 Wrapper* find_in_scope(const Scope scope, const Trace identifier) {
-    Declaration** const possible_found = get(scope.variables, identifier.source);
+    Declaration** possible_found = get(scope.variables, identifier.source);
+
+    for(u32 i = 0; !possible_found && i < len(scope.wildcards); i++) {
+        possible_found = get(scope.wildcards[i]->variables, identifier.source);
+    }
+
     return possible_found ? variable_of(*possible_found, identifier, 0) : NULL;
 }
 

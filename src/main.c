@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     Vec(char*) input_files = NULL;
     char* output_file = "out.c";
 
-    Vec(char*) include_paths = vec((char*) "stdint.h", "stdio.h", "string.h", "stdlib.h", "stdbool.h");
+    Vec(char*) include_paths = vec((char*) "stdint.h", "stdio.h", "string.h", "stdlib.h", "stdbool.h", "errno.h");
     push(&global_library_paths, str("."));
 
     int flag;

@@ -18,10 +18,14 @@ void print(str message) {
 	print_file(extern<File*> stdout, message);
 }
 
+void _write_panic_head() {
+    write_file(extern<File*> stderr, "[\x1b[31mpanicked\x1b[0m]:\n\t");
+}
+
 void panic(str message) {
     void extern exit(Int code);
 
-	write_file(extern<File*> stderr, "\x1b[31mpanicked: \x1b[0m");
+    _write_panic_head();
 	print_file(extern<File*> stderr, message);
 	exit(extern<Int> EXIT_FAILURE);
 }

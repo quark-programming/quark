@@ -54,7 +54,7 @@ void comp_FunctionDeclaration(void* void_self, String* line, Compiler* compiler)
     if(!resolve_identifier(self->identifier, &identifier)) {
         function_declaration_compiler_hoisted(self, compiler, as_str(identifier), true);
         function_declaration_compiler_hoisted(self, compiler, as_str(identifier), false);
+    } else {
+        free(vbase(identifier));
     }
-
-    free(vbase(identifier));
 }

@@ -1,5 +1,6 @@
 import containers::slice::{ Slice };
 import operator::{ Operator };
+import allocator::{ Allocator };
 
 struct Vec<T> {
 	T* data;
@@ -12,8 +13,18 @@ struct Vec<T> {
 		return Vec { 
 			data: malloc(sizeof(T)),
 			size: 0,
-			capacity: 1
+			capacity: 1,
 		};
+	}
+
+	Vec<T> from_capacity(usize capacity) {
+        T* extern malloc<T>(usize size);
+
+        return Vec {
+            data: malloc(sizeof(T) * capacity),
+            size: 0,
+            capacity: capacity,
+        };
 	}
 
 	usize len(self) {

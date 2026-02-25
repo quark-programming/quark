@@ -8,20 +8,16 @@ struct Vec<T> {
 	usize capacity;
 
 	Vec<T> new() {
-        T* extern malloc<T>(usize size);
-
-		return Vec { 
-			data: malloc(sizeof(T)),
+		return Vec {
+			data: Allocator::alloc(sizeof(T)),
 			size: 0,
 			capacity: 1,
 		};
 	}
 
 	Vec<T> from_capacity(usize capacity) {
-        T* extern malloc<T>(usize size);
-
         return Vec {
-            data: malloc(sizeof(T) * capacity),
+            data: Allocator::alloc_array(capacity),
             size: 0,
             capacity: capacity,
         };

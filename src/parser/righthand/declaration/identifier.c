@@ -89,6 +89,7 @@ compound_start:
     info.value = find_in_scope(*module->scope, next_trace);
 
     if(info.value && wrapper_action.type) {
+        // TODO: (fix) this action can be overridden on next compound_start
         info.value->action = wrapper_action;
         info.value->type = new_type((Type) {
             .Wrapper = {

@@ -117,12 +117,9 @@ void assign_generics_to_declaration(Declaration* declaration, const GenericsColl
 void close_generics_declaration(Declaration* declaration) {
     len(declaration->generics.type_arguments_stack) = 0;
 
-    const size_t base_size = len(declaration->generics.base_type_arguments);
-    len(declaration->generics.base_type_arguments) = 0;
-
-    for(size_t i = 0; i < base_size; i++) {
+    for(size_t i = 0; i < len(declaration->generics.base_type_arguments); i++) {
         Type* base_type = declaration->generics.base_type_arguments[i];
-        push(&declaration->generics.base_type_arguments, new_type(*base_type));
+        declaration->generics.base_type_arguments[i] = new_type(*base_type);
 
         *base_type = (Type) {
             .GenericReference = {

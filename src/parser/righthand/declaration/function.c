@@ -13,12 +13,13 @@
 #include "parser/lefthand/reference.h"
 #include "parser/type/traverse_type.h"
 
-static int recycle_missing_generics(Type* missing, Type* ignore, void* void_parser) {
+static int recycle_missing_generics(Type* missing, Type* ignore, void* void_scope) {
     (void) ignore;
-    Parser* const parser = void_parser;
+    Scope* const scope = void_scope;
 
     if(missing->id != NodeMissing) return 0;
-    Wrapper* possible_found = find_on_stack(parser->stack, missing->trace);
+    Wrapper* possible_found = find_in_scope(*scope, missing->trace);
+    // Wrapper* possible_found = find_on_stack(parser->stack, missing->trace);
 
     if(possible_found && possible_found->flags & fType) {
         *missing = *(Type*) (void*) possible_found;
@@ -142,7 +143,10 @@ Node* parse_function_declaration(Type* return_type, IdentifierInfo info, Parser*
 
     assign_generics_to_declaration((void*) declaration, info.generics_collection);
     push(&parser->stack, declaration->body);
-    traverse_type(return_type, NULL, &recycle_missing_generics, parser, TraverseGenerics);
+    if(info.generics_collection.generic_declarations_scope) {
+        traverse_type(return_type, NULL, &recycle_missing_generics, info.generics_collection.generic_declarations_scope,
+                      TraverseGenerics);
+    }
 
     put(&info.declaration_scope->variables, info.identifier.base, (void*) declaration);
 

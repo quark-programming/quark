@@ -41,7 +41,7 @@ void comp_Auto(void* void_self, String* line, Compiler* compiler) {
     const bool applied_action = apply_action(self->action, 0);
 
     if(!self->Auto.ref) {
-        strf(line, self->flags & fNumeric ? "int" : "/* auto */ int");
+        strf(line, "int");
     } else {
         compile(self->Auto.ref, line, compiler);
     }

@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
 
     Vec(Scope*) ready_stack = parser.stack;
     parser.stack = vec(parser.stack[0]);
-    import_wildcard("/_qkstd.qk", str("_qkstd"), &parser, &entry->body->children);
+    // import_wildcard("/_qkstd.qk", str("_qkstd"), &parser, &entry->body->children);
     free(vbase(parser.stack));
     parser.stack = ready_stack;
 

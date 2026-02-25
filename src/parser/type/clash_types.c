@@ -36,47 +36,69 @@ static int clash_autos(Wrapper* wrapper, Type* follower, ClashAccumulator* accum
         return 1;
     }
 
-    if(wrapper->Auto.test_against) {
-        const OpenedType test_against = open_type(wrapper->Auto.test_against, 0);
-        OpenedType follower_test_against = { 0 };
+    if(wrapper->Auto.test_against || (follower->id == WrapperAuto && follower->Wrapper.Auto.test_against)) {
+        Type* const wrapper_test = wrapper->Auto.test_against ? wrapper->Auto.test_against : (void*) wrapper;
+        Type* const follower_test = follower->id == WrapperAuto && follower->Wrapper.Auto.test_against
+                                        ? follower->Wrapper.Auto.test_against
+                                        : follower;
 
-        if(test_against.type == follower) {
-            close_type(test_against.actions, 0);
-            close_type(follower_test_against.actions, 0);
+        if((void*) wrapper == follower_test || follower == wrapper_test
+           || traverse_type(follower_test, NULL, &circular_acceptor, wrapper,
+                            TraverseGenerics | TraverseIntermediate)) {
             return 1;
         }
 
-        if(follower->id == WrapperAuto && follower->Wrapper.Auto.test_against) {
-            follower_test_against = open_type(follower->Wrapper.Auto.test_against, 0);
-            follower = follower_test_against.type;
-
-            if(test_against.type == follower) {
-                close_type(test_against.actions, 0);
-                close_type(follower_test_against.actions, 0);
-                return 1;
-            }
-        }
-
-        const int clash_error = clash_types(test_against.type, follower, accumulator->trace, accumulator->messages,
+        const int test_result = clash_types(wrapper_test, follower_test, accumulator->trace, accumulator->messages,
                                             ClashPassive | accumulator->flags);
-        if(clash_error) {
-            close_type(test_against.actions, 0);
-            close_type(follower_test_against.actions, 0);
-            return clash_error + 1;
+        if(test_result) {
+            return test_result + 1;
         }
-
-        if(!(accumulator->flags & ClashPassive)) assign_auto_ref(wrapper, follower);
-        close_type(test_against.actions, 0);
-        close_type(follower_test_against.actions, 0);
-        return 1;
+    } else {
+        // TODO: this may be wrong
+        if(wrapper->flags & fNumeric && !(follower->flags & fNumeric) && follower->id != WrapperAuto) {
+            return TestMismatch;
+        }
     }
 
-    if(wrapper->flags & fNumeric && !(follower->flags & fNumeric) && follower->id != WrapperAuto) {
-        return TestMismatch;
-    }
+    // if(wrapper->Auto.test_against) {
+    //     const OpenedType test_against = open_type(wrapper->Auto.test_against, 0);
+    //     OpenedType follower_test_against = { 0 };
+    //
+    //     if(test_against.type == follower) {
+    //         close_type(test_against.actions, 0);
+    //         close_type(follower_test_against.actions, 0);
+    //         return 1;
+    //     }
+    //
+    //     if(follower->id == WrapperAuto && follower->Wrapper.Auto.test_against) {
+    //         follower_test_against = open_type(follower->Wrapper.Auto.test_against, 0);
+    //         follower = follower_test_against.type;
+    //
+    //         if(test_against.type == follower) {
+    //             // if(!(accumulator->flags & ClashPassive)) assign_auto_ref(wrapper, follower);
+    //             close_type(test_against.actions, 0);
+    //             close_type(follower_test_against.actions, 0);
+    //             return 1;
+    //         }
+    //     }
+    //
+    //     const int clash_error = clash_types(test_against.type, follower, accumulator->trace, accumulator->messages,
+    //                                         ClashPassive | accumulator->flags);
+    //     if(clash_error) {
+    //         close_type(test_against.actions, 0);
+    //         close_type(follower_test_against.actions, 0);
+    //         return clash_error + 1;
+    //     }
+    //
+    //     if(!(accumulator->flags & ClashPassive)) assign_auto_ref(wrapper, follower);
+    //     close_type(test_against.actions, 0);
+    //     close_type(follower_test_against.actions, 0);
+    //     return 1;
+    // }
 
-    if(traverse_type((void*) wrapper, NULL, &circular_acceptor, follower, TraverseGenerics & TraverseIntermediate) ||
-       traverse_type((void*) follower, NULL, &circular_acceptor, wrapper, TraverseGenerics & TraverseIntermediate)) {
+    // TODO: try making this one way (like above)
+    if(traverse_type((void*) wrapper, NULL, &circular_acceptor, follower, TraverseGenerics | TraverseIntermediate) ||
+       traverse_type((void*) follower, NULL, &circular_acceptor, wrapper, TraverseGenerics | TraverseIntermediate)) {
         return TestCircular;
     }
 
@@ -93,12 +115,12 @@ static int clash_acceptor(Type* type, Type* follower, void* void_accumulator) {
 
     ClashAccumulator* const accumulator = void_accumulator;
 
-    if(follower->id == WrapperAuto && !(type->id == WrapperAuto && type->Wrapper.Auto.test_against)) {
-        return clash_autos((void*) follower, type, accumulator);
-    }
-
     if(type->id == WrapperAuto) {
         return clash_autos((void*) type, follower, accumulator);
+    }
+
+    if(follower->id == WrapperAuto) {
+        return clash_autos((void*) follower, type, accumulator);
     }
 
     if(type->id == follower->id)

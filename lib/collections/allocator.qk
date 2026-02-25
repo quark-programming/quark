@@ -11,7 +11,7 @@ struct c {
 
     char* extern strerror(Int errno);
 }
-private c;
+private (private c) extern _c;
 
 struct Allocator {
     void _panic_err(str message) {

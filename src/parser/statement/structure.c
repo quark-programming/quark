@@ -7,6 +7,7 @@
 #include "../righthand/righthand.h"
 #include "../righthand/declaration/declaration.h"
 #include "parser/righthand/declaration/identifier.h"
+#include "parser/type/clash_types.h"
 #include "parser/type/stringify_type.h"
 
 // TODO: add `Trace trace` argument for info.trace (or `IdentifierInfo info` argument)
@@ -30,35 +31,40 @@ Node* parse_struct_literal(Type* const wrapped_struct_type, Parser* parser) {
         }
     });
 
-    while(parser->tokenizer->current.type && parser->tokenizer->current.type != '}') {
-        if(parser->tokenizer->current.type == TokenIdentifier) {
-            const Token field_name = next(parser->tokenizer);
+    for(u32 field_index = 0; parser->tokenizer->current.type && parser->tokenizer->current.type != '}'; field_index++) {
+        str field_name = { 0 };
+        StructField* compare_field = struct_type->fields + field_index;
 
+        Token field_name_token;
+        if(try(parser->tokenizer, TokenIdentifier, &field_name_token)) {
             if(try(parser->tokenizer, ':', NULL)) {
-                push(&struct_literal->field_names, field_name.trace.source);
-                push(&struct_literal->field_values, expression(parser));
+                field_name = field_name_token.trace.source;
 
-                for(size_t i = 0; i < len(struct_type->fields); i++) {
-                    if(streq(struct_type->fields[i].identifier, field_name.trace.source)) {
-                        goto continue_;
+                bool found_compare_field = false;
+                for(size_t i = field_index; i < len(struct_type->fields); i++) {
+                    if(streq(struct_type->fields[i].identifier, field_name_token.trace.source)) {
+                        compare_field = struct_type->fields + i;
+                        found_compare_field = true;
                     }
                 }
 
-                String message = strf(0, iftty("no field named '\33[35m%.*s\33[35m' on '\33[35m",
-                                          "no field named '%.*s' on '")).as_owned;
-                stringify_type((void*) struct_type, &message, 0);
-                push(parser->tokenizer->messages, MERROR(field_name.trace, strf(&message, iftty("\33[0m'", "'"))));
-
-            continue_:
-                if(!try(parser->tokenizer, ',', 0)) break;
-                continue;
+                if(!found_compare_field) {
+                    String message = strf(0, iftty("no field named '\33[35m%.*s\33[35m' on '\33[35m",
+                                              "no field named '%.*s' on '")).as_owned;
+                    stringify_type((void*) struct_type, &message, 0);
+                    push(parser->tokenizer->messages,
+                         MERROR(field_name_token.trace, strf(&message, iftty("\33[0m'", "'"))));
+                }
+            } else {
+                parser->tokenizer->current = field_name_token;
             }
-
-            parser->tokenizer->current = field_name;
         }
 
-        push(&struct_literal->field_names, { 0 });
-        push(&struct_literal->field_values, expression(parser));
+        Node* const field_value = expression(parser);
+        clash_types(compare_field->type, field_value->type, field_value->trace, parser->tokenizer->messages, 0);
+
+        push(&struct_literal->field_names, field_name);
+        push(&struct_literal->field_values, field_value);
 
         if(!try(parser->tokenizer, ',', 0)) break;
     }

@@ -65,7 +65,7 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
             child->Variable.bound_self_argument = lefthand;
             child->type = make_type_standalone(child->type, 2);
 
-            if(len(global_actions)) {
+            if(len(global_actions[2])) {
                 child->action = child->type->Wrapper.action;
             }
 

@@ -80,8 +80,14 @@ void remove_action(const Action action, const unsigned flags, const u8 generics_
     }
 }
 
+static bool is_stack_reference(Type* const type_argument, Declaration* const declaration) {
+    return type_argument->id == WrapperAuto && type_argument->Wrapper.Auto.test_against
+           && type_argument->Wrapper.Auto.test_against->id == NodeGenericReference
+           && type_argument->Wrapper.Auto.test_against->GenericReference.generics_declaration
+           == declaration;
+}
 
-Type* peek_type(Type* type, Action* action, const unsigned flags, const u8 generics_offset) {
+Type* peek_type(Type* type, Action* action, const unsigned flags, u8 generics_offset) {
     if(type->id == WrapperAuto || type->id == WrapperVariable || type->id == WrapperSurround) {
         if(apply_action(type->Wrapper.action, flags, generics_offset)) {
             *action = type->Wrapper.action;
@@ -93,20 +99,20 @@ Type* peek_type(Type* type, Action* action, const unsigned flags, const u8 gener
             if(!type->Wrapper.Auto.ref && type->Wrapper.Auto.test_against
                && type->Wrapper.Auto.test_against->id == NodeGenericReference) {
                 GenericReference* const reference = &type->Wrapper.Auto.test_against->GenericReference;
-                Vec(Vec(Type*)) const stack =
-                    reference->generics_declaration->generics.type_arguments_stacks[generics_offset];
 
-                for(size_t i = len(stack) - 1; i > 0; i--) {
-                    Type* const type_argument = stack[i - 1][reference->index];
+                do {
+                    Vec(Vec(Type*)) stack =
+                        reference->generics_declaration->generics.type_arguments_stacks[generics_offset];
 
-                    if(type_argument->id == WrapperAuto && type_argument->Wrapper.Auto.test_against
-                       && type_argument->Wrapper.Auto.test_against->id == NodeGenericReference
-                       && type_argument->Wrapper.Auto.test_against->GenericReference.generics_declaration
-                       == reference->generics_declaration)
-                        continue;
+                    for(size_t i = len(stack); i > 0; i--) {
+                        Type* const type_argument = stack[i - 1][reference->index];
+                        if(is_stack_reference(type_argument, reference->generics_declaration))
+                            continue;
+                        return type_argument;
+                    }
+                } while(generics_offset != 2 && ((generics_offset = 2)));
 
-                    return type_argument;
-                }
+                panicf("path should not be reached");
             }
 
             return type->Wrapper.Auto.ref ? type->Wrapper.Auto.ref : type;

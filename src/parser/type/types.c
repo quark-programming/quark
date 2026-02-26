@@ -5,7 +5,7 @@
 
 bool global_in_compiler_step = false;
 Compiler* global_compiler_context = NULL;
-Vec(Action) global_actions = { 0 };
+Vec(Action) global_actions[3] = { 0 };
 
 Type* new_type(Type type) {
     type.flags |= fType;
@@ -24,7 +24,7 @@ bool apply_action(const Action action, const unsigned flags, const u8 generics_o
             push(&action.target->generics.type_arguments_stacks[generics_offset], action.generics);
 
             if(!(flags & ActionKeepGlobalState)) {
-                push(&global_actions, action);
+                push(&global_actions[generics_offset], action);
             }
 
             static bool recursion_stop = false;
@@ -65,7 +65,7 @@ void remove_action(const Action action, const unsigned flags, const u8 generics_
             pop(&action.target->generics.type_arguments_stacks[generics_offset]);
 
             if(!(flags & ActionKeepGlobalState)) {
-                pop(&global_actions);
+                pop(&global_actions[generics_offset]);
             }
 
             break;
@@ -114,9 +114,11 @@ Type* peek_type(Type* type, Action* action, const unsigned flags, const u8 gener
         case WrapperVariable:
             return (void*) type->Wrapper.Variable.declaration->const_value;
 
-        case NodeGenericReference:
-            return last(type->GenericReference.generics_declaration->generics.type_arguments_stacks[generics_offset])
-                    [type->GenericReference.index];
+        case NodeGenericReference: {
+            const Generics generics = type->GenericReference.generics_declaration->generics;
+            const u8 normal_offset = len(generics.type_arguments_stacks[generics_offset]) ? generics_offset : 2;
+            return last(generics.type_arguments_stacks[normal_offset])[type->GenericReference.index];
+        }
 
         default: return type;
     }
@@ -171,13 +173,18 @@ Vec(Type*) find_last_generic_action(Vec(Action) const actions, Declaration* cons
     return NULL;
 }
 
-Type* make_type_standalone(Type* type) {
-    if(!len(global_actions)) return type;
+Type* make_type_standalone(Type* type, const u8 generics_offset) {
+    if(!len(global_actions[generics_offset]) && !len(global_actions[2])) return type;
 
     Vec(Action) actions = NULL;
-    resv(&actions, len(global_actions));
-    memcpy(actions, global_actions, len(global_actions) * sizeof(Action));
-    len(actions) = len(global_actions);
+    const u32 length = len(global_actions[2]) + (generics_offset != 2) * len(global_actions[generics_offset]);
+    resv(&actions, length);
+    memcpy(actions, global_actions[2], len(global_actions[2]) * sizeof(Action));
+    if(generics_offset != 2) {
+        memcpy(actions + len(global_actions[2]), global_actions[generics_offset],
+               len(global_actions[generics_offset]) * sizeof(Action));
+    }
+    len(actions) = length;
 
     return new_type((Type) {
         .Wrapper = {

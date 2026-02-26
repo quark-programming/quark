@@ -12,7 +12,7 @@ typedef struct OpenedType {
 
 extern bool global_in_compiler_step;
 extern Compiler* global_compiler_context;
-extern Vec(Action) global_actions;
+extern Vec(Action) global_actions[3];
 
 enum {
     TraverseIntermediate     = 1 << 0,
@@ -36,6 +36,6 @@ void close_type(Vec(Action) actions, unsigned flags, u8 generics_offset);
 
 Vec(Type*) find_last_generic_action(Vec(Action) actions, Declaration* declaration);
 
-Type* make_type_standalone(Type* type);
+Type* make_type_standalone(Type* type, u8 generics_offset);
 
 #endif

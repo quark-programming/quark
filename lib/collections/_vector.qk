@@ -53,4 +53,25 @@ struct Vec<T> {
 			i = i + 1;
 		}
 	}
+
+	Vec<T> from([T] slice) {
+        T* extern malloc<T>(usize size);
+
+		Vec<T> vec = Vec {
+			data: malloc(sizeof(T) * slice.size),
+			size: 0,
+			capacity: slice.size,
+		};
+		vec.push_many(slice);
+
+		return vec;
+	}
+
+	void pop(&self) {
+		self->size--;
+	}
+
+	T Operator::index(self, usize index) {
+	    return self.data[index];
+	}
 }

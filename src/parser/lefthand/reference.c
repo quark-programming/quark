@@ -25,7 +25,7 @@ Node* reference(Node* node, const Trace trace) {
 
 Node* dereference(Node* node, Trace trace, Vec(Message)* messages) {
     if(node->flags & fType) {
-        const OpenedType open = open_type((void*) node, 0, 0);
+        const OpenedType open = open_type((void*) node, 0, 2);
 
         if(open.type->id != NodePointerType) {
             push(messages, MERROR(trace, strf(0, "Cannot de-refence a non-pointer value")));
@@ -33,8 +33,8 @@ Node* dereference(Node* node, Trace trace, Vec(Message)* messages) {
             return node;
         }
 
-        Type* const child = make_type_standalone(open.type->PointerType.base);
-        close_type(open.actions, 0, 0);
+        Type* const child = make_type_standalone(open.type->PointerType.base, 2);
+        close_type(open.actions, 0, 2);
         return (void*) child;
     }
 

@@ -10,7 +10,7 @@ static int circular_acceptor(Type* const type, Type* follower, void* const compa
 }
 
 static void assign_auto_ref(Wrapper* wrapper, Type* follower) {
-    wrapper->Auto.ref = make_type_standalone(follower);
+    wrapper->Auto.ref = make_type_standalone(follower, 1);
 
     if(follower->id == WrapperAuto) {
         if((wrapper->flags | follower->flags) & fNumeric) {

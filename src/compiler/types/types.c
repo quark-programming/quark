@@ -1,4 +1,5 @@
 #include "types.h"
+#include "parser/type/types.h"
 
 #include "../righthand/declaration/identifier.h"
 
@@ -42,8 +43,9 @@ void comp_FunctionType(void* void_self, String* line, Compiler* compiler) {
 }
 
 void comp_GenericReference(void* void_self, String* line, Compiler* compiler) {
-    GenericReference* const self = void_self;
-    compile(last(self->generics_declaration->generics.type_arguments_stacks[0])[self->index], line, compiler);
+    const OpenedType opened = open_type(void_self, 0, 0);
+    compile(opened.type, line, compiler);
+    close_type(opened.actions, 0, 0);
 }
 
 void comp_StructType(void* void_self, String* line, Compiler* compiler) {

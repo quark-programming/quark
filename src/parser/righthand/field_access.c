@@ -37,7 +37,7 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
         type = (void*) dereference((void*) type, lefthand->trace, parser->tokenizer->messages);
     }
 
-    const OpenedType opened = open_type(type, 0, 0);
+    const OpenedType opened = open_type(type, 0, 2);
     StructType* const struct_type = (void*) opened.type;
 
     const Token field_token = expect(parser->tokenizer, TokenIdentifier);
@@ -46,7 +46,7 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
         push(parser->tokenizer->messages, MERROR(lefthand->trace,
                  strf(0, iftty("'\33[35m%.*s\33[0m' is not a structure", "'%.*s' is not a structure"),
                      fmtof(lefthand->trace.source))));
-        close_type(opened.actions, 0, 0);
+        close_type(opened.actions, 0, 2);
         return lefthand;
     }
 
@@ -61,15 +61,15 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
         Wrapper* child = find_in_scope(*struct_type->module->scope, field_token.trace);
 
         if(child) {
-            lefthand->type = make_type_standalone(lefthand->type);
+            lefthand->type = make_type_standalone(lefthand->type, 2);
             child->Variable.bound_self_argument = lefthand;
-            child->type = make_type_standalone(child->type);
+            child->type = make_type_standalone(child->type, 2);
 
             if(len(global_actions)) {
                 child->action = child->type->Wrapper.action;
             }
 
-            close_type(opened.actions, 0, 0);
+            close_type(opened.actions, 0, 2);
             return (void*) child;
         }
 
@@ -81,8 +81,8 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
         return lefthand;
     }
 
-    Type* field_type = make_type_standalone(struct_type->fields[found_index].type);
-    close_type(opened.actions, 0, 0);
+    Type* field_type = make_type_standalone(struct_type->fields[found_index].type, 2);
+    close_type(opened.actions, 0, 2);
 
     return new_node((Node) {
         .BinaryOperation = {
@@ -104,10 +104,10 @@ Node* parse_indexing(Node* lefthand, Parser* parser) {
     Node* const index = expression(parser);
     const Trace trace = stretch(trace_start, expect(parser->tokenizer, ']').trace);
 
-    const OpenedType opened_index = open_type(index->type, 0, 0);
+    const OpenedType opened_index = open_type(index->type, 0, 2);
     if(opened_index.type->id == NodeStructType
        && streq(opened_index.type->StructType.module->declaration->identifier.base, str("Range"))) {
-        close_type(opened_index.actions, 0, 0);
+        close_type(opened_index.actions, 0, 2);
 
         Declaration* const slice_declaration = fetch_slice_declaration(parser);
 
@@ -177,7 +177,7 @@ Node* parse_indexing(Node* lefthand, Parser* parser) {
         collector->trace = trace;
         return (void*) collector;
     }
-    close_type(opened_index.actions, 0, 0);
+    close_type(opened_index.actions, 0, 2);
 
     Node* const override = operator_override(lefthand->type, lefthand, index, str("index"), index->trace, parser);
     if(override) return override;

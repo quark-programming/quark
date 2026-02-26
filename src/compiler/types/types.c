@@ -43,7 +43,7 @@ void comp_FunctionType(void* void_self, String* line, Compiler* compiler) {
 
 void comp_GenericReference(void* void_self, String* line, Compiler* compiler) {
     GenericReference* const self = void_self;
-    compile(last(self->generics_declaration->generics.type_arguments_stack)[self->index], line, compiler);
+    compile(last(self->generics_declaration->generics.type_arguments_stacks[0])[self->index], line, compiler);
 }
 
 void comp_StructType(void* void_self, String* line, Compiler* compiler) {

@@ -7,7 +7,7 @@
 
 typedef struct Generics {
     Set unique_combinations;
-    Vec(Vec(Type*)) type_arguments_stack;
+    Vec(Vec(Type*)) type_arguments_stacks[2];
     Vec(Type*) base_type_arguments;
 } Generics;
 

@@ -118,13 +118,13 @@ int test_righthand() {
 
         Wrapper* fields_a = find_in_scope(*parser.stack[0], (Trace) { str("fields_a") });
         assert_eq((bool) fields_a, true);
-        External* fields_a_type = (void*) open_type(fields_a->type, 0).type;
+        External* fields_a_type = (void*) open_type(fields_a->type, 0, 0).type;
         assert_eq(fields_a_type->id, NodeExternal);
         assert_eq(streq(fields_a_type->data, str("a")), true);
 
         Wrapper* fields_ref_a = find_in_scope(*parser.stack[0], (Trace) { str("fields_ref_a") });
         assert_eq((bool) fields_ref_a, true);
-        External* fields_ref_a_type = (void*) open_type(fields_ref_a->type, 0).type;
+        External* fields_ref_a_type = (void*) open_type(fields_ref_a->type, 0, 0).type;
         assert_eq(fields_ref_a_type->id, NodeExternal);
         assert_eq(streq(fields_ref_a_type->data, str("a")), true);
     }
@@ -184,9 +184,9 @@ int test_righthand() {
         assert_eq(basic_option != NULL, true);
         assert_eq(basic_option->id, NodeVariableDeclaration);
 
-        OpenedType open_basic_option = open_type(basic_option->type, 0);
+        OpenedType open_basic_option = open_type(basic_option->type, 0, 0);
         Type* basic_option_base = find_last_generic_action(open_basic_option.actions, Option)[0];
-        close_type(open_basic_option.actions, 0);
+        close_type(open_basic_option.actions, 0, 0);
         assert_eq(basic_option_base->id, NodeExternal);
         assert_eq(streq(basic_option_base->External.data, str("TEST")), true);
 
@@ -194,9 +194,9 @@ int test_righthand() {
         assert_eq(coalesced_option != NULL, true);
         assert_eq(coalesced_option->id, NodeVariableDeclaration);
 
-        OpenedType open_coalesced_option = open_type(coalesced_option->type, 0);
+        OpenedType open_coalesced_option = open_type(coalesced_option->type, 0, 0);
         Type* coalesced_option_base = find_last_generic_action(open_coalesced_option.actions, Option)[0];
-        close_type(open_coalesced_option.actions, 0);
+        close_type(open_coalesced_option.actions, 0, 0);
         assert_eq(coalesced_option_base->id, NodeExternal);
         assert_eq(streq(coalesced_option_base->External.data, str("a")), true);
     }

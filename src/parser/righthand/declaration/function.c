@@ -145,7 +145,7 @@ Node* parse_function_declaration(Type* return_type, IdentifierInfo info, Parser*
     push(&parser->stack, declaration->body);
     if(info.generics_collection.generic_declarations_scope) {
         traverse_type(return_type, NULL, &recycle_missing_generics, info.generics_collection.generic_declarations_scope,
-                      TraverseGenerics);
+                      TraverseGenerics, 0);
     }
 
     put(&info.declaration_scope->variables, info.identifier.base, (void*) declaration);

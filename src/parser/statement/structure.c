@@ -12,7 +12,7 @@
 
 // TODO: add `Trace trace` argument for info.trace (or `IdentifierInfo info` argument)
 Node* parse_struct_literal(Type* const wrapped_struct_type, Parser* parser) {
-    const OpenedType opened = open_type(wrapped_struct_type, 0);
+    const OpenedType opened = open_type(wrapped_struct_type, 0, 0);
     StructType* const struct_type = (void*) opened.type;
 
     // TODO: error message if not struct
@@ -20,7 +20,7 @@ Node* parse_struct_literal(Type* const wrapped_struct_type, Parser* parser) {
         push(parser->tokenizer->messages,
              MERROR(wrapped_struct_type->trace, str("creating structure literal with a non-structure type")));
 
-        close_type(opened.actions, 0);
+        close_type(opened.actions, 0, 0);
         return (void*) wrapped_struct_type;
     }
 
@@ -51,7 +51,7 @@ Node* parse_struct_literal(Type* const wrapped_struct_type, Parser* parser) {
                 if(!found_compare_field) {
                     String message = strf(0, iftty("no field named '\33[35m%.*s\33[35m' on '\33[35m",
                                               "no field named '%.*s' on '")).as_owned;
-                    stringify_type((void*) struct_type, &message, 0);
+                    stringify_type((void*) struct_type, &message, 0, 0);
                     push(parser->tokenizer->messages,
                          MERROR(field_name_token.trace, strf(&message, iftty("\33[0m'", "'"))));
                 }
@@ -70,7 +70,7 @@ Node* parse_struct_literal(Type* const wrapped_struct_type, Parser* parser) {
     }
 
     struct_literal->trace = stretch(wrapped_struct_type->trace, expect(parser->tokenizer, '}').trace);
-    close_type(opened.actions, 0);
+    close_type(opened.actions, 0, 0);
     return (void*) struct_literal;
 }
 

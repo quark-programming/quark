@@ -3,7 +3,7 @@
 #include "traverse_type.h"
 #include "types.h"
 
-void stringify_generics(String* string, Vec(Type*) const generics, const unsigned flags) {
+void stringify_generics(String* string, Vec(Type*) const generics, const unsigned flags, const u8 generics_offset) {
     if(!len(generics)) return;
 
     if(!(flags & StringifyAlphaNumeric)) {
@@ -17,7 +17,7 @@ void stringify_generics(String* string, Vec(Type*) const generics, const unsigne
             strf(string, ", ");
         }
 
-        stringify_type(generics[i], string, flags);
+        stringify_type(generics[i], string, flags, generics_offset);
     }
 
     if(!(flags & StringifyAlphaNumeric)) {
@@ -52,8 +52,9 @@ static int stringify_acceptor(Type* type, Type* follower, void* void_accumulator
 
             if(type->StructType.module->declaration->generics.base_type_arguments) {
                 stringify_generics(accumulator->string,
-                                   last(type->StructType.module->declaration->generics.type_arguments_stack),
-                                   accumulator->flags);
+                                   last(type->StructType.module->declaration->generics
+                                       .type_arguments_stacks[accumulator->generics_offset]),
+                                   accumulator->flags, accumulator->generics_offset);
             }
 
             return 1;
@@ -65,7 +66,7 @@ static int stringify_acceptor(Type* type, Type* follower, void* void_accumulator
 }
 
 
-void stringify_type(Type* type, String* string, const unsigned flags) {
-    traverse_type(type, NULL, &stringify_acceptor, &(StringifyAccumulator) { string, flags },
-                  ActionKeepGlobalState | ActionNoChildCompilation);
+void stringify_type(Type* type, String* string, const unsigned flags, const u8 generics_offset) {
+    traverse_type(type, NULL, &stringify_acceptor, &(StringifyAccumulator) { string, flags, generics_offset },
+                  ActionKeepGlobalState | ActionNoChildCompilation, generics_offset);
 }

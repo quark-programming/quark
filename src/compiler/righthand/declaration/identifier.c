@@ -79,9 +79,9 @@ static void build_identifier_base(const Identifier identifier, String* const ide
 
     strf(identifier_builder, "%.*s", fmtof(identifier.base));
 
-    if(len(identifier.parent_declaration->generics.type_arguments_stack) && !identifier.is_external) {
-        stringify_generics(identifier_builder, last(identifier.parent_declaration->generics.type_arguments_stack),
-                           StringifyAlphaNumeric);
+    if(len(identifier.parent_declaration->generics.type_arguments_stacks[0]) && !identifier.is_external) {
+        stringify_generics(identifier_builder, last(identifier.parent_declaration->generics.type_arguments_stacks[0]),
+                           StringifyAlphaNumeric, 0);
     }
 }
 

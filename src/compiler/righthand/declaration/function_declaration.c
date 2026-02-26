@@ -47,7 +47,7 @@ void comp_FunctionDeclaration(void* void_self, String* line, Compiler* compiler)
     FunctionDeclaration* self = void_self;
 
     if(self->identifier.is_external || (self->generics.base_type_arguments
-                                        && !len(self->generics.type_arguments_stack)))
+                                        && !len(self->generics.type_arguments_stacks[0])))
         return;
 
     String identifier = { 0 };

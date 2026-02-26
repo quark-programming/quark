@@ -21,18 +21,18 @@ enum {
     ActionNoChildCompilation = 1 << 3,
 };
 
-bool apply_action(Action action, unsigned flags);
+bool apply_action(Action action, unsigned flags, u8 generics_offset);
 
-void remove_action(Action action, unsigned flags);
+void remove_action(Action action, unsigned flags, u8 generics_offset);
 
-Type* peek_type(Type* type, Action* action, unsigned flags);
+Type* peek_type(Type* type, Action* action, unsigned flags, u8 generics_offset);
 
 OpenedType open_type_with_acceptor(Type* type, Type* follower, int (*acceptor)(Type*, Type*, void*),
-                                   void* accumulator, unsigned flags);
+                                   void* accumulator, unsigned flags, u8 generics_offset);
 
-#define open_type(type, flags) open_type_with_acceptor(type, NULL, NULL, NULL, flags)
+#define open_type(type, flags, generics_offset) open_type_with_acceptor(type, NULL, NULL, NULL, flags, generics_offset)
 
-void close_type(Vec(Action) actions, unsigned flags);
+void close_type(Vec(Action) actions, unsigned flags, u8 generics_offset);
 
 Vec(Type*) find_last_generic_action(Vec(Action) actions, Declaration* declaration);
 

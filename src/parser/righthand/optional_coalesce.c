@@ -39,17 +39,17 @@ Node* parse_optional_coalescing(Node* lefthand, Parser* parser) {
     const RighthandOperator operator = global_righthand_operator_table[parser->tokenizer->current.type];
     if(operator.precedence > 1) return NULL;
 
-    const OpenedType lefthand_optional = open_type(lefthand->type, 0);
+    const OpenedType lefthand_optional = open_type(lefthand->type, 0, 0);
 
     if(lefthand_optional.type->id != NodeStructType ||
        !streq(lefthand_optional.type->StructType.module->declaration->identifier.base, str("Option"))) {
-        close_type(lefthand_optional.actions, 0);
+        close_type(lefthand_optional.actions, 0, 0);
         return NULL;
     }
 
     Type* const lefthand_value_type =
-            last(lefthand_optional.type->StructType.module->declaration->generics.type_arguments_stack)[0];
-    close_type(lefthand_optional.actions, 0);
+            last(lefthand_optional.type->StructType.module->declaration->generics.type_arguments_stacks[0])[0];
+    close_type(lefthand_optional.actions, 0, 0);
 
     Scope* operation_step_collection = (void*) new_node((Node) {
         .Scope = {
@@ -91,10 +91,10 @@ Node* parse_optional_coalescing(Node* lefthand, Parser* parser) {
     });
     push(&some_branch_if_statement->ControlStatement.conditions, if_cond);
 
-    const OpenedType opened_optional_value = open_type(lefthand_optional_value->type, 0);
+    const OpenedType opened_optional_value = open_type(lefthand_optional_value->type, 0, 0);
     const bool no_resulting_value = opened_optional_value.type->id == NodeExternal
                                     && streq(opened_optional_value.type->External.data, str("void"));
-    close_type(opened_optional_value.actions, 0);
+    close_type(opened_optional_value.actions, 0, 0);
 
     if(no_resulting_value) {
         push(&operation_step_collection->children, some_branch_if_statement);

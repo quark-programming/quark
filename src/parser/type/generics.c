@@ -111,11 +111,13 @@ GenericsCollection collect_generics(Parser* const parser) {
 void assign_generics_to_declaration(Declaration* declaration, const GenericsCollection collection) {
     if(!len(collection.base_type_arguments)) return;
     declaration->generics.base_type_arguments = collection.base_type_arguments;
-    push(&declaration->generics.type_arguments_stack, collection.base_type_arguments);
+    push(&declaration->generics.type_arguments_stacks[0], collection.base_type_arguments);
+    push(&declaration->generics.type_arguments_stacks[1], collection.base_type_arguments);
 }
 
 void close_generics_declaration(Declaration* declaration) {
-    len(declaration->generics.type_arguments_stack) = 0;
+    len(declaration->generics.type_arguments_stacks[0]) = 0;
+    len(declaration->generics.type_arguments_stacks[1]) = 0;
 
     for(size_t i = 0; i < len(declaration->generics.base_type_arguments); i++) {
         Type* base_type = declaration->generics.base_type_arguments[i];

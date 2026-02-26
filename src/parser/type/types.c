@@ -16,12 +16,12 @@ Type* new_type(Type type) {
 
 // TODO: possibly move actions to their own file
 // TODO: remove return value if useless
-bool apply_action(const Action action, const unsigned flags) {
+bool apply_action(const Action action, const unsigned flags, const u8 generics_offset) {
     switch(action.type) {
         case ActionNone: return false;
 
         case ActionApplyGenerics: {
-            push(&action.target->generics.type_arguments_stack, action.generics);
+            push(&action.target->generics.type_arguments_stacks[generics_offset], action.generics);
 
             if(!(flags & ActionKeepGlobalState)) {
                 push(&global_actions, action);
@@ -32,7 +32,7 @@ bool apply_action(const Action action, const unsigned flags) {
                 recursion_stop = true;
 
                 String unique_key = NULL;
-                stringify_generics(&unique_key, action.generics, StringifyAlphaNumeric);
+                stringify_generics(&unique_key, action.generics, StringifyAlphaNumeric, 0);
 
                 recursion_stop = false;
 
@@ -47,7 +47,7 @@ bool apply_action(const Action action, const unsigned flags) {
 
         case ActionApplyCollection:
             for(size_t i = 0; i < len(action.collection); i++) {
-                apply_action(action.collection[i], flags);
+                apply_action(action.collection[i], flags, generics_offset);
             }
             break;
 
@@ -57,12 +57,12 @@ bool apply_action(const Action action, const unsigned flags) {
     return true;
 }
 
-void remove_action(const Action action, const unsigned flags) {
+void remove_action(const Action action, const unsigned flags, const u8 generics_offset) {
     switch(action.type) {
         case ActionNone: return;
 
         case ActionApplyGenerics:
-            pop(&action.target->generics.type_arguments_stack);
+            pop(&action.target->generics.type_arguments_stacks[generics_offset]);
 
             if(!(flags & ActionKeepGlobalState)) {
                 pop(&global_actions);
@@ -72,7 +72,7 @@ void remove_action(const Action action, const unsigned flags) {
 
         case ActionApplyCollection:
             for(size_t i = len(action.collection); i > 0; i--) {
-                remove_action(action.collection[i - 1], flags);
+                remove_action(action.collection[i - 1], flags, generics_offset);
             }
             break;
 
@@ -81,9 +81,9 @@ void remove_action(const Action action, const unsigned flags) {
 }
 
 
-Type* peek_type(Type* type, Action* action, const unsigned flags) {
+Type* peek_type(Type* type, Action* action, const unsigned flags, const u8 generics_offset) {
     if(type->id == WrapperAuto || type->id == WrapperVariable || type->id == WrapperSurround) {
-        if(apply_action(type->Wrapper.action, flags)) {
+        if(apply_action(type->Wrapper.action, flags, generics_offset)) {
             *action = type->Wrapper.action;
         }
     }
@@ -93,7 +93,8 @@ Type* peek_type(Type* type, Action* action, const unsigned flags) {
             if(!type->Wrapper.Auto.ref && type->Wrapper.Auto.test_against
                && type->Wrapper.Auto.test_against->id == NodeGenericReference) {
                 GenericReference* const reference = &type->Wrapper.Auto.test_against->GenericReference;
-                Vec(Vec(Type*)) const stack = reference->generics_declaration->generics.type_arguments_stack;
+                Vec(Vec(Type*)) const stack =
+                    reference->generics_declaration->generics.type_arguments_stacks[generics_offset];
 
                 for(size_t i = len(stack) - 1; i > 0; i--) {
                     Type* const type_argument = stack[i - 1][reference->index];
@@ -114,7 +115,7 @@ Type* peek_type(Type* type, Action* action, const unsigned flags) {
             return (void*) type->Wrapper.Variable.declaration->const_value;
 
         case NodeGenericReference:
-            return last(type->GenericReference.generics_declaration->generics.type_arguments_stack)
+            return last(type->GenericReference.generics_declaration->generics.type_arguments_stacks[generics_offset])
                     [type->GenericReference.index];
 
         default: return type;
@@ -122,12 +123,12 @@ Type* peek_type(Type* type, Action* action, const unsigned flags) {
 }
 
 OpenedType open_type_with_acceptor(Type* type, Type* follower, int (*acceptor)(Type*, Type*, void*),
-                                   void* accumulator, const unsigned flags) {
+                                   void* accumulator, const unsigned flags, const u8 generics_offset) {
     OpenedType opened_type = { 0 };
     if(!type) return opened_type;
     Action action = { 0 };
 
-    while((opened_type.type = peek_type(type, &action, flags)) != type) {
+    while((opened_type.type = peek_type(type, &action, flags, generics_offset)) != type) {
         type = opened_type.type;
         if(acceptor) acceptor(type, follower, accumulator);
 
@@ -140,13 +141,14 @@ OpenedType open_type_with_acceptor(Type* type, Type* follower, int (*acceptor)(T
     return opened_type;
 }
 
-void close_type(Vec(Action) const actions, const unsigned flags) {
+void close_type(Vec(Action) const actions, const unsigned flags, const u8 generics_offset) {
     for(size_t i = len(actions); i > 0; i--) {
-        remove_action(actions[i - 1], flags);
+        remove_action(actions[i - 1], flags, generics_offset);
     }
     free(vbase(actions));
 }
 
+// TODO: Could be changed to just used declaration and a generics_offset
 Vec(Type*) find_last_generic_action(Vec(Action) const actions, Declaration* const declaration) {
     for(size_t i = len(actions); i > 0; i--) {
         switch(actions[i - 1].type) {

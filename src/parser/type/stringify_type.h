@@ -10,10 +10,11 @@ enum {
 typedef struct {
     String* string;
     unsigned flags;
+    u8 generics_offset;
 } StringifyAccumulator;
 
-void stringify_type(Type* type, String* string, unsigned flags);
+void stringify_type(Type* type, String* string, unsigned flags, u8 generics_offset);
 
-void stringify_generics(String* string, Vec(Type*) generics, unsigned flags);
+void stringify_generics(String* string, Vec(Type*) generics, unsigned flags, u8 generics_offset);
 
 #endif

@@ -5,7 +5,7 @@
 
 void comp_Variable(void* void_self, String* line, Compiler* compiler) {
     Wrapper* const self = void_self;
-    const bool applied_action = apply_action(self->action, 0);
+    const bool applied_action = apply_action(self->action, 0, 0);
 
     if(self->Variable.declaration->compilation_state != CompilationHoisted) {
         compile(self->Variable.declaration, line, compiler);
@@ -32,13 +32,13 @@ void comp_Variable(void* void_self, String* line, Compiler* compiler) {
         free(vbase(identifier));
     }
 
-    if(applied_action) remove_action(self->action, 0);
+    if(applied_action) remove_action(self->action, 0, 0);
 }
 
 void comp_Auto(void* void_self, String* line, Compiler* compiler) {
     Wrapper* const self = void_self;
     // TODO: remove boolean result from apply_action
-    const bool applied_action = apply_action(self->action, 0);
+    const bool applied_action = apply_action(self->action, 0, 0);
 
     if(!self->Auto.ref) {
         strf(line, "int");
@@ -46,16 +46,16 @@ void comp_Auto(void* void_self, String* line, Compiler* compiler) {
         compile(self->Auto.ref, line, compiler);
     }
 
-    if(applied_action) remove_action(self->action, 0);
+    if(applied_action) remove_action(self->action, 0, 0);
 }
 
 void comp_Surround(void* void_self, String* line, Compiler* compiler) {
     Wrapper* const self = void_self;
-    const bool applied_action = apply_action(self->action, 0);
+    const bool applied_action = apply_action(self->action, 0, 0);
 
     strf(line, "%.*s", fmtof(self->Surround.prefix));
     compile(self->Surround.child, line, compiler);
     strf(line, "%.*s", fmtof(self->Surround.postfix));
 
-    if(applied_action) remove_action(self->action, 0);
+    if(applied_action) remove_action(self->action, 0, 0);
 }

@@ -44,7 +44,7 @@ static int clash_autos(Wrapper* wrapper, Type* follower, ClashAccumulator* accum
 
         if((void*) wrapper == follower_test || follower == wrapper_test
            || traverse_type(follower_test, NULL, &circular_acceptor, wrapper,
-                            TraverseGenerics | TraverseIntermediate)) {
+                            TraverseGenerics | TraverseIntermediate, 1)) {
             return 1;
         }
 
@@ -97,8 +97,8 @@ static int clash_autos(Wrapper* wrapper, Type* follower, ClashAccumulator* accum
     // }
 
     // TODO: try making this one way (like above)
-    if(traverse_type((void*) wrapper, NULL, &circular_acceptor, follower, TraverseGenerics | TraverseIntermediate) ||
-       traverse_type((void*) follower, NULL, &circular_acceptor, wrapper, TraverseGenerics | TraverseIntermediate)) {
+    if(traverse_type((void*) wrapper, NULL, &circular_acceptor, follower, TraverseGenerics | TraverseIntermediate, 0) ||
+       traverse_type((void*) follower, NULL, &circular_acceptor, wrapper, TraverseGenerics | TraverseIntermediate, 1)) {
         return TestCircular;
     }
 
@@ -141,14 +141,14 @@ static int clash_acceptor(Type* type, Type* follower, void* void_accumulator) {
 
 int clash_types(Type* a, Type* b, const Trace trace, Vec(Message)* messages, const unsigned flags) {
     ClashAccumulator accumulator = { trace, messages, flags };
-    const int result = traverse_type(a, b, &clash_acceptor, &accumulator, 0);
+    const int result = traverse_type(a, b, &clash_acceptor, &accumulator, 0, 0);
 
     if(result && !(flags & ClashPassive)) {
         String message = strf(0, iftty("type mismatch between '\33[35m", "type mismatch between '")).as_owned;
-        stringify_type(a, &message, 0);
+        stringify_type(a, &message, 0, 0);
 
         strf(&message, iftty("\33[0m' and '\33[35m", "' and '"));
-        stringify_type(b, &message, 0);
+        stringify_type(b, &message, 0, 0);
 
         strf(&message, result + 1 == TestCircular
              ? iftty("\33[0m' (types are circularly referencing each other)",

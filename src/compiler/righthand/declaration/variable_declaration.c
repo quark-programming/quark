@@ -6,7 +6,7 @@
 void comp_VariableDeclaration(void* void_self, String* line, Compiler* compiler) {
     VariableDeclaration* const self = void_self;
 
-    if((self->generics.base_type_arguments && !len(self->generics.type_arguments_stack))
+    if((self->generics.base_type_arguments && !len(self->generics.type_arguments_stacks[0]))
        || self->identifier.is_external || (self->const_value && self->const_value->flags & fType))
         return;
 

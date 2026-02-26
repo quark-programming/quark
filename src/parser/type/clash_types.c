@@ -115,7 +115,8 @@ static int clash_acceptor(Type* type, Type* follower, void* void_accumulator) {
 
     ClashAccumulator* const accumulator = void_accumulator;
 
-    if(type->id == WrapperAuto) {
+    if(type->id == WrapperAuto
+       && !(follower->id == WrapperAuto && follower->Wrapper.Auto.priority > type->Wrapper.Auto.priority)) {
         return clash_autos((void*) type, follower, accumulator);
     }
 

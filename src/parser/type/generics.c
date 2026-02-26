@@ -86,6 +86,7 @@ GenericsCollection collect_generics(Parser* const parser) {
                 .id = WrapperAuto,
                 .flags = fConstExpr,
                 .trace = identifier.trace,
+                .Auto.priority = -1,
             },
         });
 

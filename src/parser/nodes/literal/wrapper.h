@@ -39,6 +39,7 @@ typedef struct Wrapper {
         struct {
             Type* ref;
             Type* test_against;
+            i32 priority;
         } Auto;
 
         struct {

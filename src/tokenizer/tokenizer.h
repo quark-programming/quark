@@ -72,11 +72,12 @@ typedef struct Token {
 typedef struct Tokenizer {
     Token current;
     Vec(Message)* messages;
+    bool remove_newlines;
 } Tokenizer;
 
 bool char_within_range(char ch, const char* ranges);
 
-Token create_token(Trace trace);
+Token create_token(Trace trace, bool remove_newlines);
 
 Tokenizer new_tokenizer(const char* filename, char* data, Vec(Message)* messages);
 

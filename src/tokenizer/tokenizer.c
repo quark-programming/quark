@@ -21,13 +21,13 @@ static bool char_within_ranges(const char ch, const char* ranges) {
     return 0;
 }
 
-Token create_token(Trace trace) {
+Token create_token(Trace trace, const bool remove_newlines) {
     trace.source.data += trace.source.len;
     trace.source.len = 0;
 
     while(*trace.source.data && *trace.source.data <= ' ') {
         if(*trace.source.data++ == '\n') {
-            trace.source.data[-1] = 0;
+            if(remove_newlines) trace.source.data[-1] = 0;
             trace.col = 0;
             trace.row++;
             trace.line_start = trace.source.data;
@@ -79,13 +79,13 @@ Token create_token(Trace trace) {
 
     if(trace.source.data[0] == '/' && trace.source.data[1] == '/') {
         while(*++trace.source.data && *trace.source.data != '\n');
-        return create_token(trace);
+        return create_token(trace, remove_newlines);
     }
 
     if(trace.source.data[0] == '/' && trace.source.data[1] == '*') {
         while((*++trace.source.data && *trace.source.data != '*') || *++trace.source.data != '/');
         trace.source.data++;
-        return create_token(trace);
+        return create_token(trace, remove_newlines);
     }
 
     trace.col += trace.source.len = 1;
@@ -99,8 +99,9 @@ Tokenizer new_tokenizer(const char* const filename, char* const data, Vec(Messag
             .filename = filename,
             .line_start = data,
             .col = 1, .row = 1,
-        }),
+        }, true),
         .messages = messages,
+        .remove_newlines = true,
     };
 }
 
@@ -112,7 +113,7 @@ Token next(Tokenizer* const tokenizer) {
                  iftty("expected a token, but got \33[35mend of file\33[0m",
                      "expected a token, but got end of file" ))));
     } else {
-        tokenizer->current = create_token(next.trace);
+        tokenizer->current = create_token(next.trace, tokenizer->remove_newlines);
     }
 
     return next;

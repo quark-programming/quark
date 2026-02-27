@@ -112,23 +112,38 @@ Node* keyword_extern(const Token token, Parser* parser) {
         }
     }
 
-    Token external_token;
-    if(!try(parser->tokenizer, TokenIdentifier, &external_token)) {
-        external_token = expect(parser->tokenizer, TokenString);
-    }
+    str data;
+    Token data_token;
 
-    const Trace trace = stretch(token.trace, external_token.trace);
-    str data = external_token.trace.source;
-    if(external_token.type == TokenString) {
-        data.data++;
-        data.len -= 2;
+    if(try(parser->tokenizer, TokenString, &data_token)) {
+        data = (str) { data_token.trace.source.len - 2, data_token.trace.source.data + 1 };
+    } else if(parser->tokenizer->current.type == '{') {
+        parser->tokenizer->remove_newlines = false;
+        Token data_end = data_token = next(parser->tokenizer);
+
+        for(u32 depth = 1; parser->tokenizer->current.type && depth;) {
+            data_end = next(parser->tokenizer);
+            if(data_end.type == '{') depth++;
+            else if(data_end.type == '}') depth--;
+        }
+        parser->tokenizer->remove_newlines = true;
+
+        data = (str) {
+            .len = data_end.trace.source.data - data_token.trace.source.data,
+            .data = data_token.trace.source.data + 1,
+        };
+        if(data.len) data.len -= 2;
+        data_token = data_end;
+    } else {
+        data_token = expect(parser->tokenizer, TokenIdentifier);
+        data = data_token.trace.source;
     }
 
     Node* external = new_node((Node) {
         .External = {
             .id = NodeExternal,
             .flags = fConstExpr | flags,
-            .trace = trace,
+            .trace = stretch(token.trace, data_token.trace),
             .type = type,
             .data = data,
         }

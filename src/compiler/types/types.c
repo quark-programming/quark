@@ -31,7 +31,7 @@ void comp_FunctionType(void* void_self, String* line, Compiler* compiler) {
         }
 
         strf(&typedef_line, ");");
-        push(&compiler->sections[1].lines, typedef_line);
+        push(&compiler->sections[0].lines, typedef_line);
 
         *get(self->type_definitions, as_str(identifier)) = true;
     } else if(!*type_definition_state) {

@@ -13,8 +13,8 @@
 #include "compiler/righthand/declaration/identifier.h"
 #include "parser/statement/modules.h"
 
-#define QUARK_VERSION "0.5"
-#define QUARK_STABILITY "dev"
+#define QUARK_VERSION "0.5pre"
+#define QUARK_STABILITY "untested"
 
 FunctionDeclaration* entry_declaration() {
     FunctionType* function_type = (void*) new_type((Type) { NodeFunctionType });

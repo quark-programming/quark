@@ -11,5 +11,15 @@
         </clean>
       </configuration>
     </target>
+    <target id="fb37bc18-23a5-461c-9504-d0049f54e7bd" name="debug" defaultType="MAKE">
+      <configuration id="dd14db74-b0c5-4d79-a5b5-30fdbb725963" name="debug">
+        <build type="MAKE">
+          <make targetName="debug" />
+        </build>
+        <clean type="MAKE">
+          <make targetName="clean" />
+        </clean>
+      </configuration>
+    </target>
   </component>
 </project>

@@ -50,7 +50,7 @@ void apply_type_arguments(Wrapper* variable, Parser* parser) {
         while(parser->tokenizer->current.type && parser->tokenizer->current.type != '>'
               && parser->tokenizer->current.type != TokenDoubleGreater) {
             push(&type_arguments, expression(parser));
-            if(try(parser->tokenizer, ',', NULL)) break;
+            if(!try(parser->tokenizer, ',', NULL)) break;
         }
 
         Token double_greater;

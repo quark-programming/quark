@@ -50,7 +50,8 @@ Node* parse_struct_literal(Type* const wrapped_struct_type, Parser* parser) {
 
                 if(!found_compare_field) {
                     String message = strf(0, iftty("no field named '\33[35m%.*s\33[35m' on '\33[35m",
-                                              "no field named '%.*s' on '")).as_owned;
+                                              "no field named '%.*s' on '"),
+                                              fmtof(field_name)).as_owned;
                     stringify_type((void*) struct_type, &message, 0, 2);
                     push(parser->tokenizer->messages,
                          MERROR(field_name_token.trace, strf(&message, iftty("\33[0m'", "'"))));
@@ -61,7 +62,12 @@ Node* parse_struct_literal(Type* const wrapped_struct_type, Parser* parser) {
         }
 
         Node* const field_value = expression(parser);
-        clash_types(compare_field->type, field_value->type, field_value->trace, parser->tokenizer->messages, 0);
+
+        if(field_index >= len(struct_type->fields)) {
+            push(parser->tokenizer->messages, MERROR(field_value->trace, str("excess fields in struct literal")));
+        } else {
+            clash_types(compare_field->type, field_value->type, field_value->trace, parser->tokenizer->messages, 0);
+        }
 
         push(&struct_literal->field_names, field_name);
         push(&struct_literal->field_values, field_value);

@@ -52,6 +52,8 @@ void comp_StructType(void* void_self, String* line, Compiler* compiler) {
     (void) compiler;
     StructType* self = void_self;
 
+    compile(self->module->declaration, line, compiler);
+
     strf(line, "struct ");
     resolve_identifier(self->module->declaration->identifier, line);
 }

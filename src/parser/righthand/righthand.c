@@ -57,7 +57,7 @@ Node* righthand_expression(Node* lefthand, Parser* parser, const unsigned char p
     while((operator = global_righthand_operator_table[parser->tokenizer->current.type]).precedence) {
         if(lefthand->flags & fStatementTerminated) break;
         if(operator.precedence >= precedence + (operator.type == RightAssignment)) break;
-        if(operator.precedence == 6 && global_righthand_collecting_type_arguments) break;
+        if((operator.precedence == 6 || operator.precedence == 5) && global_righthand_collecting_type_arguments) break;
 
         switch(operator.type) {
             case RightOptional: {

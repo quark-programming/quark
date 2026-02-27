@@ -44,7 +44,25 @@ void apply_type_arguments(Wrapper* variable, Parser* parser) {
     if(try(parser->tokenizer, '<', 0)) {
         const bool save = global_righthand_collecting_type_arguments;
         global_righthand_collecting_type_arguments = true;
-        Vec(Node*) const type_arguments = collect_until(parser, &expression, ',', '>');
+
+        Vec(Node*) type_arguments = NULL;
+
+        while(parser->tokenizer->current.type && parser->tokenizer->current.type != '>'
+              && parser->tokenizer->current.type != TokenDoubleGreater) {
+            push(&type_arguments, expression(parser));
+            if(try(parser->tokenizer, ',', NULL)) break;
+        }
+
+        Token double_greater;
+        if(try(parser->tokenizer, TokenDoubleGreater, &double_greater)) {
+            parser->tokenizer->current.trace.source = (str) {
+                .len = 1,
+                .data = double_greater.trace.source.data + 1,
+            };
+            parser->tokenizer->current.type = '>';
+        } else expect(parser->tokenizer, '>');
+
+        // Vec(Node*) const type_arguments = collect_until(parser, &expression, ',', '>');
         global_righthand_collecting_type_arguments = save;
 
         for(size_t i = 0; i < len(type_arguments); i++) {

@@ -24,7 +24,8 @@ struct String {
 	}
 
 	char* to_cstr(&self) {
-		self->vector.push('\0');
+	    self->vector.reserve(1);
+	    self->vector.data[self->vector.size] = '\0';
 		return self->vector.data;
 	}
 }

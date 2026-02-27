@@ -31,12 +31,8 @@ compound_start:
         apply_type_arguments(info.value, parser);
     }
 
-    if(!info.value || !info.value->Variable.declaration->const_value) {
-        return info;
-    }
-
     if(!try(parser->tokenizer, TokenDoubleColon, NULL)) {
-        if(outer_scope->declaration->id != NodeStructType || outer_scope == info.declaration_scope) {
+        if(outer_scope->declaration->id != NodeStructDeclaration || outer_scope == info.declaration_scope) {
             return info;
         }
 
@@ -59,6 +55,10 @@ compound_start:
         }
 
         info.declaration_scope = trait_fields;
+        return info;
+    }
+
+    if(!info.value || !info.value->Variable.declaration->const_value) {
         return info;
     }
 

@@ -2,6 +2,7 @@ import containers::slice::{ Slice };
 import operator::{ Operator };
 import allocator::{ Allocator };
 import io::{ panic };
+import c::string::{ memcpy };
 
 struct Vec<T> {
 	T* data;
@@ -14,6 +15,17 @@ struct Vec<T> {
 			size: 0,
 			capacity: 1,
 		};
+	}
+
+	Vec<T> from([T] slice) {
+		Vec<T> vec = Vec {
+			data: Allocator::alloc(sizeof(T) * slice.size),
+			size: slice.size,
+			capacity: slice.size,
+		};
+		memcpy(vec.data, slice.data, slice.size);
+
+		return vec;
 	}
 
 	Vec<T> from_capacity(usize capacity) {
@@ -29,8 +41,7 @@ struct Vec<T> {
 	}
 
 	void reserve(&self, usize n) {
-	    if(self->size + n > extern<usize> SIZE_MAX / 2)
-            panic("[Vec::reserve] capacity overflow");
+	    if(self->size + n > extern<usize> SIZE_MAX / 2) panic("[Vec::reserve] capacity overflow");
 
 		if(self->size + n <= self->capacity) return;
 		while(self->capacity < self->size + n) self->capacity *= 2;
@@ -46,22 +57,8 @@ struct Vec<T> {
 	void push_many(&self, [T] slice) {
 		self->reserve(slice.size);
 
-        for(int i = 0; i < slice.size; i++) {
-			self->data[self->size++] = slice.data[i];
-        }
-	}
-
-	Vec<T> from([T] slice) {
-        T* extern malloc<T>(usize size);
-
-		Vec<T> vec = Vec {
-			data: malloc(sizeof(T) * slice.size),
-			size: 0,
-			capacity: slice.size,
-		};
-		vec.push_many(slice);
-
-		return vec;
+        memcpy(self->data + self->size, slice.data, slice.size * sizeof(T));
+        self->size += slice.size;
 	}
 
 	void pop(&self) {

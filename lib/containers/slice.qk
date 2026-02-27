@@ -20,6 +20,10 @@ struct str {
 		return self.slice.data;
 	}
 
+	char Operator::index(self, usize index) {
+	    return self.slice.data[index];
+	}
+
 	bool Operator::equals(self, str string) {
         Int extern memcmp<T, K>(T* s1, K* s2, usize n);
 

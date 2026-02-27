@@ -65,6 +65,10 @@ struct Vec<T> {
 		self->size--;
 	}
 
+	void free(self) {
+        Allocator::free(self.data);
+	}
+
 	T Operator::index(self, usize index) {
 	    return self.data[index];
 	}

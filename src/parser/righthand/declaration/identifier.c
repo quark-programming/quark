@@ -32,7 +32,8 @@ compound_start:
     }
 
     if(!try(parser->tokenizer, TokenDoubleColon, NULL)) {
-        if(outer_scope->declaration->id != NodeStructDeclaration || outer_scope == info.declaration_scope) {
+        if(!(flags & IdentifierDeclaration) || outer_scope->declaration->id != NodeStructDeclaration
+           || outer_scope == info.declaration_scope) {
             return info;
         }
 
@@ -74,8 +75,8 @@ compound_start:
 
         default:
             push(parser->tokenizer->messages, MERROR(info.value->trace,
-                strf(0, iftty("'\33[36m%.*s\33[0m' is not a module", "'%.*s' is not a module"),
-                    fmtof(info.value->trace.source))));
+                     strf(0, iftty("'\33[36m%.*s\33[0m' is not a module", "'%.*s' is not a module"),
+                         fmtof(info.value->trace.source))));
     }
 
     const Trace next_trace = expect(parser->tokenizer, TokenIdentifier).trace;

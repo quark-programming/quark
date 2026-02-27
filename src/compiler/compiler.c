@@ -15,6 +15,12 @@ String new_line(Compiler* const compiler) {
     return strf(0, "%.*s", fmtof(indent)).as_owned;
 }
 
+static void ignore(void* self, String* line, Compiler* compiler) {
+    (void) self;
+    (void) line;
+    (void) compiler;
+}
+
 void compile(void* void_node, String* line, Compiler* compiler) {
     static void (*const compiler_function_table[])(void*, String*, Compiler*) = {
         [NodeNumericLiteral] = &comp_NumericLiteral,
@@ -22,7 +28,7 @@ void compile(void* void_node, String* line, Compiler* compiler) {
         [WrapperVariable] = &comp_Variable,
         [WrapperSurround] = &comp_Surround,
         [NodeScope] = &comp_Scope,
-        // [NodeMissing] = &comp_Missing,
+        [NodeMissing] = &ignore,
         [NodeExternal] = &comp_External,
         [NodeGenericReference] = &comp_GenericReference,
         [NodeVariableDeclaration] = &comp_VariableDeclaration,
@@ -39,6 +45,7 @@ void compile(void* void_node, String* line, Compiler* compiler) {
         [NodeStructLiteral] = &comp_StructLiteral,
         [NodeCast] = &comp_Cast,
         [NodeStructDeclaration] = &comp_StructDeclaration,
+        [NodeDeclarationLink] = &ignore,
     };
 
     Node* const node = void_node;

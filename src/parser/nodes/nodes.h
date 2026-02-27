@@ -44,7 +44,7 @@ enum {
     CompilationUnused,
     CompilationSkip,
     CompilationIntermediate,
-    CompilationHoisted,
+    CompilationLocal,
 };
 
 enum {

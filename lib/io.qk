@@ -1,14 +1,12 @@
 import containers::slice::{ str };
+import c::stdio::{ fwrite };
+import c::stdlib::{ exit };
 
 void write_file(File* file, str message) {
-    usize extern fwrite<T>(T* ptr, usize size, usize nitems, File* stream);
-
 	fwrite(message.slice.data, message.slice.size, sizeof(char), file);
 }
 
 void print_file(File* file, str message) {
-    usize extern fwrite<T>(T* ptr, usize size, usize nitems, File* stream);
-
 	fwrite(message.slice.data, message.slice.size, sizeof(char), file);
 	const char newline = '\n';
 	fwrite(&newline, 1, sizeof(char), file);
@@ -23,8 +21,6 @@ void _write_panic_head() {
 }
 
 void panic(str message) {
-    void extern exit(Int code);
-
     _write_panic_head();
 	print_file(extern<File*> stderr, message);
 	exit(extern<Int> EXIT_FAILURE);

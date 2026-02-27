@@ -97,7 +97,7 @@ static void parse_function_arguments(FunctionType* function_type, FunctionDeclar
                 .VariableDeclaration = {
                     .id = NodeVariableDeclaration,
                     .type = argument.type,
-                    .compilation_state = CompilationHoisted,
+                    .compilation_state = CompilationLocal,
                     .identifier = {
                         .base = argument.identifier,
                         .parent_scope = (void*) parser->stack[0],

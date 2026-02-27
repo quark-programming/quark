@@ -14,6 +14,7 @@ typedef struct ClashAccumulator {
     Trace trace;
     Vec(Message)* messages;
     unsigned flags;
+    u8 assign_auto_generic_offset;
 } ClashAccumulator;
 
 int clash_types(Type* a, Type* b, Trace trace, Vec(Message)* messages, unsigned flags);

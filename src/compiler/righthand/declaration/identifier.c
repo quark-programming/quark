@@ -24,9 +24,7 @@ Map(Declaration*) global_function_identifiers = 0;
 
 static void prevent_keyword(String* const identifier_builder) {
     Declaration** defined_declaration = get(global_declaration_space, as_str(*identifier_builder));
-    if(defined_declaration && !*defined_declaration) {
-        strf(identifier_builder, "_");
-    }
+    if(defined_declaration && !*defined_declaration) strf(identifier_builder, "_");
 }
 
 void build_simple_identifier(const str identifier, String* const application) {
@@ -41,7 +39,7 @@ void build_simple_identifier(const str identifier, String* const application) {
 
 static void build_identifier_base(const Identifier identifier, String* const identifier_builder) {
     if(!identifier.is_external && !(identifier.parent_declaration->id == NodeVariableDeclaration
-                                    && identifier.parent_declaration->compilation_state == CompilationHoisted)) {
+                                    && identifier.parent_declaration->compilation_state == CompilationLocal)) {
         switch(identifier.parent_scope->declaration->id) {
             case NodeStructDeclaration:
                 if(identifier.parent_declaration->id == NodeVariableDeclaration
@@ -54,22 +52,6 @@ static void build_identifier_base(const Identifier identifier, String* const ide
 
             default: ;
         }
-
-        // if(identifier.parent_scope->declaration->id == NodeFunctionDeclaration) {
-        //     build_identifier_base(identifier.parent_scope->declaration->identifier, identifier_builder);
-        //     strf(identifier_builder, "__");
-        // }
-        //
-        // if(identifier.parent_scope->declaration->id == NodeStructDeclaration
-        //     && !(identifier.parent_declaration->id == NodeVariableDeclaration
-        //         && !(identifier.parent_declaration->type->flags & fType))) {
-        //     build_identifier_base(identifier.parent_scope->declaration->identifier, identifier_builder);
-        //     strf(identifier_builder, "__");
-        // }
-        //
-        // if(identifier.parent_scope->declaration->id == NodeVariableDeclaration) {
-        //     puts("var");
-        // }
 
         if(identifier.trait) {
             build_identifier_base(identifier.trait->identifier, identifier_builder);

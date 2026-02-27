@@ -1,0 +1,1 @@
+usize extern fwrite<T>(T* ptr, usize size, usize nitems, File* stream);

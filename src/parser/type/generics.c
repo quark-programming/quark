@@ -42,9 +42,10 @@ void apply_type_arguments(Wrapper* variable, Parser* parser) {
     }
 
     if(try(parser->tokenizer, '<', 0)) {
+        const bool save = global_righthand_collecting_type_arguments;
         global_righthand_collecting_type_arguments = true;
         Vec(Node*) const type_arguments = collect_until(parser, &expression, ',', '>');
-        global_righthand_collecting_type_arguments = false;
+        global_righthand_collecting_type_arguments = save;
 
         for(size_t i = 0; i < len(type_arguments); i++) {
             if(!(type_arguments[i]->flags & fType)) {

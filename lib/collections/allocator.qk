@@ -1,27 +1,19 @@
 import containers::slice::{ str };
 import io::{ _write_panic_head, panic };
-
-struct c {
-    T* extern malloc<T>(usize size);
-    T* extern realloc<T>(T* ptr, usize size);
-    void extern free<T>(T* ptr);
-
-    void extern exit(Int code);
-    usize extern fprintf<A>(File* file, char* fmt, A a);
-
-    char* extern strerror(Int errno);
-}
-private (private c) extern _c;
+import c::stdlib;
+import c::string;
 
 struct Allocator {
     void _panic_err(str message) {
+        void extern fprintf(File* file, char* fmt, char* a);
+
         _write_panic_head();
-        c::fprintf(extern<File*> stderr, message.data(), c::strerror(extern<Int> errno));
-        c::exit(extern<Int> EXIT_FAILURE);
+        fprintf(extern<File*> stderr, message.data(), string::strerror(extern<Int> errno));
+        stdlib::exit(extern<Int> EXIT_FAILURE);
     }
 
     T* alloc<T>(usize size) {
-        T* memory = c::malloc(size);
+        T* memory = stdlib::malloc(size);
         if(!memory) _panic_err("[Allocator::alloc] malloc() failed: %s\n");
         return memory;
     }
@@ -29,13 +21,13 @@ struct Allocator {
     T* alloc_array<T>(usize n) {
         if(n > extern<usize> SIZE_MAX / sizeof(T))
              panic("[Allocator::alloc_array] multiplication overflow between input size and element size");
-        T* memory = c::malloc(n * sizeof(T));
+        T* memory = stdlib::malloc(n * sizeof(T));
         if(!memory) _panic_err("[Allocator::alloc_array] malloc() failed: %s\n");
         return memory;
     }
 
     T* realloc<T>(T* ptr, usize size) {
-        T* memory = c::realloc(ptr, size);
+        T* memory = stdlib::realloc(ptr, size);
         if(!memory) _panic_err("[Allocator::realloc] realloc() failed: %s\n");
         return memory;
     }
@@ -43,12 +35,12 @@ struct Allocator {
     T* realloc_array<T>(T* ptr, usize n) {
         if(n > extern<usize> SIZE_MAX / sizeof(T))
              panic("[Allocator::realloc_array] multiplication overflow between input size and element size");
-        T* memory = c::realloc(ptr, n * sizeof(T));
+        T* memory = stdlib::realloc(ptr, n * sizeof(T));
         if(!memory) _panic_err("[Allocator::realloc_array] realloc() failed: %s\n");
         return memory;
     }
 
     void free<T>(T* ptr) {
-        c::free(ptr);
+        stdlib::free(ptr);
     }
 }

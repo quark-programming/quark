@@ -3,4 +3,4 @@ import io::*;
 import containers::option::*;
 
 import collections::vector::*;
-// import collections::string::*;
+import collections::string::*;

@@ -33,29 +33,22 @@ struct Vec<T> {
             panic("[Vec::reserve] capacity overflow");
 
 		if(self->size + n <= self->capacity) return;
-
-		while(self->capacity < self->size + n) {
-			self->capacity = self->capacity * 2;
-		}
+		while(self->capacity < self->size + n) self->capacity *= 2;
 
 		self->data = Allocator::realloc_array(self->data, self->capacity);
 	}
 
 	void push(&self, T item) {
 		self->reserve(1);
-		self->data[self->size] = item;
-		self->size = self->size + 1;
+		self->data[self->size++] = item;
 	}
 
 	void push_many(&self, [T] slice) {
 		self->reserve(slice.size);
 
-		int i = 0;
-		while(i < slice.size) {
-			self->data[self->size] = slice.data[i];
-			self->size = self->size + 1;
-			i = i + 1;
-		}
+        for(int i = 0; i < slice.size; i++) {
+			self->data[self->size++] = slice.data[i];
+        }
 	}
 
 	Vec<T> from([T] slice) {

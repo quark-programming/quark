@@ -50,7 +50,7 @@ void comp_FunctionDeclaration(void* void_self, String* line, Compiler* compiler)
                                         && !len(self->generics.type_arguments_stacks[0])))
         return;
 
-    String identifier = { 0 };
+    String identifier = NULL;
     if(!resolve_identifier(self->identifier, &identifier)) {
         function_declaration_compiler_hoisted(self, compiler, as_str(identifier), true);
         function_declaration_compiler_hoisted(self, compiler, as_str(identifier), false);

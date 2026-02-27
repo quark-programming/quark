@@ -18,20 +18,16 @@ struct Option<T> {
 	}
 
 	bool is_none(self) {
-		return 1 - self.some;
+		return !self.some;
 	}
 
 	T unwrap(self) {
-		if(self.some == 0) {
-			panic("Unwrapped on None");
-		}
+		if(!self.some) panic("[Option::unwrap] Unwrapped on None");
 		return self.value;
 	}
 
 	T expect(self, str message) {
-		if(self.some == 0) {
-			panic(message);
-		}
+		if(!self.some) panic(message);
 		return self.value;
 	}
 

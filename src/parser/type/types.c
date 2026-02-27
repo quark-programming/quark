@@ -32,7 +32,7 @@ bool apply_action(const Action action, const unsigned flags, const u8 generics_o
                 recursion_stop = true;
 
                 String unique_key = NULL;
-                stringify_generics(&unique_key, action.generics, StringifyAlphaNumeric, 0);
+                stringify_generics(&unique_key, action.generics, StringifyAlphaNumeric, generics_offset);
 
                 recursion_stop = false;
 

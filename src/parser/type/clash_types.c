@@ -9,8 +9,21 @@ static int circular_acceptor(Type* const type, Type* follower, void* const compa
     return 2 * (type == compare);
 }
 
-static void assign_auto_ref(Wrapper* wrapper, Type* follower) {
-    wrapper->Auto.ref = make_type_standalone(follower, 1);
+static int assign_auto_ref(Type* type, Type* follower, const bool passive) {
+    u8 generics_offset = 1;
+    Wrapper* wrapper = &type->Wrapper;
+
+    if(type->id != WrapperAuto
+       || (follower->id == WrapperAuto && follower->Wrapper.Auto.priority > wrapper->Auto.priority)) {
+        wrapper = &follower->Wrapper;
+        follower = type;
+        generics_offset = 0;
+    }
+
+    if(follower->id != WrapperAuto && wrapper->flags & fNumeric && !(follower->flags & fNumeric)) return TestMismatch;
+    if(passive) return 1;
+
+    wrapper->Auto.ref = make_type_standalone(follower, generics_offset);
 
     if(follower->id == WrapperAuto) {
         if((wrapper->flags | follower->flags) & fNumeric) {
@@ -19,92 +32,59 @@ static void assign_auto_ref(Wrapper* wrapper, Type* follower) {
         }
         if(wrapper->Auto.test_against) follower->Wrapper.Auto.test_against = wrapper->Auto.test_against;
     }
+
+    return 1;
 }
 
 static int clash_acceptor(Type* type, Type* follower, void* void_accumulator);
 
-static int clash_autos(Wrapper* wrapper, Type* follower, ClashAccumulator* accumulator) {
+static int clash_autos(Type* type, Type* follower, ClashAccumulator* accumulator) {
 #ifdef EBUG
     printf("assigning:\t \33[3%dm%-24.*s \33[3%dm%.*s\33[0m\n",
-           (int) ((size_t) wrapper->trace.source.data / 16) % 6 + 1,
-           fmtof(wrapper->trace.source),
+           (int) ((size_t) type->trace.source.data / 16) % 6 + 1,
+           fmtof(type->trace.source),
            (int) ((size_t) follower->trace.source.data / 16) % 6 + 1,
            fmtof(follower->trace.source));
 #endif
 
-    if((void*) wrapper == follower) {
+    if(type == follower) {
         return 1;
     }
 
-    if(wrapper->Auto.test_against || (follower->id == WrapperAuto && follower->Wrapper.Auto.test_against)) {
-        Type* const wrapper_test = wrapper->Auto.test_against ? wrapper->Auto.test_against : (void*) wrapper;
+    if((type->id == WrapperAuto && type->Wrapper.Auto.test_against)
+       || (follower->id == WrapperAuto && follower->Wrapper.Auto.test_against)) {
+        Type* const type_test = type->id == WrapperAuto && type->Wrapper.Auto.test_against
+                                    ? type->Wrapper.Auto.test_against
+                                    : type;
         Type* const follower_test = follower->id == WrapperAuto && follower->Wrapper.Auto.test_against
                                         ? follower->Wrapper.Auto.test_against
                                         : follower;
 
-        if((void*) wrapper == follower_test || follower == wrapper_test
-           || traverse_type(follower_test, NULL, &circular_acceptor, wrapper,
+        if(type == follower_test || follower == type_test
+           || traverse_type(follower_test, NULL, &circular_acceptor, type,
                             TraverseGenerics | TraverseIntermediate, 1)) {
             return 1;
         }
 
-        const int test_result = clash_types(wrapper_test, follower_test, accumulator->trace, accumulator->messages,
+        const int test_result = clash_types(type_test, follower_test, accumulator->trace, accumulator->messages,
                                             ClashPassive | accumulator->flags);
         if(test_result) {
             return test_result + 1;
         }
     } else {
         // TODO: this may be wrong
-        if(wrapper->flags & fNumeric && !(follower->flags & fNumeric) && follower->id != WrapperAuto) {
-            return TestMismatch;
-        }
+        // if(wrapper->flags & fNumeric && !(follower->flags & fNumeric) && follower->id != WrapperAuto) {
+        //     return TestMismatch;
+        // }
     }
 
-    // if(wrapper->Auto.test_against) {
-    //     const OpenedType test_against = open_type(wrapper->Auto.test_against, 0);
-    //     OpenedType follower_test_against = { 0 };
-    //
-    //     if(test_against.type == follower) {
-    //         close_type(test_against.actions, 0);
-    //         close_type(follower_test_against.actions, 0);
-    //         return 1;
-    //     }
-    //
-    //     if(follower->id == WrapperAuto && follower->Wrapper.Auto.test_against) {
-    //         follower_test_against = open_type(follower->Wrapper.Auto.test_against, 0);
-    //         follower = follower_test_against.type;
-    //
-    //         if(test_against.type == follower) {
-    //             // if(!(accumulator->flags & ClashPassive)) assign_auto_ref(wrapper, follower);
-    //             close_type(test_against.actions, 0);
-    //             close_type(follower_test_against.actions, 0);
-    //             return 1;
-    //         }
-    //     }
-    //
-    //     const int clash_error = clash_types(test_against.type, follower, accumulator->trace, accumulator->messages,
-    //                                         ClashPassive | accumulator->flags);
-    //     if(clash_error) {
-    //         close_type(test_against.actions, 0);
-    //         close_type(follower_test_against.actions, 0);
-    //         return clash_error + 1;
-    //     }
-    //
-    //     if(!(accumulator->flags & ClashPassive)) assign_auto_ref(wrapper, follower);
-    //     close_type(test_against.actions, 0);
-    //     close_type(follower_test_against.actions, 0);
-    //     return 1;
-    // }
-
     // TODO: try making this one way (like above)
-    if(traverse_type((void*) wrapper, NULL, &circular_acceptor, follower, TraverseGenerics | TraverseIntermediate, 0) ||
-       traverse_type((void*) follower, NULL, &circular_acceptor, wrapper, TraverseGenerics | TraverseIntermediate, 1)) {
+    if(traverse_type(type, NULL, &circular_acceptor, follower, TraverseGenerics | TraverseIntermediate, 0)
+       || traverse_type(follower, NULL, &circular_acceptor, type, TraverseGenerics | TraverseIntermediate, 1)) {
         return TestCircular;
     }
 
-    if(!(accumulator->flags & ClashPassive)) assign_auto_ref(wrapper, follower);
-
-    return 1;
+    return assign_auto_ref(type, follower, accumulator->flags & ClashPassive);
 }
 
 static int clash_acceptor(Type* type, Type* follower, void* void_accumulator) {
@@ -115,13 +95,17 @@ static int clash_acceptor(Type* type, Type* follower, void* void_accumulator) {
 
     ClashAccumulator* const accumulator = void_accumulator;
 
-    if(type->id == WrapperAuto
-       && !(follower->id == WrapperAuto && follower->Wrapper.Auto.priority > type->Wrapper.Auto.priority)) {
-        return clash_autos((void*) type, follower, accumulator);
-    }
+    // if(type->id == WrapperAuto
+    //    && !(follower->id == WrapperAuto && follower->Wrapper.Auto.priority > type->Wrapper.Auto.priority)) {
+    //     return clash_autos((void*) type, follower, accumulator);
+    // }
+    //
+    // if(follower->id == WrapperAuto) {
+    //     return clash_autos((void*) follower, type, accumulator);
+    // }
 
-    if(follower->id == WrapperAuto) {
-        return clash_autos((void*) follower, type, accumulator);
+    if(type->id == WrapperAuto || follower->id == WrapperAuto) {
+        return clash_autos(type, follower, accumulator);
     }
 
     if(type->id == follower->id)

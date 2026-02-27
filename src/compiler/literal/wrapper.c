@@ -7,7 +7,7 @@ void comp_Variable(void* void_self, String* line, Compiler* compiler) {
     Wrapper* const self = void_self;
     const bool applied_action = apply_action(self->action, 0, 0);
 
-    if(self->Variable.declaration->compilation_state != CompilationHoisted) {
+    if(self->Variable.declaration->compilation_state != CompilationLocal) {
         compile(self->Variable.declaration, line, compiler);
     }
 
@@ -26,8 +26,14 @@ void comp_Variable(void* void_self, String* line, Compiler* compiler) {
             strf(line, ")");
         }
     } else {
-        String identifier = { 0 };
-        resolve_identifier(self->Variable.declaration->identifier, &identifier);
+        String identifier = NULL;
+
+        if(self->Variable.declaration->compilation_state == CompilationLocal) {
+            build_full_identifier(self->Variable.declaration->identifier, &identifier);
+        } else {
+            resolve_identifier(self->Variable.declaration->identifier, &identifier);
+        }
+
         strf(line, "%.*s", fmtof(identifier));
         free(vbase(identifier));
     }

@@ -86,7 +86,7 @@ Node* parse_binary_operation(Node* lefthand, const RighthandOperator operator, P
     return new_node((Node) {
         .BinaryOperation = {
             .id = NodeBinaryOperation,
-            .flags = lefthand->flags & righthand->flags,
+            .flags = lefthand->flags & righthand->flags & ~fIgnoreStatement,
             .trace = trace,
             .type = type,
             .left = lefthand,

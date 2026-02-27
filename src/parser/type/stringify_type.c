@@ -51,10 +51,16 @@ static int stringify_acceptor(Type* type, Type* follower, void* void_accumulator
                  fmtof(type->StructType.module->declaration->identifier.base));
 
             if(type->StructType.module->declaration->generics.base_type_arguments) {
-                stringify_generics(accumulator->string,
-                                   last(type->StructType.module->declaration->generics
-                                       .type_arguments_stacks[accumulator->generics_offset]),
+                const Generics generics = type->StructType.module->declaration->generics;
+                const u8 normal_offset = len(generics.type_arguments_stacks[accumulator->generics_offset])
+                                             ? accumulator->generics_offset
+                                             : 2;
+                stringify_generics(accumulator->string, last(generics.type_arguments_stacks[normal_offset]),
                                    accumulator->flags, accumulator->generics_offset);
+                // stringify_generics(accumulator->string,
+                //                    last(type->StructType.module->declaration->generics
+                //                        .type_arguments_stacks[accumulator->generics_offset]),
+                //                    accumulator->flags, accumulator->generics_offset);
             }
 
             return 1;

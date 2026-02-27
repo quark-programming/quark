@@ -30,7 +30,7 @@ Node* operator_override_n(Type* type, Node* self, Vec(Node*) arguments, const st
 
     override_variable->Variable.bound_self_argument = self;
     override_variable->type = make_type_standalone(override_variable->type, 2);
-    if(len(global_actions)) override_variable->action = override_variable->type->Wrapper.action;
+    if(len(global_actions[2])) override_variable->action = override_variable->type->Wrapper.action;
 
     close_type(opened_lefthand.actions, 0, 2);
     return call_function((void*) override_variable, arguments, parser);

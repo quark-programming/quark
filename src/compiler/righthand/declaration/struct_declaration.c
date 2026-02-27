@@ -8,7 +8,7 @@ void comp_StructDeclaration(void* void_self, String* line, Compiler* compiler) {
 
     if(self->identifier.is_external) return;
 
-    String identifier = { 0 };
+    String identifier = NULL;
     if(resolve_identifier(self->identifier, &identifier)) {
         if(self->compilation_state == CompilationIntermediate) {
             push(&compiler->sections[0].lines, strf(0, "struct %.*s;", fmtof(identifier)).as_owned);

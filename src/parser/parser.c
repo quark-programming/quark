@@ -2,20 +2,21 @@
 
 #include "impl/std.h"
 
-Map(Module) global_modules = NULL;
+Map(Module*) global_modules = NULL;
 
 Scope* new_scope(Declaration* parent);
 
 Parser create_parser(Tokenizer* tokenizer, const str filename, const bool root, str module_identifier) {
-    const Module module_data = {
-        .id = NodeModule,
-        .flags = fConst | fConstExpr,
-        .scope = new_scope(NULL),
-        .root = root,
-    };
+    Module* const module = (void*) new_node((Node) {
+        .Module = {
+            .id = NodeModule,
+            .flags = fConst | fConstExpr,
+            .scope = new_scope(NULL),
+            .root = root,
+        }
+    });
 
-    put(&global_modules, filename, module_data);
-    Module* const module = get(global_modules, filename);
+    put(&global_modules, filename, module);
 
     static Declaration fake_entry = { NodeEntryFunctionDeclaration };
     static Scope fake_scope = {

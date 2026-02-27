@@ -11,7 +11,7 @@ typedef struct Parser {
     str dir_path;
 } Parser;
 
-extern Map(Module) global_modules;
+extern Map(Module*) global_modules;
 
 Parser create_parser(Tokenizer* tokenizer, str filename, bool root, str module_identifier);
 

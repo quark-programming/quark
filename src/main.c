@@ -134,7 +134,7 @@ int main(int argc, char** argv) {
     for(u32 i = 0; i < len(global_missing_identifiers); i++) {
         if(global_missing_identifiers[i]->id == NodeMissing) {
             print_message(MERROR(global_missing_identifiers[i]->trace, strf(0,
-                                     iftty("cannot find '\33[35m%.*s\33[0m' in scope", "cannot find '%.*s' in scope"),
+                                     iftty("cannot find "HERR"%.*s"H" in scope", "cannot find %.*s in scope"),
                                      fmtof(global_missing_identifiers[i]->trace.source))));
             printed_error = true;
         }

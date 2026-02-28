@@ -158,8 +158,8 @@ Node* parse_function_declaration(Type* return_type, IdentifierInfo info, Parser*
     close_generics_declaration((void*) declaration);
     pop(&parser->stack);
 
-    return (void*) variable_of((void*) declaration, declaration->trace,
-                               fIgnoreStatement | fStatementTerminated * !declaration->identifier.is_external);
+    if(declaration->identifier.is_external) expect(parser->tokenizer, ';');
+    return (void*) variable_of((void*) declaration, declaration->trace, fIgnoreStatement | fStatementTerminated);
 }
 
 Node* parse_function_lambda(Type* return_type, Parser* parser) {

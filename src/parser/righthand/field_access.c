@@ -46,7 +46,8 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
 
     ssize_t found_index = -1;
     for(ssize_t i = 0; i < len(struct_type->fields); i++) {
-        if(streq(field_token.trace.source, struct_type->fields[i].identifier) && !struct_type->fields[i].private) {
+        if(streq(field_token.trace.source, struct_type->fields[i].identifier)
+           && !(struct_type->fields[i].private && struct_type->module->scope->flags & fPrivate)) {
             found_index = i;
         }
     }

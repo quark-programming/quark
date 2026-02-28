@@ -130,18 +130,23 @@ Node* parser_struct_declaration(const Token keyword, Parser* parser, bool is_tra
     push(&parser->stack, module->scope);
     expect(parser->tokenizer, '{');
 
+outer:
     while(parser->tokenizer->current.type && parser->tokenizer->current.type != '}') {
         Token static_token = { 0 };
+        bool is_private = false;
 
-        if(parser->tokenizer->current.type == TokenIdentifier) {
+        while(parser->tokenizer->current.type == TokenIdentifier) {
             if(streq(parser->tokenizer->current.trace.source, str("static"))) {
                 static_token = next(parser->tokenizer);
+            } else if(streq(parser->tokenizer->current.trace.source, str("private"))) {
+                next(parser->tokenizer);
+                is_private = true;
             } else if(streq(parser->tokenizer->current.trace.source, str("struct"))
                       || streq(parser->tokenizer->current.trace.source, str("type"))) {
                 const Token token = next(parser->tokenizer);
                 get(global_keyword_table, token.trace.source)->consumer(token, parser);
-                continue;
-            }
+                goto outer;
+            } else break;
         }
 
         Type* const declaration_type = get_type(parser);
@@ -155,7 +160,9 @@ Node* parser_struct_declaration(const Token keyword, Parser* parser, bool is_tra
                      MHINT(str("methods are always able to be called statically using '::' syntax")));
             }
 
-            unbox(parse_function_declaration(declaration_type, declaration_info, parser));
+            Wrapper* variable = (void*) parse_function_declaration(declaration_type, declaration_info, parser);
+            variable->Variable.declaration->flags |= fPrivate * is_private;
+            unbox((void*) variable);
             continue;
         }
 
@@ -172,11 +179,12 @@ Node* parser_struct_declaration(const Token keyword, Parser* parser, bool is_tra
                 variable->Variable.declaration->VariableDeclaration.static_value = new_node((Node) { NodeNone });
             }
 
+            variable->Variable.declaration->flags |= fPrivate * is_private;
             expect(parser->tokenizer, ';');
             continue;
         }
 
-        push(&type->fields, { declaration_type, declaration_info.trace.source });
+        push(&type->fields, { declaration_type, declaration_info.trace.source, is_private });
         expect(parser->tokenizer, ';');
     }
 
@@ -184,5 +192,6 @@ Node* parser_struct_declaration(const Token keyword, Parser* parser, bool is_tra
     pop(&parser->stack);
     close_generics_declaration((void*) declaration);
 
+    module->scope->flags |= fPrivate;
     return new_node((Node) { NodeNone });
 }

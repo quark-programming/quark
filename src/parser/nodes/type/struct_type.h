@@ -7,6 +7,7 @@
 typedef struct StructField {
     Type* type;
     str identifier;
+    bool private;
 } StructField;
 
 typedef struct StructType {

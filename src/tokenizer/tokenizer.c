@@ -16,6 +16,7 @@ unsigned char const tokenizer_equal_characters[128] = {
 };
 
 char* const token_type_strings[128] = {
+    [0] = "end of file",
     [TokenIdentifier] = "identifier",
     [TokenNumber] = "number",
     [TokenString] = "string",

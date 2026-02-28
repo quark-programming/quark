@@ -6,6 +6,7 @@
 #include "../type/types.h"
 #include "../righthand/righthand.h"
 #include "../righthand/declaration/declaration.h"
+#include "parser/keywords.h"
 #include "parser/lefthand/lefthand.h"
 #include "parser/righthand/declaration/function.h"
 #include "parser/righthand/declaration/identifier.h"
@@ -131,9 +132,16 @@ Node* parser_struct_declaration(const Token keyword, Parser* parser, bool is_tra
 
     while(parser->tokenizer->current.type && parser->tokenizer->current.type != '}') {
         Token static_token = { 0 };
-        if(parser->tokenizer->current.type == TokenIdentifier
-           && streq(parser->tokenizer->current.trace.source, str("static"))) {
-            static_token = next(parser->tokenizer);
+
+        if(parser->tokenizer->current.type == TokenIdentifier) {
+            if(streq(parser->tokenizer->current.trace.source, str("static"))) {
+                static_token = next(parser->tokenizer);
+            } else if(streq(parser->tokenizer->current.trace.source, str("struct"))
+                      || streq(parser->tokenizer->current.trace.source, str("type"))) {
+                const Token token = next(parser->tokenizer);
+                get(global_keyword_table, token.trace.source)->consumer(token, parser);
+                continue;
+            }
         }
 
         Type* const declaration_type = get_type(parser);

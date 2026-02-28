@@ -15,6 +15,45 @@ unsigned char const tokenizer_equal_characters[128] = {
     ['^'] = TokenXorEqual, ['|'] = TokenOrEqual,
 };
 
+char* const token_type_strings[128] = {
+    [TokenIdentifier] = "identifier",
+    [TokenNumber] = "number",
+    [TokenString] = "string",
+    [TokenCharacter] = "character",
+    [TokenRightArrow] = "->",
+    [TokenDoubleRightArrow] = "=>",
+
+    [TokenDoubleColon] = "::",
+    [TokenDoublePlus] = "++",
+    [TokenDoubleMinus] = "--",
+    [TokenDoubleLess] = "<<",
+    [TokenDoubleGreater] = ">>",
+    [TokenDoubleEqual] = "==",
+    [TokenDoubleAnd] = "&&",
+    [TokenDoubleOr] = "||",
+    [TokenDoubleDot] = "..",
+
+    [TokenLessEqual] = "<=",
+    [TokenGreaterEqual] = ">=",
+    [TokenNotEqual] = "!=",
+    [TokenPlusEqual] = "+=",
+    [TokenMinusEqual] = "-=",
+    [TokenTimesEqual] = "*=",
+    [TokenDivideEqual] = "/=",
+    [TokenModEqual] = "%=",
+    [TokenAndEqual] = "&=",
+    [TokenXorEqual] = "^=",
+    [TokenOrEqual] = "|=",
+};
+
+char* token_type_to_string(const char type) {
+    if(token_type_strings[type]) return token_type_strings[type];
+
+    static char buffer[2] = { 0 };
+    buffer[0] = type;
+    return buffer;
+}
+
 static bool char_within_ranges(const char ch, const char* ranges) {
     for(; *ranges; ranges += 2)
         if(ch >= ranges[0] && ch <= ranges[1]) return 1;
@@ -57,7 +96,7 @@ Token create_token(Trace trace, const bool remove_newlines) {
     }
 
     if(tokenizer_double_characters[*trace.source.data] &&
-       trace.source.data[0] == trace.source.data[1]) {
+        trace.source.data[0] == trace.source.data[1]) {
         trace.col += trace.source.len = 2;
         return (Token) { trace, tokenizer_double_characters[*trace.source.data] };
     }
@@ -95,11 +134,11 @@ Token create_token(Trace trace, const bool remove_newlines) {
 Tokenizer new_tokenizer(const char* const filename, char* const data, Vec(Message)* const messages) {
     return (Tokenizer) {
         .current = create_token((Trace) {
-            .source = { 0, data },
-            .filename = filename,
-            .line_start = data,
-            .col = 1, .row = 1,
-        }, true),
+                                    .source = { 0, data },
+                                    .filename = filename,
+                                    .line_start = data,
+                                    .col = 1, .row = 1,
+                                }, true),
         .messages = messages,
         .remove_newlines = true,
     };
@@ -110,7 +149,7 @@ Token next(Tokenizer* const tokenizer) {
 
     if(!next.type) {
         push(tokenizer->messages, MERROR(next.trace, str(
-                 iftty("expected a token, but got \33[35mend of file\33[0m",
+                 iftty("expected a token, but got "HERR"end of file"H,
                      "expected a token, but got end of file" ))));
     } else {
         tokenizer->current = create_token(next.trace, tokenizer->remove_newlines);
@@ -124,9 +163,8 @@ Token expect(Tokenizer* const tokenizer, const unsigned char type) {
 
     if(expect.type != type) {
         push(tokenizer->messages, MERROR(expect.trace,
-                 strf(0, iftty("expected type [\33[35m%c (%u)\33[0m], but got '\33[35m%.*s\33[0m'",
-                         "expected type [%c (%u)], but got '%.*s'"),
-                     type, type, (int) expect.trace.source.len, expect.trace.source.data)));
+                 strf(0, iftty("expected "HERR"%s"H", but got "HERR"%.*s"H, "expected %s, but got %.*s"),
+                     token_type_to_string(type), fmtof(expect.trace.source))));
     }
 
     return expect;

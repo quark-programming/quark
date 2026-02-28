@@ -32,4 +32,10 @@ bool print_message(Message message);
 #define MINFO(trace, content) ((Message) { trace, content, 6, 2 })
 #define MWARN(trace, content) ((Message) { trace, content, 3, 3 })
 
+#define HERR "\33[31m"
+#define HHNT "\33[36m"
+#define HINF "\33[36m"
+#define HWRN "\33[33m"
+#define H "\33[0m"
+
 #endif

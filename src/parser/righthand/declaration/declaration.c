@@ -10,13 +10,12 @@ Message see_declaration(Declaration* declaration, Trace trace) {
         return MINFO({ 0 }, str("declaration not found"));
     }
     return MINFO(declaration->trace,
-                 strf(0, iftty("declaration of '\33[35m%.*s\33[0m'", "declaration of '%.*s'"), fmtof(trace.source)));
+                 strf(0, iftty("declaration of "HINF"%.*s"H, "declaration of %.*s"), fmtof(trace.source)));
 }
 
 Node* parse_declaration(Node* type, Token identifier, Parser* parser) {
     if(!(type->flags & fType)) {
-        push(parser->tokenizer->messages,
-             MERROR(type->trace, str("expected a type before declaration identifier")));
+        push(parser->tokenizer->messages, MERROR(type->trace, str("expected a type before declaration identifier")));
         type = (void*) type->type;
     }
 

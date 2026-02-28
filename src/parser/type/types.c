@@ -2,6 +2,9 @@
 
 #include "stringify_type.h"
 #include "../compiler/compiler.h"
+#include "parser/parser.h"
+#include "parser/lefthand/lefthand.h"
+#include "parser/righthand/righthand.h"
 
 bool global_in_compiler_step = false;
 Compiler* global_compiler_context = NULL;
@@ -201,4 +204,13 @@ Type* make_type_standalone(Type* type, const u8 generics_offset) {
             .Auto.ref = type,
         }
     });
+}
+
+Type* get_type(Parser* parser) {
+    Type* const type = (void*) righthand_expression(lefthand_expression(parser), parser, 11);
+    if(!(type->flags & fType)) {
+        push(parser->tokenizer->messages, MERROR(type->trace, str("expected a type here")));
+        return type->type;
+    }
+    return type;
 }

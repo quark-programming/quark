@@ -32,11 +32,15 @@ enum {
     TokenModEqual,
     TokenAndEqual,
     TokenXorEqual,
-    TokenOrEqual,
+    TokenOrEqual = 'z',
 };
 
-extern unsigned char const tokenizer_double_characters[128];
-extern unsigned char const tokenizer_equal_characters[128];
+extern unsigned char const tokenizer_double_characters[];
+extern unsigned char const tokenizer_equal_characters[];
+
+extern char* const token_type_strings[];
+
+char* token_type_to_string(char type);
 
 struct Parser;
 struct Token;

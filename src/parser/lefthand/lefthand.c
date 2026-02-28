@@ -122,8 +122,8 @@ Node* lefthand_expression(Parser* parser) {
 
         default:
             push(parser->tokenizer->messages, MERROR(token.trace,
-                     strf(0, iftty("expected a \33[35mliteral\33[0m, but got '\33[35m%.*s\33[0m'",
-                             "expected a literal, but got '%.*s'"),
+                     strf(0, iftty("expected a "HERR"literal"H", but got "HERR"%.*s\33[0m"H,
+                             "expected a literal, but got %.*s"),
                          fmtof(token.trace.source))));
             return (void*) numeric_literal_from_token(token);
     }

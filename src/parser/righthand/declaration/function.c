@@ -19,7 +19,6 @@ static int recycle_missing_generics(Type* missing, Type* ignore, void* void_scop
 
     if(missing->id != NodeMissing) return 0;
     Wrapper* possible_found = find_in_scope(*scope, missing->trace);
-    // Wrapper* possible_found = find_on_stack(parser->stack, missing->trace);
 
     if(possible_found && possible_found->flags & fType) {
         *missing = *(Type*) (void*) possible_found;
@@ -87,8 +86,7 @@ static void parse_function_arguments(FunctionType* function_type, FunctionDeclar
 
         if(!(argument.type->flags & fType)) {
             push(parser->tokenizer->messages,
-                 MERROR(argument.type->trace, strf(0,
-                     iftty("'\33[35m%.*s\33[0m' is not a type", "'%.*s' is not a type"),
+                 MERROR(argument.type->trace, strf(0, iftty(HERR"%.*s"H" is not a type", "%.*s is not a type"),
                      fmtof(argument.type->trace.source))));
         }
 
@@ -224,7 +222,8 @@ Node* parse_function_lambda(Type* return_type, Parser* parser) {
                 return (void*) function_type;
             }
 
-            push(parser->tokenizer->messages, MERROR(operator.trace, str("Expected either '=>' or '{'")));
+            push(parser->tokenizer->messages, MERROR(operator.trace,
+                iftty(str("expected either "HERR"=>"H" or "HERR"{"H), str("expected either => or {"))));
     }
 
     pop(&parser->stack);

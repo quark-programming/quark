@@ -76,14 +76,7 @@ Node* keyword_const(const Token token, Parser* parser) {
     // TODO: (const) fix trace
     (void) token;
 
-    Type* type = (void*) righthand_expression(lefthand_expression(parser), parser, 13);
-
-    if(!(type->flags & fType)) {
-        push(parser->tokenizer->messages, MERROR(type->trace,
-            iftty(str("expected a type after '\33[35mconst\33[0m'"), str("expected a type after 'const'"))));
-        type = type->type;
-    }
-
+    Type* type = get_type(parser);
     type->flags |= fConst;
     return (void*) type;
 }
@@ -95,13 +88,8 @@ Node* keyword_extern(const Token token, Parser* parser) {
     if(try(parser->tokenizer, '<', 0)) {
         // TODO: maybe move to a flag in `Parser`
         global_righthand_collecting_type_arguments = true;
-        type = (void*) expression(parser);
+        type = get_type(parser);
         global_righthand_collecting_type_arguments = false;
-
-        if(!(type->flags & fType)) {
-            // TODO: error when (in extern<TYPE>) TYPE is not a type
-            type = type->type;
-        }
 
         expect(parser->tokenizer, '>');
     } else {

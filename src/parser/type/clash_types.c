@@ -71,11 +71,6 @@ static int clash_autos(Type* type, Type* follower, ClashAccumulator* accumulator
         if(test_result) {
             return test_result + 1;
         }
-    } else {
-        // TODO: this may be wrong
-        // if(wrapper->flags & fNumeric && !(follower->flags & fNumeric) && follower->id != WrapperAuto) {
-        //     return TestMismatch;
-        // }
     }
 
     // TODO: try making this one way (like above)
@@ -94,15 +89,6 @@ static int clash_acceptor(Type* type, Type* follower, void* void_accumulator) {
 #endif
 
     ClashAccumulator* const accumulator = void_accumulator;
-
-    // if(type->id == WrapperAuto
-    //    && !(follower->id == WrapperAuto && follower->Wrapper.Auto.priority > type->Wrapper.Auto.priority)) {
-    //     return clash_autos((void*) type, follower, accumulator);
-    // }
-    //
-    // if(follower->id == WrapperAuto) {
-    //     return clash_autos((void*) follower, type, accumulator);
-    // }
 
     if(type->id == WrapperAuto || follower->id == WrapperAuto) {
         return clash_autos(type, follower, accumulator);
@@ -129,18 +115,18 @@ int clash_types(Type* a, Type* b, const Trace trace, Vec(Message)* messages, con
     const int result = traverse_type(a, b, &clash_acceptor, &accumulator, 0, 0);
 
     if(result && !(flags & ClashPassive)) {
-        String message = strf(0, iftty("type mismatch between '\33[35m", "type mismatch between '")).as_owned;
+        String message = strf(0, iftty("type mismatch between "HERR, "type mismatch between ")).as_owned;
         stringify_type(a, &message, 0, 0);
 
-        strf(&message, iftty("\33[0m' and '\33[35m", "' and '"));
+        strf(&message, iftty(H" and "HERR, " and "));
         stringify_type(b, &message, 0, 0);
 
-        strf(&message, result + 1 == TestCircular
-             ? iftty("\33[0m' (types are circularly referencing each other)",
-                 "' (types are circularly referencing each other)")
-             : iftty("\33[0m'", "'"));
-
+        strf(&message, iftty(H, ""));
         push(messages, MERROR(trace, as_str(message)));
+
+        if(result + 1 == TestCircular) {
+            push(messages, MINFO({ 0 }, str("types are referencing each-other circularly")));
+        }
     }
 
     return result;

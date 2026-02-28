@@ -38,4 +38,6 @@ Vec(Type*) find_last_generic_action(Vec(Action) actions, Declaration* declaratio
 
 Type* make_type_standalone(Type* type, u8 generics_offset);
 
+Type* get_type(struct Parser* parser);
+
 #endif

@@ -73,7 +73,7 @@ Node* call_function(Node* function, Vec(Node*) arguments, Parser* const parser) 
         if(i + 1 >= len(function_type->signature)) {
             push(parser->tokenizer->messages,
                  MERROR(stretch(arguments[i]->trace, last(arguments)->trace),
-                     str("too many arguments in function call")));
+                     str("excess arguments in function call")));
             push(parser->tokenizer->messages,
                  see_declaration((Declaration*) function_type->declaration, function->trace));
             break;

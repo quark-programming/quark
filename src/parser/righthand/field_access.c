@@ -15,17 +15,11 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
     const str operator_token = next(parser->tokenizer).trace.source;
 
     if(*operator_token.data == '.' && try(parser->tokenizer, '(', NULL)) {
-        Type* cast = (void*) expression(parser);
-
-        if(!(cast->flags & fType)) {
-            push(parser->tokenizer->messages, MERROR(cast->trace, str("cast is not a type")));
-            cast = cast->type;
-        }
-
+        Type* const type = get_type(parser);
         return new_node((Node) {
             .Cast = {
                 .id = NodeCast,
-                .type = cast,
+                .type = type,
                 .trace = stretch(lefthand->trace, expect(parser->tokenizer, ')').trace),
                 .value = lefthand,
             },
@@ -44,7 +38,7 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
 
     if(struct_type->id != NodeStructType) {
         push(parser->tokenizer->messages, MERROR(lefthand->trace,
-                 strf(0, iftty("'\33[35m%.*s\33[0m' is not a structure", "'%.*s' is not a structure"),
+                 strf(0, iftty(HERR"%.*s"H" is not a structure", "%.*s is not a structure"),
                      fmtof(lefthand->trace.source))));
         close_type(opened.actions, 0, 2);
         return lefthand;
@@ -74,8 +68,8 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
         }
 
         push(parser->tokenizer->messages,
-             MERROR(field_token.trace, strf(0, iftty("no field named '\33[35m%.*s\33[0m' on struct '\33[35m%.*s\33[0m'",
-                     "no field named '%.*s' on struct '%.*s'"),
+             MERROR(field_token.trace, strf(0, iftty("no field named "HERR"%.*s"H" on struct "HERR"%.*s"H,
+                     "no field named %.*s on struct %.*s"),
                  fmtof(field_token.trace.source), fmtof(lefthand->trace.source))));
         push(parser->tokenizer->messages, see_declaration((void*) struct_type, lefthand->trace));
         return lefthand;

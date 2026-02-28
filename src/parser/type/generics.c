@@ -45,11 +45,11 @@ void apply_type_arguments(Wrapper* variable, Parser* parser) {
         const bool save = global_righthand_collecting_type_arguments;
         global_righthand_collecting_type_arguments = true;
 
-        Vec(Node*) type_arguments = NULL;
+        Vec(Type*) type_arguments = NULL;
 
         while(parser->tokenizer->current.type && parser->tokenizer->current.type != '>'
               && parser->tokenizer->current.type != TokenDoubleGreater) {
-            push(&type_arguments, expression(parser));
+            push(&type_arguments, get_type(parser));
             if(!try(parser->tokenizer, ',', NULL)) break;
         }
 
@@ -64,15 +64,10 @@ void apply_type_arguments(Wrapper* variable, Parser* parser) {
 
         global_righthand_collecting_type_arguments = save;
 
-        for(size_t i = 0; i < len(type_arguments); i++) {
-            if(!(type_arguments[i]->flags & fType)) {
-                push(parser->tokenizer->messages, MERROR(type_arguments[i]->trace,
-                         str("expected a type in type arguments")));
-            }
-
+        for(u32 i = 0; i < len(type_arguments); i++) {
             if(i >= len(base_generics)) {
                 push(parser->tokenizer->messages, MERROR(stretch(type_arguments[i]->trace,
-                         last(type_arguments)->trace), str("too many type arguments")));
+                         last(type_arguments)->trace), str("excess type arguments")));
                 push(parser->tokenizer->messages, see_declaration(declaration, type_arguments[i]->trace));
                 break;
             }

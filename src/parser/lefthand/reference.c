@@ -28,7 +28,7 @@ Node* dereference(Node* node, Trace trace, Vec(Message)* messages) {
         const OpenedType open = open_type((void*) node, 0, 2);
 
         if(open.type->id != NodePointerType) {
-            push(messages, MERROR(trace, strf(0, "Cannot de-refence a non-pointer value")));
+            push(messages, MERROR(trace, strf(0, "cannot de-refence a non-pointer value")));
             close_type(open.actions, 0, 2);
             return node;
         }

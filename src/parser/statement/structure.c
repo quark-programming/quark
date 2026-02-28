@@ -6,7 +6,10 @@
 #include "../type/types.h"
 #include "../righthand/righthand.h"
 #include "../righthand/declaration/declaration.h"
+#include "parser/lefthand/lefthand.h"
+#include "parser/righthand/declaration/function.h"
 #include "parser/righthand/declaration/identifier.h"
+#include "parser/righthand/declaration/variable.h"
 #include "parser/type/clash_types.h"
 #include "parser/type/stringify_type.h"
 
@@ -51,7 +54,7 @@ Node* parse_struct_literal(Type* const wrapped_struct_type, Parser* parser) {
                 if(!found_compare_field) {
                     String message = strf(0, iftty("no field named '\33[35m%.*s\33[35m' on '\33[35m",
                                               "no field named '%.*s' on '"),
-                                              fmtof(field_name)).as_owned;
+                                          fmtof(field_name)).as_owned;
                     stringify_type((void*) struct_type, &message, 0, 2);
                     push(parser->tokenizer->messages,
                          MERROR(field_name_token.trace, strf(&message, iftty("\33[0m'", "'"))));
@@ -128,39 +131,88 @@ Node* parser_struct_declaration(const Token keyword, Parser* parser, bool is_tra
     push(&parser->stack, module->scope);
     expect(parser->tokenizer, '{');
 
-    Node* next_declaration = 0;
-    // TODO: make the `NodeNone` with `.type` system more readable
-    while(parser->tokenizer->current.type && parser->tokenizer->current.type != '}'
-          && !(next_declaration = statement(parser))->id && next_declaration->type) {
-        if(next_declaration->type->id != WrapperVariable || !(next_declaration->type->flags & fIgnoreStatement)
-           || next_declaration->type->Wrapper.Variable.declaration->id != NodeVariableDeclaration)
-            break;
-
-        VariableDeclaration* const field_decl = (void*) next_declaration->type->Wrapper.Variable.declaration;
-        const StructField field = {
-            .type = field_decl->type,
-            .identifier = field_decl->identifier.base,
-        };
-
-        push(&type->fields, field);
-
-        unbox((void*) field_decl);
-        unbox((void*) next_declaration->type);
-        unbox(next_declaration);
-    }
-
-    Vec(Node*) declarations = { 0 };
-    if(!try(parser->tokenizer, '}', NULL)) {
-        push(&declarations, next_declaration);
-
-        while(parser->tokenizer->current.type && !try(parser->tokenizer, '}', NULL)) {
-            push(&declarations, statement(parser));
+    while(parser->tokenizer->current.type && parser->tokenizer->current.type != '}') {
+        Token static_token = { 0 };
+        if(parser->tokenizer->current.type == TokenIdentifier
+           && streq(parser->tokenizer->current.trace.source, str("static"))) {
+            static_token = next(parser->tokenizer);
         }
+
+        Type* const declaration_type = (void*) righthand_expression(lefthand_expression(parser), parser, 11);
+        if(!(declaration_type->flags & fType)) {
+            push(parser->tokenizer->messages, MERROR(declaration_type->trace,
+                     str("expected a declaration in body of structure")));
+            continue;
+        }
+
+        const IdentifierInfo declaration_info = new_identifier(expect(parser->tokenizer, TokenIdentifier), parser,
+                                                               IdentifierDeclaration);
+        if(try(parser->tokenizer, '(', NULL)) {
+            if(static_token.type) {
+                push(parser->tokenizer->messages, MWARN(static_token.trace,
+                         str("static is ignored before function declaration")));
+                push(parser->tokenizer->messages,
+                     MHINT(str("methods are always able to be called statically using '::' syntax")));
+            }
+
+            unbox(parse_function_declaration(declaration_type, declaration_info, parser));
+            continue;
+        }
+
+        if(static_token.type) {
+            Wrapper* const variable = (void*) parse_variable_declaration(declaration_type, declaration_info, parser);
+
+            if(try(parser->tokenizer, '=', NULL)) {
+                Node* const value = expression(parser);
+                clash_types(variable->type, value->type, stretch(variable->trace, value->trace),
+                            parser->tokenizer->messages, 0);
+
+                variable->Variable.declaration->VariableDeclaration.static_value = value;
+            } else {
+                variable->Variable.declaration->VariableDeclaration.static_value = new_node((Node) { NodeNone });
+            }
+
+            expect(parser->tokenizer, ';');
+            continue;
+        }
+
+        push(&type->fields, { declaration_type, declaration_info.trace.source });
+        expect(parser->tokenizer, ';');
     }
 
+    // Node* next_declaration = 0;
+    // // TODO: make the `NodeNone` with `.type` system more readable
+    // while(parser->tokenizer->current.type && parser->tokenizer->current.type != '}'
+    //       && !(next_declaration = statement(parser))->id && next_declaration->type) {
+    //     if(next_declaration->type->id != WrapperVariable || !(next_declaration->type->flags & fIgnoreStatement)
+    //        || next_declaration->type->Wrapper.Variable.declaration->id != NodeVariableDeclaration)
+    //         continue;
+    //
+    //     VariableDeclaration* const field_decl = (void*) next_declaration->type->Wrapper.Variable.declaration;
+    //     const StructField field = {
+    //         .type = field_decl->type,
+    //         .identifier = field_decl->identifier.base,
+    //     };
+    //
+    //     push(&type->fields, field);
+    //
+    //     unbox((void*) field_decl);
+    //     unbox((void*) next_declaration->type);
+    //     unbox(next_declaration);
+    // }
+    //
+    // Vec(Node*) declarations = { 0 };
+    // if(!try(parser->tokenizer, '}', NULL)) {
+    //     push(&declarations, next_declaration);
+    //
+    //     while(parser->tokenizer->current.type && !try(parser->tokenizer, '}', NULL)) {
+    //         push(&declarations, statement(parser));
+    //     }
+    // }
+
+    expect(parser->tokenizer, '}');
     pop(&parser->stack);
     close_generics_declaration((void*) declaration);
-    module->scope->children = declarations;
 
     return new_node((Node) { NodeNone });
 }

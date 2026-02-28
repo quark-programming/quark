@@ -10,14 +10,17 @@ void comp_VariableDeclaration(void* void_self, String* line, Compiler* compiler)
        || self->identifier.is_external || (self->const_value && self->const_value->flags & fType))
         return;
 
-    String decl_line = new_line(compiler);
+    String decl_line = self->static_value ? NULL : new_line(compiler);
     line = &decl_line;
 
     compile(self->type, line, compiler);
     strf(line, self->type->flags & fConst ? " const " : " ");
     build_full_identifier(self->identifier, line);
 
-    if(self->const_value) {
+    if(self->static_value && self->static_value->id != NodeNone) {
+        strf(line, " = ");
+        compile(self->static_value, line, compiler);
+    } else if(self->const_value) {
         strf(line, " = ");
         compile(self->const_value, line, compiler);
     } else if(self->type->flags & fConst) {
@@ -26,5 +29,5 @@ void comp_VariableDeclaration(void* void_self, String* line, Compiler* compiler)
     }
 
     strf(line, ";");
-    push(&compiler->sections[compiler->open_section].lines, decl_line);
+    push(&compiler->sections[!self->static_value * compiler->open_section].lines, decl_line);
 }

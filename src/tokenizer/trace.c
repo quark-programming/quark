@@ -1,7 +1,7 @@
 #include <tty.h>
 #include "trace.h"
 
-const char* global_message_labels[] = { "error", "hint", "info", "warn" };
+const char* global_message_labels[] = { "error", "hint", "info", "warning" };
 
 Trace stretch(Trace a, const Trace b) {
     a.source.len = b.source.data - a.source.data + b.source.len;

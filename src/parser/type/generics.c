@@ -62,7 +62,6 @@ void apply_type_arguments(Wrapper* variable, Parser* parser) {
             parser->tokenizer->current.type = '>';
         } else expect(parser->tokenizer, '>');
 
-        // Vec(Node*) const type_arguments = collect_until(parser, &expression, ',', '>');
         global_righthand_collecting_type_arguments = save;
 
         for(size_t i = 0; i < len(type_arguments); i++) {

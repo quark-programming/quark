@@ -5,6 +5,7 @@
 
 typedef struct VariableDeclaration {
     DECLARATION_FIELDS;
+    Node* static_value;
 } VariableDeclaration;
 
 #endif

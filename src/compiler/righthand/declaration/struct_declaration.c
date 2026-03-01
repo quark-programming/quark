@@ -1,6 +1,8 @@
 #include "struct_declaration.h"
 
 #include "identifier.h"
+#include "parser/statement/scope.h"
+#include "parser/type/types.h"
 
 void comp_StructDeclaration(void* void_self, String* line, Compiler* compiler) {
     StructDeclaration* const self = void_self;
@@ -22,12 +24,13 @@ void comp_StructDeclaration(void* void_self, String* line, Compiler* compiler) {
     String typedef_line = strf(0, "struct %.*s", fmtof(identifier)).as_owned;
     self->compilation_state = CompilationIntermediate;
 
-    strf(&typedef_line, " { ");
+    strf(&typedef_line, " {\n");
     for(size_t i = 0; i < len(struct_type->fields); i++) {
+        strf(&typedef_line, "    ");
         compile(struct_type->fields[i].type, &typedef_line, compiler);
         strf(&typedef_line, " ");
         build_simple_identifier(struct_type->fields[i].identifier, &typedef_line);
-        strf(&typedef_line, "; ");
+        strf(&typedef_line, ";\n");
     }
     strf(&typedef_line, "};");
 
@@ -44,4 +47,15 @@ void comp_StructDeclaration(void* void_self, String* line, Compiler* compiler) {
     }
 
     self->compilation_state = CompilationSkip;
+}
+
+void comp_NodeTraitAccess(void* void_self, String* line, Compiler* compiler) {
+    TraitAccess* const self = void_self;
+    const OpenedType opened = open_type(self->generic_type, 0, 0);
+    StructType* const struct_type = (void*) opened.type;
+
+    Scope* const trait_scope = get(struct_type->traits, self->trait_declaration->identifier.base);
+    compile(find_in_scope(*trait_scope, self->field_trace), line, compiler);
+
+    close_type(opened.actions, 0, 0);
 }

@@ -10,11 +10,7 @@ struct Vec<T> {
 	usize capacity;
 
 	Vec<T> new() {
-		return Vec {
-			data: Allocator::alloc(sizeof(T)),
-			size: 0,
-			capacity: 1,
-		};
+		return Vec { 0 };
 	}
 
 	Vec<T> from([T] slice) {
@@ -44,6 +40,7 @@ struct Vec<T> {
 	    if(self->size + n > extern<usize> SIZE_MAX / 2) panic("[Vec::reserve] capacity overflow");
 
 		if(self->size + n <= self->capacity) return;
+		if(!self->capacity) self->capacity = 1;
 		while(self->capacity < self->size + n) self->capacity *= 2;
 
 		self->data = Allocator::realloc_array(self->data, self->capacity);

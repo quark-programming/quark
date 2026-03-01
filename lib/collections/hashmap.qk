@@ -1,0 +1,67 @@
+import containers::slice::{ str, Slice };
+import containers::option::{ Option };
+import collections::vector::{ Vec };
+import c::string::{ memset };
+import operator::{ Operator };
+
+trait Hashable {
+    usize hash(self);
+}
+
+usize str::[Hashable::hash](self) {
+    usize hash = 2166136261;
+    while(self.slice.size--) hash = (hash * 16777619) ^ *self.slice.data++;
+    return hash;
+}
+
+struct Entry<K, V> {
+    K key;
+    V value;
+}
+
+struct HashMap<K : Hashable::hash + Operator::equals, V> {
+    Vec<Vec<Entry<K, V>>> data;
+
+    static usize default_capacity = 32;
+
+    HashMap<K, V> new() {
+        HashMap map = HashMap { Vec::from_capacity(default_capacity) };
+        memset(map.data.data, 0, default_capacity);
+        return map;
+    }
+
+    void put(&self, K key, V value) {
+        self->data.data[key.hash() % self->data.capacity].push(Entry { key, value });
+        self->data.size++;
+    }
+
+    HashMap<K, V> from_entries([Entry<K, V>] entries) {
+        HashMap map = HashMap::new();
+        for(int i = 0; i < entries.len(); i++) {
+            map.put(entries[i].key, entries[i].value);
+        }
+        return map;
+    }
+
+    bool has(self, K key) {
+        Vec entries = self.data[key.hash() % self.data.capacity];
+        for(int i = 0; i < entries.len(); i++) {
+            if(entries[i].key.equals(key)) return true;
+        }
+        return false;
+    }
+
+    bool try_put(&self, K key, V value) {
+        if(self->has(key)) return false;
+        self->put(key, value);
+        return true;
+    }
+
+    V? get(self, K key) {
+        Vec entries = self.data[key.hash() % self.data.capacity];
+        for(int i = 0; i < entries.len(); i++) {
+            if(entries[i].key.equals(key)) return Option::Some(entries[i].value);
+        }
+        return Option::None();
+    }
+}

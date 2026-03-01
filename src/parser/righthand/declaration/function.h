@@ -6,7 +6,7 @@
 
 #include "identifier.h"
 
-Node* parse_function_declaration(Type* return_type, IdentifierInfo info, Parser* parser);
+Node* parse_function_declaration(Type* return_type, IdentifierInfo info, Parser* parser, bool no_body);
 
 Node* parse_function_lambda(Type* return_type, Parser* parser);
 

@@ -1,2 +1,3 @@
 char* extern strerror(Int errno);
 T* extern memcpy<T>(T* dest, T* src, usize size);
+T* extern memset<T>(T* ptr, Int value, usize num);

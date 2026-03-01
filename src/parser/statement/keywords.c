@@ -116,11 +116,11 @@ Node* keyword_return(const Token token, Parser* parser) {
 }
 
 Node* keyword_struct(const Token token, Parser* parser) {
-    return parser_struct_declaration(token, parser, false);
+    return parse_struct_declaration(token, parser, false);
 }
 
 Node* keyword_trait(const Token token, Parser* parser) {
-    return parser_struct_declaration(token, parser, true);
+    return parse_struct_declaration(token, parser, true);
 }
 
 Node* keywords_control(const Token keyword, Parser* parser) {

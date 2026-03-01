@@ -22,7 +22,7 @@ IdentifierInfo new_identifier(Token base_identifier, Parser* parser, const unsig
         .trace = base_identifier.trace,
     };
 
-    Scope* const outer_scope = info.declaration_scope;
+    Scope* outer_scope = info.declaration_scope;
 
 compound_start:
     if(flags & IdentifierDeclaration) {
@@ -55,12 +55,29 @@ compound_start:
             trait_fields->declaration = outer_scope->declaration;
         }
 
-        info.declaration_scope = trait_fields;
+        info.trait_scope = trait_fields;
+        info.declaration_scope = outer_scope;
         return info;
     }
 
     if(!info.value || !info.value->Variable.declaration->const_value) {
         return info;
+    }
+
+    if(try(parser->tokenizer, '[', NULL)) {
+        IdentifierInfo trait_info = new_identifier(expect(parser->tokenizer, TokenIdentifier), parser, flags);
+        expect(parser->tokenizer, ']');
+
+        if(info.value->Variable.declaration->id != NodeStructDeclaration) {
+            push(parser->tokenizer->messages, MERROR(info.trace,
+                     str("attempting to assign trait declaration to a non-struct value")));
+            goto compound_start;
+        }
+
+        outer_scope = info.value->Variable.declaration->type->StructType.module->scope;
+        info = trait_info;
+        info.identifier.parent_scope = outer_scope;
+        goto compound_start;
     }
 
     Module* module = NULL;
@@ -90,17 +107,7 @@ compound_start:
     info.value = find_in_scope(*module->scope, next_trace);
 
     if(info.value && wrapper_action.type) {
-        // TODO: (fix) this action can be overridden on next compound_start
-        info.value->action = wrapper_action;
-        info.value->type = new_type((Type) {
-            .Wrapper = {
-                .id = WrapperAuto,
-                .trace = info.value->type->trace,
-                .flags = info.value->type->flags,
-                .Auto.ref = info.value->type,
-                .action = wrapper_action,
-            },
-        });
+        assign_action((void*) info.value, wrapper_action, true);
     }
 
     info.trace = stretch(info.trace, next_trace);

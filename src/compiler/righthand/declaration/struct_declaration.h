@@ -5,4 +5,6 @@
 
 void comp_StructDeclaration(void* void_self, String* line, Compiler* compiler);
 
+void comp_NodeTraitAccess(void* void_self, String* line, Compiler* compiler);
+
 #endif

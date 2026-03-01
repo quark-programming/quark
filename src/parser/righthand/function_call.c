@@ -54,18 +54,31 @@ Node* call_function(Node* function, Vec(Node*) arguments, Parser* const parser) 
         return function;
     }
 
-    if(function->id == WrapperVariable && function->Wrapper.Variable.bound_self_argument) {
+    Node* const bound_self = function->id == WrapperVariable
+                                 ? function->Wrapper.Variable.bound_self_argument
+                                 : function->id == NodeTraitAccess
+                                       ? function->TraitAccess.bound_self_argument
+                                       : NULL;
+    if(bound_self) {
         // TODO: vector unshift() function macro
         resv(&arguments, 1);
         memmove(arguments + 1, arguments, len(arguments) * sizeof(Node*));
-        arguments[0] = function->Wrapper.Variable.bound_self_argument;
+        arguments[0] = bound_self;
         len(arguments)++;
 
         const OpenedType open_self = open_type(arguments[0]->type, 0, 2);
-        if(len(function_type->signature) >= 2 && function_type->signature[1]->id == NodePointerType
-           && open_self.type->id != NodePointerType) {
-            arguments[0] = reference(arguments[0], arguments[0]->trace);
+        const OpenedType open_argument = open_type(len(function_type->signature) >= 2
+                                                   ? function_type->signature[1] : NULL, 0, 2);
+
+        if(open_argument.type) {
+            if(open_self.type->id != NodePointerType && function_type->signature[1]->id == NodePointerType) {
+                arguments[0] = reference(arguments[0], arguments[0]->trace);
+            } else if(open_self.type->id == NodePointerType && function_type->signature[1]->id != NodePointerType) {
+                arguments[0] = dereference(arguments[0], arguments[0]->trace, parser->tokenizer->messages);
+            }
         }
+
+        close_type(open_argument.actions, 0, 2);
         close_type(open_self.actions, 0, 2);
     }
 

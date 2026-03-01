@@ -82,8 +82,7 @@ Node* parse_struct_literal(Type* const wrapped_struct_type, Parser* parser) {
     return (void*) struct_literal;
 }
 
-// TODO: actually implement traits u bum
-Node* parser_struct_declaration(const Token keyword, Parser* parser, bool is_trait) {
+Node* parse_struct_declaration(const Token keyword, Parser* parser, bool is_trait) {
     const Trace trace_start = keyword.trace;
     IdentifierInfo info = new_identifier(expect(parser->tokenizer, TokenIdentifier), parser, IdentifierDeclaration);
 
@@ -128,6 +127,30 @@ Node* parser_struct_declaration(const Token keyword, Parser* parser, bool is_tra
     declaration->identifier.parent_declaration = (void*) declaration;
 
     push(&parser->stack, module->scope);
+
+    if(try(parser->tokenizer, ':', NULL)) {
+        do {
+            IdentifierInfo trait_info = new_identifier(expect(parser->tokenizer, TokenIdentifier), parser, 0);
+            if(!trait_info.value || trait_info.value->Variable.declaration->id != NodeStructDeclaration
+               || !trait_info.value->type->StructType.is_trait) {
+                push(parser->tokenizer->messages, MERROR(trait_info.trace, str("expected a trait here")));
+                continue;
+            }
+
+            put(&type->traits, trait_info.identifier.base,
+                ((Scope) { NodeScope, .declaration = trait_info.value->Variable.declaration }));
+
+            Vec(Declaration*) const trait_declarations =
+                trait_info.value->Variable.declaration->StructDeclaration.trait_declarations;
+            for(u32 i = 0; i < len(trait_declarations); i++) {
+                // Declaration* const declaration_mirror =
+                //         (void*) new_node((Node) { .Declaration = *trait_declarations[i] });
+
+                put(&module->scope->variables, trait_declarations[i]->identifier.base, trait_declarations[i]);
+            }
+        } while(try(parser->tokenizer, ',', NULL));
+    }
+
     expect(parser->tokenizer, '{');
 
 outer:
@@ -160,7 +183,12 @@ outer:
                      MHINT(str("methods are always able to be called statically using '::' syntax")));
             }
 
-            Wrapper* variable = (void*) parse_function_declaration(declaration_type, declaration_info, parser);
+            Wrapper* variable = (void*) parse_function_declaration(declaration_type, declaration_info, parser,
+                                                                   is_trait);
+            if(is_trait && variable->Variable.declaration->FunctionDeclaration.body->children) {
+                push(&declaration->trait_declarations, variable->Variable.declaration);
+            }
+
             variable->Variable.declaration->flags |= fPrivate * is_private;
             unbox((void*) variable);
             continue;

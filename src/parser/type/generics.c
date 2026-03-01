@@ -6,17 +6,32 @@
 #include "../righthand/declaration/declaration.h"
 #include "../statement/statement.h"
 #include "../statement/scope.h"
+#include "parser/lefthand/lefthand.h"
 
-Type* wrap_applied_generics(Type* type, Vec(Type*) const generics, Declaration* declaration) {
-    return new_type((Type) {
-        .Wrapper = {
-            .id = WrapperAuto,
-            .trace = type->trace,
-            .flags = type->flags,
-            .action = { ActionApplyGenerics, generics, (void*) declaration },
-            .Auto = { type },
-        }
-    });
+Node* assign_action(Node* node, const Action action, const bool owned_variable) {
+    if(!owned_variable) {
+        return (void*) new_type((Type) {
+            .Wrapper = {
+                .id = WrapperAuto,
+                .trace = node->trace,
+                .flags = node->flags,
+                .action = action,
+                .Auto.ref = (void*) node,
+            },
+        });
+    }
+
+    if(node->Wrapper.action.type) {
+        node->Wrapper.action = (Action) {
+            .type = ActionApplyCollection,
+            .collection = vec(node->Wrapper.action, action),
+        };
+    } else {
+        node->Wrapper.action = action;
+    }
+
+    node->Wrapper.type = (void*) assign_action((void*) node->Wrapper.type, action, false);
+    return node;
 }
 
 void apply_type_arguments(Wrapper* variable, Parser* parser) {
@@ -78,8 +93,7 @@ void apply_type_arguments(Wrapper* variable, Parser* parser) {
         }
     }
 
-    variable->action = (Action) { ActionApplyGenerics, input_generics, (void*) declaration };
-    variable->type = wrap_applied_generics(variable->type, input_generics, declaration);
+    assign_action((void*) variable, (Action) { ActionApplyGenerics, input_generics, declaration }, true);
 }
 
 GenericsCollection collect_generics(Parser* const parser) {
@@ -90,6 +104,7 @@ GenericsCollection collect_generics(Parser* const parser) {
     }
 
     collection.generic_declarations_scope = new_scope(NULL);
+    push(&parser->stack, collection.generic_declarations_scope);
 
     while(parser->tokenizer->current.type && parser->tokenizer->current.type != '>') {
         const Token identifier = expect(parser->tokenizer, TokenIdentifier);
@@ -102,6 +117,47 @@ GenericsCollection collect_generics(Parser* const parser) {
                 .Auto.priority = -1,
             },
         });
+
+#define exp_trait_error() \
+    push(parser->tokenizer->messages, MERROR(extension->trace, str("expected a trait or structure here")))
+
+        if(try(parser->tokenizer, ':', NULL)) {
+            do {
+                Wrapper* const extension = (void*) lefthand_expression(parser);
+                if(extension->id != WrapperVariable) {
+                    exp_trait_error();
+                    continue;
+                }
+
+                Declaration* const declaration = extension->Variable.declaration;
+                switch(declaration->id) {
+                    case NodeFunctionDeclaration: {
+                        StructDeclaration* const parent_trait =
+                                (void*) declaration->identifier.parent_scope->declaration;
+                        if(parent_trait->id != NodeStructDeclaration || !parent_trait->type->StructType.is_trait) {
+                            exp_trait_error();
+                            break;
+                        }
+
+                        push(&base_type->Wrapper.Auto.required_traits, declaration);
+                        break;
+                    }
+
+                    case NodeStructDeclaration:
+                        if(!declaration->type->StructType.is_trait) {
+                            exp_trait_error();
+                            break;
+                        }
+
+                        push(&base_type->Wrapper.Auto.required_traits, declaration);
+                        break;
+
+                    default: exp_trait_error();
+                }
+            } while(try(parser->tokenizer, '+', NULL));
+        }
+
+#undef exp_trait_error
 
         Declaration* const type_declaration = (void*) new_node((Node) {
             .VariableDeclaration = {
@@ -118,6 +174,7 @@ GenericsCollection collect_generics(Parser* const parser) {
         if(!try(parser->tokenizer, ',', 0)) break;
     }
     expect(parser->tokenizer, '>');
+    pop(&parser->stack);
 
     return collection;
 }

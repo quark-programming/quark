@@ -30,13 +30,26 @@ static int recycle_missing_generics(Type* missing, Type* ignore, void* void_scop
     return 0;
 }
 
-static Argument create_self_literal(const Trace trace, Declaration* const declaration, Parser* parser, bool is_ref) {
-    Type* type;
+static Argument create_self_literal(const Trace trace, Declaration* declaration, Declaration* func_declaration,
+                                    Parser* parser, bool is_ref) {
+    Type* type = NULL;
 
     if(declaration->id != NodeStructDeclaration) {
         push(parser->tokenizer->messages,
              MERROR(trace, str("Cannot create self literal outside of a struct declaration")));
         type = new_type((Type) { .Wrapper = { WrapperAuto, 0, trace } });
+    } else if(declaration->type->StructType.is_trait) {
+        type = new_type((Type) {
+            .Wrapper = {
+                .id = WrapperAuto,
+                .trace = trace,
+                .Auto = {
+                    .priority = 1,
+                    .constant = true,
+                    .required_traits = vec(declaration, func_declaration),
+                },
+            },
+        });
     } else {
         Wrapper* wrapper = variable_of(declaration, trace, 0);
         apply_type_arguments(wrapper, parser);
@@ -63,14 +76,16 @@ static void parse_function_arguments(FunctionType* function_type, FunctionDeclar
             if(parser->tokenizer->current.type == TokenIdentifier
                && streq(parser->tokenizer->current.trace.source, str("self"))) {
                 argument = create_self_literal(stretch(snapshot.trace, next(parser->tokenizer).trace),
-                                               (void*) declaration->identifier.parent_scope->declaration, parser, true);
+                                               (void*) declaration->identifier.parent_scope->declaration,
+                                               (void*) function_type->declaration, parser, true);
             } else {
                 parser->tokenizer->current = snapshot;
             }
         } else if(parser->tokenizer->current.type == TokenIdentifier
                   && streq(parser->tokenizer->current.trace.source, str("self"))) {
             argument = create_self_literal(next(parser->tokenizer).trace,
-                                           (void*) declaration->identifier.parent_scope->declaration, parser, false);
+                                           (void*) declaration->identifier.parent_scope->declaration,
+                                           (void*) function_type->declaration, parser, false);
         }
 
         if(!argument.type) {
@@ -114,7 +129,7 @@ static void parse_function_arguments(FunctionType* function_type, FunctionDeclar
     expect(parser->tokenizer, ')');
 }
 
-Node* parse_function_declaration(Type* return_type, IdentifierInfo info, Parser* parser) {
+Node* parse_function_declaration(Type* return_type, IdentifierInfo info, Parser* parser, const bool no_body) {
     const Trace trace_start = stretch(return_type->trace, info.trace);
 
     FunctionType* function_type = (void*) new_type((Type) {
@@ -147,10 +162,21 @@ Node* parse_function_declaration(Type* return_type, IdentifierInfo info, Parser*
     }
 
     put(&info.declaration_scope->variables, info.identifier.base, (void*) declaration);
+    if(info.trait_scope) {
+        put(&info.trait_scope->variables, info.identifier.base, (void*) declaration);
+    }
 
     parse_function_arguments(function_type, declaration, parser, false);
 
-    if(!declaration->identifier.is_external) {
+    if(no_body) {
+        if(try(parser->tokenizer, '{', NULL)) {
+            declaration->body->children = collect_until(parser, &statement, 0, '}');
+        } else {
+            expect(parser->tokenizer, ';');
+        }
+    } else if(declaration->identifier.is_external) {
+        expect(parser->tokenizer, ';');
+    } else {
         expect(parser->tokenizer, '{');
         declaration->body->children = collect_until(parser, &statement, 0, '}');
     }
@@ -158,7 +184,6 @@ Node* parse_function_declaration(Type* return_type, IdentifierInfo info, Parser*
     close_generics_declaration((void*) declaration);
     pop(&parser->stack);
 
-    if(declaration->identifier.is_external) expect(parser->tokenizer, ';');
     return (void*) variable_of((void*) declaration, declaration->trace, fIgnoreStatement | fStatementTerminated);
 }
 
@@ -223,7 +248,7 @@ Node* parse_function_lambda(Type* return_type, Parser* parser) {
             }
 
             push(parser->tokenizer->messages, MERROR(operator.trace,
-                iftty(str("expected either "HERR"=>"H" or "HERR"{"H), str("expected either => or {"))));
+                     iftty(str("expected either "HERR"=>"H" or "HERR"{"H), str("expected either => or {"))));
     }
 
     pop(&parser->stack);

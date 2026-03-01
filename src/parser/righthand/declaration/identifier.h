@@ -13,6 +13,7 @@ typedef struct IdentifierInfo {
     Identifier identifier;
     Wrapper* value;
     Scope* declaration_scope;
+    Scope* trait_scope;
     Trace trace;
     GenericsCollection generics_collection;
 } IdentifierInfo;

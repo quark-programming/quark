@@ -22,7 +22,7 @@ Node* parse_declaration(Node* type, Token identifier, Parser* parser) {
     const IdentifierInfo info = new_identifier(identifier, parser, IdentifierDeclaration);
 
     if(try(parser->tokenizer, '(', 0)) {
-        return parse_function_declaration((void*) type, info, parser);
+        return parse_function_declaration((void*) type, info, parser, false);
     }
 
     return parse_variable_declaration((void*) type, info, parser);

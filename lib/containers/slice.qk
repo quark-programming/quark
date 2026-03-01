@@ -4,6 +4,10 @@ struct Slice<T> {
 	T* data;
 	usize size;
 
+	usize len(self) {
+	    return self.size;
+	}
+
 	T Operator::index(self, usize index) {
 	    return self.data[index];
 	}

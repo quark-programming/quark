@@ -1,1 +1,3 @@
-trait Operator {}
+trait Operator {
+    bool equals(self, typeof(self) other);
+}

@@ -4,7 +4,7 @@
 #include "../nodes/nodes.h"
 #include "../parser.h"
 
-Type* wrap_applied_generics(Type* type, Vec(Type*) generics, Declaration* declaration);
+Node* assign_action(Node* node, Action action, bool owned_variable);
 
 void apply_type_arguments(Wrapper* variable, Parser* parser);
 

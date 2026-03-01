@@ -6,6 +6,6 @@
 
 Node* parse_struct_literal(Type* wrapper_struct_type, Parser* parser);
 
-Node* parser_struct_declaration(Token keyword, Parser* parser, bool is_trait);
+Node* parse_struct_declaration(Token keyword, Parser* parser, bool is_trait);
 
 #endif

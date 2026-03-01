@@ -10,6 +10,7 @@
 #include "parser/literal/wrapper.h"
 #include "../literal/array.h"
 #include "declaration/variable.h"
+#include "parser/literal/number.h"
 
 Node* parse_field_access(Node* lefthand, Parser* parser) {
     const str operator_token = next(parser->tokenizer).trace.source;
@@ -37,6 +38,43 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
     const Token field_token = expect(parser->tokenizer, TokenIdentifier);
 
     if(struct_type->id != NodeStructType) {
+        if(opened.type->id == WrapperAuto && opened.type->Wrapper.Auto.required_traits) {
+            Vec(Declaration*) required_traits = opened.type->Wrapper.Auto.required_traits;
+
+            for(u32 i = 0; i < len(required_traits); i++) {
+                switch(required_traits[i]->id) {
+                    case NodeFunctionDeclaration:
+                        if(streq(required_traits[i]->identifier.base, field_token.trace.source)) {
+                            Node* const trait_access = new_node((Node) {
+                                .TraitAccess = {
+                                    .id = NodeTraitAccess,
+                                    .trace = stretch(lefthand->trace, field_token.trace),
+                                    .type = required_traits[i]->type,
+                                    .generic_type = make_type_standalone(opened.type, 2),
+                                    .trait_declaration = required_traits[i]->identifier.parent_scope->declaration,
+                                    .field_trace = field_token.trace,
+                                    .bound_self_argument = lefthand,
+                                },
+                            });
+
+                            close_type(opened.actions, 0, 2);
+                            return trait_access;
+                        }
+                        break;
+
+                    case NodeStructDeclaration: {
+                        Node* const child = (void*) find_in_scope(*required_traits[i]->type->StructType.module->scope,
+                                                                  field_token.trace);
+                        if(!child) break;
+                        child->Wrapper.Variable.bound_self_argument = lefthand;
+                        return child;
+                    }
+
+                    default: ;
+                }
+            }
+        }
+
         push(parser->tokenizer->messages, MERROR(lefthand->trace,
                  strf(0, iftty(HERR"%.*s"H" is not a structure", "%.*s is not a structure"),
                      fmtof(lefthand->trace.source))));

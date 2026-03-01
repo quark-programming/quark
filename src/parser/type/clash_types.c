@@ -3,10 +3,43 @@
 #include "stringify_type.h"
 #include "traverse_type.h"
 #include "tty.h"
+#include "parser/statement/scope.h"
 
 static int circular_acceptor(Type* const type, Type* follower, void* const compare) {
     (void) follower;
     return 2 * (type == compare);
+}
+
+static int test_required_traits(Wrapper* left, StructType* right) {
+    if(!left->Auto.required_traits || right->id == WrapperAuto) return 0;
+    if(right->id != NodeStructType) return 1;
+
+    for(u32 i = 0; i < len(left->Auto.required_traits); i++) {
+        switch(left->Auto.required_traits[i]->id) {
+            case NodeFunctionDeclaration: {
+                Scope* const trait_scope = get(right->traits, left->Auto.required_traits[i]
+                                               ->identifier.parent_scope->declaration->identifier.base);
+                if(!trait_scope) return 1;
+                if(trait_scope->declaration) break;
+
+                Declaration* const trait_function =
+                        find_in_scope_unwrapped(*trait_scope, left->Auto.required_traits[i]->identifier.base);
+                if(!trait_function) return 1;
+
+                break;
+            }
+
+            case NodeStructDeclaration: {
+                Scope* const trait_scope = get(right->traits, left->Auto.required_traits[i]->identifier.base);
+                if(!trait_scope || !trait_scope->declaration) return 1;
+                break;
+            }
+
+            default: return 1;
+        }
+    }
+
+    return 0;
 }
 
 static int assign_auto_ref(Type* type, Type* follower, const bool passive) {
@@ -21,6 +54,7 @@ static int assign_auto_ref(Type* type, Type* follower, const bool passive) {
     }
 
     if(follower->id != WrapperAuto && wrapper->flags & fNumeric && !(follower->flags & fNumeric)) return TestMismatch;
+    if(test_required_traits(wrapper, (void*) follower)) return TestMismatch;
     if(passive) return 1;
 
     wrapper->Auto.ref = make_type_standalone(follower, generics_offset);
@@ -31,6 +65,16 @@ static int assign_auto_ref(Type* type, Type* follower, const bool passive) {
             follower->flags |= fNumeric;
         }
         if(wrapper->Auto.test_against) follower->Wrapper.Auto.test_against = wrapper->Auto.test_against;
+        if(wrapper->Auto.required_traits) {
+            for(u32 i = 0, j; i < len(wrapper->Auto.required_traits); i++) {
+                for(j = 0; wrapper->Auto.required_traits[i] != follower->Wrapper.Auto.required_traits[j]
+                           && j < len(follower->Wrapper.Auto.required_traits); j++)
+                    ;
+                if(j == len(follower->Wrapper.Auto.required_traits)) {
+                    push(&follower->Wrapper.Auto.required_traits, wrapper->Auto.required_traits[i]);
+                }
+            }
+        }
     }
 
     return 1;

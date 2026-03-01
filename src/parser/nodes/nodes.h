@@ -32,6 +32,7 @@ typedef enum : u32 {
     NodeEntryFunctionDeclaration,
     NodeStructDeclaration,
     NodeDeclarationLink,
+    NodeTraitAccess,
 
     NodeScope,
     NodeModule,
@@ -129,6 +130,7 @@ union Node {
     VariableDeclaration VariableDeclaration;
     FunctionDeclaration FunctionDeclaration;
     StructDeclaration StructDeclaration;
+    TraitAccess TraitAccess;
 
     StatementWrapper StatementWrapper;
     ReturnStatement ReturnStatement;

@@ -10,12 +10,20 @@ void comp_VariableDeclaration(void* void_self, String* line, Compiler* compiler)
        || self->identifier.is_external || (self->const_value && self->const_value->flags & fType))
         return;
 
+    String identifier = NULL;
+    if(self->compilation_state != CompilationLocal && resolve_identifier(self->identifier, &identifier)) {
+        free(vbase(identifier));
+        return;
+    }
+
     String decl_line = self->static_value ? NULL : new_line(compiler);
     line = &decl_line;
 
     compile(self->type, line, compiler);
     strf(line, self->type->flags & fConst ? " const " : " ");
-    build_full_identifier(self->identifier, line);
+
+    if(identifier) strf(line, "%.*s", fmtof(identifier));
+    else build_full_identifier(self->identifier, line);
 
     if(self->static_value && self->static_value->id != NodeNone) {
         strf(line, " = ");

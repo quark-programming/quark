@@ -1,0 +1,13 @@
+trait Iterator<T> {
+    T? next(&self);
+
+    void foreach(&self, void (T) func) {
+        while((T? value = self->next()).is_some()) {
+            func(value.unwrap());
+        }
+    }
+}
+
+trait IntoIter<T, K : Iterator<T>> {
+    K iter(self);
+}

@@ -46,6 +46,7 @@ void compile(void* void_node, String* line, Compiler* compiler) {
         [NodeCast] = &comp_Cast,
         [NodeStructDeclaration] = &comp_StructDeclaration,
         [NodeDeclarationLink] = &ignore,
+        [NodeTraitAccess] = &comp_NodeTraitAccess,
     };
 
     Node* const node = void_node;

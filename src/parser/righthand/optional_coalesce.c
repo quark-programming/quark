@@ -9,6 +9,7 @@
 #include "../statement/statement.h"
 #include "../type/clash_types.h"
 #include "../type/types.h"
+#include "parser/literal/wrapper.h"
 
 Node* parse_optional_coalescing(Node* lefthand, Parser* parser) {
     static Declaration* optional_declaration = NULL;
@@ -21,17 +22,32 @@ Node* parse_optional_coalescing(Node* lefthand, Parser* parser) {
         }
     }
 
-    Type* const optional_type = new_type((Type) {
-        .Wrapper = {
-            .id = WrapperAuto,
-            .action = { ActionApplyGenerics, {}, optional_declaration },
-            .Auto.ref = (void*) optional_declaration->const_value,
-        },
-    });
+    Type* const optional_type = (void*) variable_of(optional_declaration, lefthand->trace, 0);
+    optional_type->Wrapper.action = (Action) {
+        ActionApplyGenerics, { 0 }, optional_type->Wrapper.Variable.declaration
+    };
+
+    // Type* const optional_type = new_type((Type) {
+    //     .Wrapper = {
+    //         .id = WrapperVariable,
+    //         .action = { ActionApplyGenerics, {}, optional_declaration },
+    //         .Variable.declaration = optional_declaration,
+    //     },
+    // });
 
     next(parser->tokenizer);
 
     if(lefthand->flags & fType) {
+        // Type* const type_argument = new_type((Type) {
+        //     .Wrapper = {
+        //         .id = WrapperAuto,
+        //         .Auto.test_against = optional_declaration->generics.base_type_arguments[0],
+        //     }
+        // });
+        //
+        // clash_types(type_argument, (void*) lefthand, lefthand->trace, parser->tokenizer->messages, 0);
+        //
+        // push(&optional_type->Wrapper.action.generics, type_argument);
         push(&optional_type->Wrapper.action.generics, (void*) lefthand);
         return (void*) optional_type;
     }

@@ -84,7 +84,7 @@ dirs:
 build: dirs
 ifeq ($(MODE_L),debug)
 	@echo ------ Debug build qc ------
-	$(CC) $(CFLAGS) $(MAIN_C) $(SRCS) $(LDFLAGS) -g -ggdb -DEBUG -o $(BUILD_DIR)/$(QC)
+	$(CC) $(CFLAGS) $(MAIN_C) $(SRCS) $(LDFLAGS) -g -ggdb -DEBUG -fsanitize=address -o $(BUILD_DIR)/$(QC)
 else
 	@echo ------ Release build qc ------
 	$(CC) $(CFLAGS) $(MAIN_C) $(SRCS) $(LDFLAGS) -O2 -o $(BUILD_DIR)/$(QC)
@@ -123,7 +123,7 @@ endif
 
 # ========= unit-tests =========
 build-test-c: dirs
-	$(CC) $(CFLAGS) $(UT_SRCS) $(SRCS) $(LDFLAGS) -g -ggdb -o $(UT_BUILD)/unit-tests$(EXE)
+	$(CC) $(CFLAGS) $(UT_SRCS) $(SRCS) $(LDFLAGS) -g -ggdb -fsanitize=address -o $(UT_BUILD)/unit-tests$(EXE)
 
 test-c: build-test-c
 	@echo ------ unit-tests ------

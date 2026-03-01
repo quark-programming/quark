@@ -55,5 +55,7 @@ void comp_StructType(void* void_self, String* line, Compiler* compiler) {
     compile(self->module->declaration, line, compiler);
 
     strf(line, "struct ");
-    resolve_identifier(self->module->declaration->identifier, line);
+    String identifier = NULL;
+    resolve_identifier(self->module->declaration->identifier, &identifier);
+    strf(line, "%.*s", fmtof(identifier));
 }

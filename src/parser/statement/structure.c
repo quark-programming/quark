@@ -132,7 +132,7 @@ Node* parse_struct_declaration(const Token keyword, Parser* parser, bool is_trai
         do {
             IdentifierInfo trait_info = new_identifier(expect(parser->tokenizer, TokenIdentifier), parser, 0);
             if(!trait_info.value || trait_info.value->Variable.declaration->id != NodeStructDeclaration
-               || !trait_info.value->type->StructType.is_trait) {
+               || !trait_info.value->Variable.declaration->type->StructType.is_trait) {
                 push(parser->tokenizer->messages, MERROR(trait_info.trace, str("expected a trait here")));
                 continue;
             }
@@ -142,12 +142,30 @@ Node* parse_struct_declaration(const Token keyword, Parser* parser, bool is_trai
 
             Vec(Declaration*) const trait_declarations =
                 trait_info.value->Variable.declaration->StructDeclaration.trait_declarations;
-            for(u32 i = 0; i < len(trait_declarations); i++) {
-                // Declaration* const declaration_mirror =
-                //         (void*) new_node((Node) { .Declaration = *trait_declarations[i] });
+            if(!len(trait_declarations)) continue;
 
-                put(&module->scope->variables, trait_declarations[i]->identifier.base, trait_declarations[i]);
+            Scope* const trait_scope = get(type->traits, trait_info.identifier.base);
+            const OpenedType open_trait = open_type((void*) trait_info.value, 0, 2);
+
+            Vec(Action) actions_clone = NULL;
+            resv(&actions_clone, len(global_actions[2]));
+            memcpy(actions_clone, global_actions[2], len(global_actions[2]) * sizeof(Action));
+            len(actions_clone) = len(global_actions[2]);
+
+            for(u32 i = 0; i < len(trait_declarations); i++) {
+                FunctionDeclaration* const declaration_mirror =
+                        (void*) new_node((Node) { .Declaration = *trait_declarations[i] });
+                declaration_mirror->actions = actions_clone;
+                declaration_mirror->identifier.trait = (void*) trait_info.value->Variable.declaration;
+                declaration_mirror->identifier.parent_scope = module->scope;
+
+                put(&trait_scope->variables, trait_declarations[i]->identifier.base, (void*) declaration_mirror);
+                if(declaration_mirror->body->children) {
+                    put(&module->scope->variables, trait_declarations[i]->identifier.base, (void*) declaration_mirror);
+                }
             }
+
+            close_type(open_trait.actions, 0, 2);
         } while(try(parser->tokenizer, ',', NULL));
     }
 
@@ -186,6 +204,12 @@ outer:
             Wrapper* variable = (void*) parse_function_declaration(declaration_type, declaration_info, parser,
                                                                    is_trait);
             if(is_trait && variable->Variable.declaration->FunctionDeclaration.body->children) {
+                // FunctionDeclaration* const function_declaration = (void*) variable->Variable.declaration;
+                //
+                // resv(&function_declaration->actions, len(global_actions[2]));
+                // memcpy(function_declaration->actions, global_actions[2], len(global_actions[2]) * sizeof(Action));
+                // len(function_declaration->actions) = len(global_actions[2]);
+                //
                 push(&declaration->trait_declarations, variable->Variable.declaration);
             }
 

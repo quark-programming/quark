@@ -57,7 +57,7 @@ Parser find_import(String relative_path, str identifier, Trace trace, Parser* pa
 }
 
 void import_wildcard(char* path, str identifier, Parser* parser, Vec(Node*)* collector) {
-    Parser imported_parser = find_import(path, identifier, (Trace) { 0 }, parser);
+    Parser imported_parser = find_import(strf(0, "%s", path).as_owned, identifier, (Trace) { 0 }, parser);
     if(!imported_parser.module) panicf("Unable to import '%s'\n", path);
 
     collect_into(&imported_parser, &statement, 0, 0, collector);

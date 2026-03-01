@@ -35,7 +35,6 @@ void comp_Variable(void* void_self, String* line, Compiler* compiler) {
         }
 
         strf(line, "%.*s", fmtof(identifier));
-        free(vbase(identifier));
     }
 
     if(applied_action) remove_action(self->action, 0, 0);

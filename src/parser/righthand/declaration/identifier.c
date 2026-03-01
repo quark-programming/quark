@@ -107,7 +107,7 @@ compound_start:
     info.value = find_in_scope(*module->scope, next_trace);
 
     if(info.value && wrapper_action.type) {
-        assign_action((void*) info.value, wrapper_action, true);
+        assign_action((void*) info.value, wrapper_action, false, true);
     }
 
     info.trace = stretch(info.trace, next_trace);

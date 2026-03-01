@@ -49,7 +49,7 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
                                 .TraitAccess = {
                                     .id = NodeTraitAccess,
                                     .trace = stretch(lefthand->trace, field_token.trace),
-                                    .type = required_traits[i]->type,
+                                    .type = make_type_standalone(required_traits[i]->type, 2),
                                     .generic_type = make_type_standalone(opened.type, 2),
                                     .trait_declaration = required_traits[i]->identifier.parent_scope->declaration,
                                     .field_trace = field_token.trace,
@@ -63,11 +63,25 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
                         break;
 
                     case NodeStructDeclaration: {
-                        Node* const child = (void*) find_in_scope(*required_traits[i]->type->StructType.module->scope,
-                                                                  field_token.trace);
+                        Declaration* const child =
+                                find_in_scope_unwrapped(*required_traits[i]->type->StructType.module->scope,
+                                                        field_token.trace.source);
                         if(!child) break;
-                        child->Wrapper.Variable.bound_self_argument = lefthand;
-                        return child;
+
+                        Node* const trait_access = new_node((Node) {
+                            .TraitAccess = {
+                                .id = NodeTraitAccess,
+                                .trace = stretch(lefthand->trace, field_token.trace),
+                                .type = make_type_standalone(child->type, 2),
+                                .generic_type = make_type_standalone(opened.type, 2),
+                                .trait_declaration = required_traits[i],
+                                .field_trace = field_token.trace,
+                                .bound_self_argument = lefthand,
+                            },
+                        });
+
+                        close_type(opened.actions, 0, 2);
+                        return trait_access;
                     }
 
                     default: ;
@@ -96,10 +110,9 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
         if(child) {
             lefthand->type = make_type_standalone(lefthand->type, 2);
             child->Variable.bound_self_argument = lefthand;
-            child->type = make_type_standalone(child->type, 2);
 
             if(len(global_actions[2])) {
-                child->action = child->type->Wrapper.action;
+                assign_action((void*) child, lefthand->type->Wrapper.action, true, true);
             }
 
             close_type(opened.actions, 0, 2);

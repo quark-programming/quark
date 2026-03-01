@@ -67,9 +67,8 @@ static int assign_auto_ref(Type* type, Type* follower, const bool passive) {
         if(wrapper->Auto.test_against) follower->Wrapper.Auto.test_against = wrapper->Auto.test_against;
         if(wrapper->Auto.required_traits) {
             for(u32 i = 0, j; i < len(wrapper->Auto.required_traits); i++) {
-                for(j = 0; wrapper->Auto.required_traits[i] != follower->Wrapper.Auto.required_traits[j]
-                           && j < len(follower->Wrapper.Auto.required_traits); j++)
-                    ;
+                for(j = 0; j < len(follower->Wrapper.Auto.required_traits)
+                           && wrapper->Auto.required_traits[i] != follower->Wrapper.Auto.required_traits[j]; j++);
                 if(j == len(follower->Wrapper.Auto.required_traits)) {
                     push(&follower->Wrapper.Auto.required_traits, wrapper->Auto.required_traits[i]);
                 }

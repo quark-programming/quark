@@ -4,7 +4,7 @@
 #include "../nodes/nodes.h"
 #include "../parser.h"
 
-Node* assign_action(Node* node, Action action, bool owned_variable);
+Node* assign_action(Node* node, Action action, bool important, bool owned_variable);
 
 void apply_type_arguments(Wrapper* variable, Parser* parser);
 

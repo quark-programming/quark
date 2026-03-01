@@ -8,7 +8,7 @@
 #include "../statement/scope.h"
 #include "parser/lefthand/lefthand.h"
 
-Node* assign_action(Node* node, const Action action, const bool owned_variable) {
+Node* assign_action(Node* node, Action action, const bool important, const bool owned_variable) {
     if(!owned_variable) {
         return (void*) new_type((Type) {
             .Wrapper = {
@@ -24,13 +24,13 @@ Node* assign_action(Node* node, const Action action, const bool owned_variable) 
     if(node->Wrapper.action.type) {
         node->Wrapper.action = (Action) {
             .type = ActionApplyCollection,
-            .collection = vec(node->Wrapper.action, action),
+            .collection = important ? vec(action, node->Wrapper.action) : vec(node->Wrapper.action, action),
         };
     } else {
         node->Wrapper.action = action;
     }
 
-    node->Wrapper.type = (void*) assign_action((void*) node->Wrapper.type, action, false);
+    node->Wrapper.type = (void*) assign_action((void*) node->Wrapper.type, action, important, false);
     return node;
 }
 
@@ -93,7 +93,7 @@ void apply_type_arguments(Wrapper* variable, Parser* parser) {
         }
     }
 
-    assign_action((void*) variable, (Action) { ActionApplyGenerics, input_generics, declaration }, true);
+    assign_action((void*) variable, (Action) { ActionApplyGenerics, input_generics, declaration }, false, true);
 }
 
 GenericsCollection collect_generics(Parser* const parser) {

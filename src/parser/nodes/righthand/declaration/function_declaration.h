@@ -13,6 +13,7 @@ typedef struct FunctionDeclaration {
     Vec(Argument) arguments;
     struct Scope* body;
     Vec(VariableDeclaration*) variable_declarations;
+    Vec(Action) actions;
 } FunctionDeclaration;
 
 #endif

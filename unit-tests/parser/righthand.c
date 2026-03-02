@@ -165,6 +165,21 @@ int test_righthand() {
         assert_eq(tokenizer.current.type, 0);
     }
 
+    test("generic constraints do not accumulate in global_actions") {
+        Tokenizer tokenizer = new_tokenizer(
+            "TEST RIGHTHAND",
+            "trait Runnable<T> {}"
+            "void consume<A: Runnable<auto>>(A a) { A x = a; A y = a; A z = a; }",
+            &messages);
+        parser.tokenizer = &tokenizer;
+
+        const size_t initial_action_count = len(global_actions[2]);
+        collect_until(&parser, &statement, 0, 0);
+
+        assert_eq(len(messages), 0);
+        assert_eq(len(global_actions[2]), initial_action_count);
+    }
+
     test("optionals & optional coalescing") {
         Tokenizer tokenizer = new_tokenizer("TEST RIGHTHAND",
                                             "struct Option<T> { extern bool some; T value; }"

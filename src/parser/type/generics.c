@@ -30,12 +30,33 @@ Node* assign_action(Node* node, Action action, const bool important, const bool 
         node->Wrapper.action = action;
     }
 
-    node->Wrapper.type = (void*) assign_action((void*) node->Wrapper.type, action, important, false);
+    if(!(node->flags & fType)) {
+        node->Wrapper.type = (void*) assign_action((void*) node->Wrapper.type, action, important, false);
+    }
     return node;
 }
 
+Vec(Action) extract_actions(Type* type, const bool close) {
+    const OpenedType opened = open_type(type, 0, 2);
+    if(!close) return opened.actions;
+
+    Vec(Action) actions_clone = NULL;
+    // resv(&actions_clone, len(global_actions[2]));
+    // memcpy(actions_clone, global_actions[2], len(global_actions[2]) * sizeof(Action));
+    // len(actions_clone) = len(global_actions[2]);
+
+    resv(&actions_clone, len(opened.actions));
+    memcpy(actions_clone, opened.actions, len(opened.actions) * sizeof(Action));
+    len(actions_clone) = len(opened.actions);
+
+    close_type(opened.actions, 0, 2);
+    return actions_clone;
+}
+
 void apply_type_arguments(Wrapper* variable, Parser* parser) {
-    while(variable->id != WrapperVariable) variable = (void*) variable->child;
+    // while(variable->id != WrapperVariable) variable = (void*) variable->child;
+    apply_action(variable->action, 0, 2);
+
     Declaration* const declaration = variable->Variable.declaration;
     if(!declaration->generics.base_type_arguments) return;
 
@@ -93,6 +114,7 @@ void apply_type_arguments(Wrapper* variable, Parser* parser) {
         }
     }
 
+    remove_action(variable->action, 0, 2);
     assign_action((void*) variable, (Action) { ActionApplyGenerics, input_generics, declaration }, false, true);
 }
 
@@ -118,48 +140,7 @@ GenericsCollection collect_generics(Parser* const parser) {
             },
         });
 
-#define exp_trait_error() \
-    push(parser->tokenizer->messages, MERROR(extension->trace, str("expected a trait or structure here")))
-
-        if(try(parser->tokenizer, ':', NULL)) {
-            do {
-                Wrapper* const extension = (void*) lefthand_expression(parser);
-                if(extension->id != WrapperVariable) {
-                    exp_trait_error();
-                    continue;
-                }
-
-                Declaration* const declaration = extension->Variable.declaration;
-                switch(declaration->id) {
-                    case NodeFunctionDeclaration: {
-                        StructDeclaration* const parent_trait =
-                                (void*) declaration->identifier.parent_scope->declaration;
-                        if(parent_trait->id != NodeStructDeclaration || !parent_trait->type->StructType.is_trait) {
-                            exp_trait_error();
-                            break;
-                        }
-
-                        push(&base_type->Wrapper.Auto.required_traits, declaration);
-                        break;
-                    }
-
-                    case NodeStructDeclaration:
-                        if(!declaration->type->StructType.is_trait) {
-                            exp_trait_error();
-                            break;
-                        }
-
-                        push(&base_type->Wrapper.Auto.required_traits, declaration);
-                        break;
-
-                    default: exp_trait_error();
-                }
-            } while(try(parser->tokenizer, '+', NULL));
-        }
-
-#undef exp_trait_error
-
-        Declaration* const type_declaration = (void*) new_node((Node) {
+        Declaration* type_declaration = (void*) new_node((Node) {
             .VariableDeclaration = {
                 .id = NodeVariableDeclaration,
                 .flags = fType | fConst,
@@ -167,6 +148,71 @@ GenericsCollection collect_generics(Parser* const parser) {
                 .const_value = (void*) base_type,
             },
         });
+
+#define exp_trait_error() \
+    push(parser->tokenizer->messages, MERROR(extension->trace, str("expected a trait or structure here")))
+
+        if(try(parser->tokenizer, ':', NULL)) {
+            type_declaration = (void*) new_node((Node) {
+                .Declaration.DeclarationLink = {
+                    .id = NodeDeclarationLink,
+                    .link = type_declaration,
+                },
+            });
+
+            do {
+                Wrapper* const extension = (void*) lefthand_expression(parser);
+                if(extension->id != WrapperVariable) {
+                    exp_trait_error();
+                    continue;
+                }
+
+                Declaration* declaration = extension->Variable.declaration;
+                switch(declaration->id) {
+                    case NodeFunctionDeclaration: {
+                        StructDeclaration* const parent_trait =
+                                (void*) declaration->identifier.parent_scope->declaration;
+                        if(parent_trait->id != NodeStructDeclaration || !parent_trait->type->StructType.is_trait) {
+                            exp_trait_error();
+                            declaration = NULL;
+                            break;
+                        }
+
+                        break;
+                    }
+
+                    case NodeStructDeclaration:
+                        if(!declaration->type->StructType.is_trait) {
+                            exp_trait_error();
+                            declaration = NULL;
+                            break;
+                        }
+
+                        break;
+
+                    default:
+                        exp_trait_error();
+                        declaration = NULL;
+                }
+
+                if(!declaration) continue;
+
+                push(&type_declaration->DeclarationLink.actions,
+                     { ActionApplyCollection, .collection = extract_actions((void*) extension, true) });
+                // assign_action((void*) base_type, (Action) {
+                //                   ActionApplyCollection,
+                //                   .collection = extract_actions((void*) extension, true)
+                //               }, false, true);
+                push(&base_type->Wrapper.Auto.required_traits, declaration);
+
+                // Declaration* const declaration_mirror = (void*) new_node((Node) { .Declaration = *declaration });
+                // declaration_mirror->actions = extract_actions((void*) extension, true);
+                //
+                // push(&base_type->Wrapper.Auto.required_traits, declaration_mirror);
+            } while(try(parser->tokenizer, '+', NULL));
+        }
+
+#undef exp_trait_error
 
         put(&collection.generic_declarations_scope->variables, identifier.trace.source, type_declaration);
         push(&collection.base_type_arguments, base_type);

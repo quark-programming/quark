@@ -1,3 +1,5 @@
+import containers::option::{ Option };
+
 trait Iterator<T> {
     T? next(&self);
 
@@ -5,6 +7,20 @@ trait Iterator<T> {
         while((T? value = self->next()).is_some()) {
             func(value.unwrap());
         }
+    }
+
+    struct Mapped<IterA : Iterator<T>, K> : Iterator<K> {
+        IterA iter_a;
+        K (T) func;
+
+        K? Iterator::next(&self) {
+            if((T? next = self->iter_a.next()).is_none()) return Option::None();
+            return Option::Some(self->func(next.unwrap()));
+        }
+    }
+
+    Mapped<I, K> map<I : Iterator<T>, K>(self, K value) {
+        return Mapped { self };
     }
 }
 

@@ -1,7 +1,7 @@
 #include "scope.h"
 #include "../literal/wrapper.h"
 
-Vec(Missing*) global_missing_identifiers = NULL;
+Vec(Wrapper*) global_missing_identifiers = NULL;
 
 Scope* new_scope(Declaration* const parent) {
     Scope* const scope = (void*) new_node((Node) {

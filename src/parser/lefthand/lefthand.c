@@ -48,10 +48,11 @@ Node* lefthand_expression(Parser* parser) {
             const IdentifierInfo info = new_identifier(token, parser, 0);
 
             if(!info.value) {
-                Missing* const missing = (void*) new_type((Type) {
-                    .Missing = {
-                        .id = NodeMissing,
+                Wrapper* const missing = (void*) new_type((Type) {
+                    .Wrapper = {
+                        .id = WrapperAuto,
                         .trace = info.trace,
+                        .Auto.missing = true,
                     }
                 });
                 push(&global_missing_identifiers, missing);

@@ -7,6 +7,7 @@ enum {
     ActionNone,
     ActionApplyGenerics,
     ActionApplyCollection,
+    ActionAnchorTrait,
 };
 
 typedef struct Action {
@@ -15,6 +16,7 @@ typedef struct Action {
     union {
         Vec(Type*) generics;
         Vec(struct Action) collection;
+        struct StructType* trait_struct;
     };
 
     Declaration* target;
@@ -42,6 +44,7 @@ typedef struct Wrapper {
             Vec(Declaration*) required_traits;
             i32 priority;
             bool constant;
+            bool missing;
         } Auto;
 
         struct {

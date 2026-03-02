@@ -5,6 +5,7 @@
 
 enum {
     StringifyAlphaNumeric = 1 << 0,
+    StringifyShorthand = 1 << 1,
 };
 
 typedef struct {

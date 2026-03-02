@@ -48,10 +48,7 @@ int traverse_type(Type* type, Type* follower, int (*acceptor)(Type*, Type*, void
                                     flags & (ActionKeepGlobalState | ActionNoChildCompilation), generics_offset);
     const OpenedType open_follower = open_type(follower, flags & (ActionKeepGlobalState | ActionNoChildCompilation), 1);
 
-    int result = 0, result_offset = 0;
-    if(!(flags & TraverseIntermediate)) {
-        result_offset = !!((result = acceptor(open_type.type, open_follower.type, accumulator)));
-    }
+    int result = 0, result_offset = !!((result = acceptor(open_type.type, open_follower.type, accumulator)));
 
     if(result) {
     } else if(follower && open_type.type->id != open_follower.type->id) {

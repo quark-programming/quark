@@ -4,7 +4,7 @@
 #include "../nodes/nodes.h"
 #include "../parser.h"
 
-extern Vec(Missing*) global_missing_identifiers;
+extern Vec(Wrapper*) global_missing_identifiers;
 
 Scope* new_scope(Declaration* parent);
 

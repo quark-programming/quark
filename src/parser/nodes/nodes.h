@@ -19,10 +19,11 @@ typedef enum : u32 {
     NodeStructType,
 
     NodeCast,
+    NodeReference,
 
     NodeNumericLiteral,
     NodeStructLiteral,
-    NodeMissing,
+    // NodeMissing,
     NodeExternal,
 
     NodeBinaryOperation,
@@ -69,6 +70,7 @@ enum {
 #include "type/struct_type.h"
 
 #include "lefthand/cast.h"
+#include "lefthand/reference.h"
 
 #include "literal/wrapper.h"
 #include "literal/numeric_literal.h"
@@ -118,8 +120,10 @@ union Node {
     GenericReference GenericReference;
     StructType StructType;
 
-    Wrapper Wrapper;
     Cast Cast;
+    Reference Reference;
+
+    Wrapper Wrapper;
     NumericLiteral NumericLiteral;
     StructLiteral StructLiteral;
     Missing Missing;

@@ -6,6 +6,8 @@
 
 Node* assign_action(Node* node, Action action, bool important, bool owned_variable);
 
+Vec(Action) extract_actions(Type* type, bool close);
+
 void apply_type_arguments(Wrapper* variable, Parser* parser);
 
 typedef struct GenericsCollection {

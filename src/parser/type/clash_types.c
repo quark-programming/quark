@@ -55,7 +55,7 @@ static int assign_auto_ref(Type* type, Type* follower, const bool passive) {
 
     if(follower->id != WrapperAuto && wrapper->flags & fNumeric && !(follower->flags & fNumeric)) return TestMismatch;
     if(test_required_traits(wrapper, (void*) follower)) return TestMismatch;
-    if(passive) return 1;
+    if(passive || wrapper->Auto.constant) return 1;
 
     wrapper->Auto.ref = make_type_standalone(follower, generics_offset);
 

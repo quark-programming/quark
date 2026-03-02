@@ -30,20 +30,20 @@ bool apply_action(const Action action, const unsigned flags, const u8 generics_o
                 push(&global_actions[generics_offset], action);
             }
 
-            static bool recursion_stop = false;
-            if(global_in_compiler_step && !recursion_stop && !(flags & ActionNoChildCompilation)) {
-                recursion_stop = true;
-
-                String unique_key = NULL;
-                stringify_generics(&unique_key, action.generics, StringifyAlphaNumeric, generics_offset);
-
-                recursion_stop = false;
-
-                if(!get(action.target->generics.unique_combinations, as_str(unique_key))) {
-                    put(&action.target->generics.unique_combinations, as_str(unique_key));
-                    compile(action.target, NULL, global_compiler_context);
-                }
-            }
+            // static bool recursion_stop = false;
+            // if(global_in_compiler_step && !recursion_stop && !(flags & ActionNoChildCompilation)) {
+            //     recursion_stop = true;
+            //
+            //     String unique_key = NULL;
+            //     stringify_generics(&unique_key, action.generics, StringifyAlphaNumeric, generics_offset);
+            //
+            //     recursion_stop = false;
+            //
+            //     if(!get(action.target->generics.unique_combinations, as_str(unique_key))) {
+            //         put(&action.target->generics.unique_combinations, as_str(unique_key));
+            //         compile(action.target, NULL, global_compiler_context);
+            //     }
+            // }
 
             break;
         }
@@ -52,6 +52,19 @@ bool apply_action(const Action action, const unsigned flags, const u8 generics_o
             for(size_t i = 0; i < len(action.collection); i++) {
                 apply_action(action.collection[i], flags, generics_offset);
             }
+            break;
+
+        case ActionAnchorTrait:
+            if(!global_in_compiler_step || len(action.target->type->FunctionType.signature) < 2) break;
+            Type* self_type = action.target->type->FunctionType.signature[1];
+
+            if(self_type->id == WrapperAuto && self_type->Wrapper.Auto.constant) {
+                self_type->Wrapper.Auto.ref = (void*) action.trait_struct;
+            } else if(self_type->id == NodePointerType && self_type->PointerType.base->id == WrapperAuto
+                      && self_type->PointerType.base->Wrapper.Auto.constant) {
+                self_type->PointerType.base->Wrapper.Auto.ref = (void*) action.trait_struct;
+            }
+
             break;
 
         default: unreachable();
@@ -79,6 +92,8 @@ void remove_action(const Action action, const unsigned flags, const u8 generics_
             }
             break;
 
+        case ActionAnchorTrait: break;
+
         default: unreachable();
     }
 }
@@ -91,6 +106,8 @@ static bool is_stack_reference(Type* const type_argument, Declaration* const dec
 }
 
 Type* peek_type(Type* type, Action* action, const unsigned flags, u8 generics_offset) {
+    if(!type) return type;
+
     if(type->id == WrapperAuto || type->id == WrapperVariable || type->id == WrapperSurround) {
         if(apply_action(type->Wrapper.action, flags, generics_offset)) {
             *action = type->Wrapper.action;

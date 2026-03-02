@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
     }
 
     for(u32 i = 0; i < len(global_missing_identifiers); i++) {
-        if(global_missing_identifiers[i]->id == NodeMissing) {
+        if(global_missing_identifiers[i]->Auto.missing) {
             print_message(MERROR(global_missing_identifiers[i]->trace, strf(0,
                                      iftty("cannot find "HERR"%.*s"H" in scope", "cannot find %.*s in scope"),
                                      fmtof(global_missing_identifiers[i]->trace.source))));

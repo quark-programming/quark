@@ -14,12 +14,13 @@ Node* reference(Node* node, const Trace trace) {
     }
 
     return new_node((Node) {
-        .Wrapper = {
-            .id = WrapperSurround,
+        .Reference = {
+            .id = NodeReference,
             .trace = trace,
             .type = (void*) reference((void*) node->type, trace),
-            .Surround = { node, str("(&"), str(")") },
-        }
+            .dereferenced_type = node->type,
+            .value = node,
+        },
     });
 }
 

@@ -34,5 +34,6 @@ Declaration* create_declaration_link(Declaration* link, Scope* parent_scope, con
     declaration->link = link;
     declaration->identifier.parent_scope = parent_scope;
     declaration->flags |= flags;
+    declaration->actions = NULL;
     return (void*) declaration;
 }

@@ -50,3 +50,20 @@ void comp_Cast(void* void_self, String* line, Compiler* compiler) {
     strf(line, ") ");
     compile(self->value, line, compiler);
 }
+
+void comp_Reference(void* void_self, String* line, Compiler* compiler) {
+    Reference* const self = void_self;
+
+    if(!(self->value->flags & fMutable)) {
+        strf(line, "((");
+        compile(self->dereferenced_type, line, compiler);
+        strf(line, "[]) { ");
+        compile(self->value, line, compiler);
+        strf(line, " })");
+        return;
+    }
+
+    strf(line, "(&");
+    compile(self->value, line, compiler);
+    strf(line, ")");
+}

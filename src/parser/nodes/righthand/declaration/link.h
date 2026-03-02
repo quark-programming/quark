@@ -6,6 +6,7 @@
 typedef struct DeclarationLink {
     DECLARATION_FIELDS;
     Declaration* link;
+    Vec(struct Action) actions;
 } DeclarationLink;
 
 #endif

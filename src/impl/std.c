@@ -2,10 +2,11 @@
 
 Scope global_std_scope = { 0 };
 
-static Declaration* build_type(const str name, const u32 flags) {
+static Declaration* build_type(const str name, const str display, const u32 flags) {
     Type* type = new_type((Type) {
         .External = {
             .id = NodeExternal,
+            .trace.source = display,
             .flags = fConst | fConstExpr | fType | flags,
             .data = name,
         },
@@ -22,7 +23,7 @@ static Declaration* build_type(const str name, const u32 flags) {
 }
 
 static void put_std_type(const str identifier, const str name, const u32 flags) {
-    put(&global_std_scope.variables, identifier, build_type(name, flags));
+    put(&global_std_scope.variables, identifier, build_type(name, identifier, flags));
 }
 
 static Declaration* build_const(const str name, const u32 flags, Type* const type) {

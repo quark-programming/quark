@@ -115,6 +115,8 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
                 assign_action((void*) child, lefthand->type->Wrapper.action, true, true);
             }
 
+            apply_type_arguments(child, parser);
+
             close_type(opened.actions, 0, 2);
             return (void*) child;
         }

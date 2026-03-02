@@ -3,8 +3,10 @@ import operator::{ Operator };
 import allocator::{ Allocator };
 import io::{ panic };
 import c::string::{ memcpy };
+import iterator::{ Iterator, IntoIter };
+import containers::option::{ Option };
 
-struct Vec<T> {
+struct Vec<T> : IntoIter<T> {
 	T* data;
 	usize size;
 	usize capacity;
@@ -15,11 +17,11 @@ struct Vec<T> {
 
 	Vec<T> from([T] slice) {
 		Vec<T> vec = Vec {
-			data: Allocator::alloc(sizeof(T) * slice.size),
+			data: Allocator::alloc_array(slice.size),
 			size: slice.size,
 			capacity: slice.size,
 		};
-		memcpy(vec.data, slice.data, slice.size);
+		memcpy(vec.data, slice.data, sizeof(T) * slice.size);
 
 		return vec;
 	}
@@ -68,5 +70,19 @@ struct Vec<T> {
 
 	T Operator::index(self, usize index) {
 	    return self.data[index];
+	}
+
+	struct Iter : Iterator<T> {
+        Vec<T> vector;
+        usize index;
+
+        T? Iterator::next(&self) {
+            if(self->index >= self->vector.len()) return Option::None();
+            return Option::Some(self->vector[self->index++]);
+        }
+	}
+
+	Iter IntoIter<T, Iter>::iter(self) {
+        return Iter { self, 0 };
 	}
 }

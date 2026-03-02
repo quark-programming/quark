@@ -40,7 +40,7 @@ void comp_StructDeclaration(void* void_self, String* line, Compiler* compiler) {
     if(!struct_type->traits) return;
     // TODO: create wrap::Map entry iterator or just iterator functions in general
     for(u32 i = 0; i < WRAPMAPSIZE; i++) {
-        unsigned char* const entry_list = (void*)(*struct_type->traits)[i];
+        unsigned char* const entry_list = (void*) (*struct_type->traits)[i];
         for(u32 j = 0; j < len((*struct_type->traits)[i]); j++) {
             compile(entry_list + j * (sizeof(str) + sizeof(Scope*)) + sizeof(str), line, compiler);
         }
@@ -55,7 +55,15 @@ void comp_NodeTraitAccess(void* void_self, String* line, Compiler* compiler) {
     StructType* const struct_type = (void*) opened.type;
 
     Scope* const trait_scope = get(struct_type->traits, self->trait_declaration->identifier.base);
-    compile(find_in_scope(*trait_scope, self->field_trace), line, compiler);
+    Wrapper* const resolved = find_in_scope(*trait_scope, self->field_trace);
+    //
+    // if(resolved->Variable.declaration->id == NodeFunctionDeclaration
+    //    && len(resolved->Variable.declaration->type->FunctionType.signature) >= 2
+    //    && resolved->Variable.declaration->type->FunctionType.signature[1]->id == WrapperAuto
+    //    && resolved->Variable.declaration->type->FunctionType.signature[1]->Wrapper.Auto.constant) {
+    //     resolved->Variable.declaration->type->FunctionType.signature[1]->Wrapper.Auto.ref = (void*) struct_type;
+    // }
 
+    compile(resolved, line, compiler);
     close_type(opened.actions, 0, 0);
 }

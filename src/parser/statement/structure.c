@@ -145,27 +145,25 @@ Node* parse_struct_declaration(const Token keyword, Parser* parser, bool is_trai
             if(!len(trait_declarations)) continue;
 
             Scope* const trait_scope = get(type->traits, trait_info.identifier.base);
-            const OpenedType open_trait = open_type((void*) trait_info.value, 0, 2);
-
-            Vec(Action) actions_clone = NULL;
-            resv(&actions_clone, len(global_actions[2]));
-            memcpy(actions_clone, global_actions[2], len(global_actions[2]) * sizeof(Action));
-            len(actions_clone) = len(global_actions[2]);
 
             for(u32 i = 0; i < len(trait_declarations); i++) {
-                FunctionDeclaration* const declaration_mirror =
-                        (void*) new_node((Node) { .Declaration = *trait_declarations[i] });
-                declaration_mirror->actions = actions_clone;
-                declaration_mirror->identifier.trait = (void*) trait_info.value->Variable.declaration;
-                declaration_mirror->identifier.parent_scope = module->scope;
+                DeclarationLink* const link = (void*) new_node((Node) {
+                    .Declaration.DeclarationLink = {
+                        .id = NodeDeclarationLink,
+                        .link = trait_declarations[i],
+                        .actions = extract_actions((void*) trait_info.value, true),
+                    },
+                });
 
-                put(&trait_scope->variables, trait_declarations[i]->identifier.base, (void*) declaration_mirror);
-                if(declaration_mirror->body->children) {
-                    put(&module->scope->variables, trait_declarations[i]->identifier.base, (void*) declaration_mirror);
+                push(&link->actions, { ActionAnchorTrait, .trait_struct = type, .target = trait_declarations[i] });
+                // link->identifier.trait = (void*) trait_info.value->Variable.declaration;
+                // link->identifier.parent_scope = module->scope;
+
+                put(&trait_scope->variables, trait_declarations[i]->identifier.base, (void*) link);
+                if(trait_declarations[i]->FunctionDeclaration.body->children) {
+                    put(&module->scope->variables, trait_declarations[i]->identifier.base, (void*) link);
                 }
             }
-
-            close_type(open_trait.actions, 0, 2);
         } while(try(parser->tokenizer, ',', NULL));
     }
 

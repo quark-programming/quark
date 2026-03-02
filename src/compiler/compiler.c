@@ -28,7 +28,7 @@ void compile(void* void_node, String* line, Compiler* compiler) {
         [WrapperVariable] = &comp_Variable,
         [WrapperSurround] = &comp_Surround,
         [NodeScope] = &comp_Scope,
-        [NodeMissing] = &ignore,
+        // [NodeMissing] = &ignore,
         [NodeExternal] = &comp_External,
         [NodeGenericReference] = &comp_GenericReference,
         [NodeVariableDeclaration] = &comp_VariableDeclaration,
@@ -47,6 +47,7 @@ void compile(void* void_node, String* line, Compiler* compiler) {
         [NodeStructDeclaration] = &comp_StructDeclaration,
         [NodeDeclarationLink] = &ignore,
         [NodeTraitAccess] = &comp_NodeTraitAccess,
+        [NodeReference] = &comp_Reference,
     };
 
     Node* const node = void_node;

@@ -13,4 +13,6 @@ void comp_StructLiteral(void* void_self, String* line, Compiler* compiler);
 
 void comp_Cast(void* void_self, String* line, Compiler* compiler);
 
+void comp_Reference(void* void_self, String* line, Compiler* compiler);
+
 #endif

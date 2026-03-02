@@ -16,6 +16,7 @@ typedef struct IdentifierInfo {
     Scope* trait_scope;
     Trace trace;
     GenericsCollection generics_collection;
+    Vec(struct Action) declaration_actions;
 } IdentifierInfo;
 
 IdentifierInfo new_identifier(Token base_identifier, Parser* parser, unsigned flags);

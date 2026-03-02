@@ -11,10 +11,12 @@ void stringify_generics(String* string, Vec(Type*) const generics, const unsigne
     }
 
     for(size_t i = 0; i < len(generics); i++) {
-        if(flags & StringifyAlphaNumeric) {
-            strf(string, "__");
-        } else if(i) {
-            strf(string, ", ");
+        if(!(flags & StringifyShorthand)) {
+            if(flags & StringifyAlphaNumeric) {
+                strf(string, "__");
+            } else if(i) {
+                strf(string, ", ");
+            }
         }
 
         stringify_type(generics[i], string, flags, generics_offset);
@@ -25,7 +27,7 @@ void stringify_generics(String* string, Vec(Type*) const generics, const unsigne
     }
 }
 
-static void stringify_required_traits(Vec(Declaration*) required_traits, String* string) {
+static void stringify_required_traits(Vec(Declaration*) required_traits, String* string, const unsigned flags) {
     for(u32 i = 0; i < len(required_traits); i++) {
         strf(string, " + ");
 
@@ -37,7 +39,8 @@ static void stringify_required_traits(Vec(Declaration*) required_traits, String*
                 break;
 
             case NodeStructDeclaration:
-                strf(string, "%.*s", fmtof(required_traits[i]->identifier.base));
+                // strf(string, "%.*s", fmtof(required_traits[i]->identifier.base));
+                stringify_type(required_traits[i]->type, string, flags, 0);
                 break;
 
             default: ;
@@ -51,36 +54,57 @@ static int stringify_acceptor(Type* type, Type* follower, void* void_accumulator
 
     switch(type->id) {
         case WrapperAuto:
+            if(type->Wrapper.Auto.missing) {
+                strf(accumulator->string, "(%.*s)", fmtof(type->trace.source));
+                break;
+            }
+
             if(type->Wrapper.Auto.test_against && !(accumulator->flags & StringifyAlphaNumeric)) {
                 stringify_type(type->Wrapper.Auto.test_against, accumulator->string, accumulator->flags,
                                accumulator->generics_offset);
 
-                stringify_required_traits(type->Wrapper.Auto.required_traits, accumulator->string);
+                stringify_required_traits(type->Wrapper.Auto.required_traits, accumulator->string, accumulator->flags);
                 return 0;
             }
 
             if(type->Wrapper.Auto.priority < 0 && !(accumulator->flags & StringifyAlphaNumeric)) {
-                strf(accumulator->string, "%.*s", fmtof(type->trace.source));
+                if(accumulator->flags & StringifyShorthand)
+                    strf(accumulator->string, "%c", type->trace.source.data[0]);
+                else
+                    strf(accumulator->string, "%.*s", fmtof(type->trace.source));
             } else {
-                strf(accumulator->string, type->flags & fNumeric ? "int" : "auto");
+                if(accumulator->flags & StringifyShorthand)
+                    strf(accumulator->string, type->flags & fNumeric ? "i" : "a");
+                else
+                    strf(accumulator->string, type->flags & fNumeric ? "int" : "auto");
             }
 
             if(type->Wrapper.Auto.required_traits && !(accumulator->flags & StringifyAlphaNumeric)) {
-                stringify_required_traits(type->Wrapper.Auto.required_traits, accumulator->string);
+                stringify_required_traits(type->Wrapper.Auto.required_traits, accumulator->string, accumulator->flags);
             }
 
             return 0;
 
         case NodeExternal:
-            strf(accumulator->string, "%.*s", fmtof(type->External.data));
+            if(accumulator->flags & StringifyShorthand)
+                strf(accumulator->string, "%c",
+                 type->External.shorthand ? type->External.shorthand : type->External.trace.source.data[0]);
+            else
+                strf(accumulator->string, "%.*s", fmtof(type->External.trace.source));
             return 0;
 
         case NodePointerType:
-            strf(accumulator->string, accumulator->flags & StringifyAlphaNumeric ? "ptrto_" : "&");
+            if(accumulator->flags & StringifyShorthand)
+                strf(accumulator->string, "p");
+            else
+                strf(accumulator->string, accumulator->flags & StringifyAlphaNumeric ? "ptrto_" : "&");
             return 0;
 
         case NodeStructType:
-            strf(accumulator->string, accumulator->flags & StringifyAlphaNumeric ? "struct_%.*s" : "%.*s",
+            if(accumulator->flags & StringifyShorthand)
+                strf(accumulator->string, "%c", type->StructType.module->declaration->identifier.base.data[0]);
+            else
+                strf(accumulator->string, accumulator->flags & StringifyAlphaNumeric ? "struct_%.*s" : "%.*s",
                  fmtof(type->StructType.module->declaration->identifier.base));
 
             if(type->StructType.module->declaration->generics.base_type_arguments) {
@@ -95,7 +119,10 @@ static int stringify_acceptor(Type* type, Type* follower, void* void_accumulator
             return 1;
 
         default:
-            strf(accumulator->string, accumulator->flags & StringifyAlphaNumeric ? "UNKNOWN" : "~unknown");
+            if(accumulator->flags & StringifyShorthand)
+                strf(accumulator->string, "U");
+            else
+                strf(accumulator->string, accumulator->flags & StringifyAlphaNumeric ? "UNKNOWN" : "~unknown");
             return 0;
     }
 }

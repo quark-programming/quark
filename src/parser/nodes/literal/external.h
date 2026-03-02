@@ -6,6 +6,7 @@
 typedef struct External {
     NODE_FIELDS;
     str data;
+    char shorthand;
 } External;
 
 #endif

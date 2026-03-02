@@ -25,7 +25,8 @@ IdentifierInfo new_identifier(Token base_identifier, Parser* parser, const unsig
     Scope* outer_scope = info.declaration_scope;
 
 compound_start:
-    if(flags & IdentifierDeclaration) {
+    if(flags & IdentifierDeclaration
+       && !(info.value && info.value->Variable.declaration->id == NodeStructDeclaration)) {
         info.generics_collection = collect_generics(parser);
     } else if(info.value) {
         apply_type_arguments(info.value, parser);
@@ -55,6 +56,7 @@ compound_start:
             trait_fields->declaration = outer_scope->declaration;
         }
 
+        info.declaration_actions = extract_actions((void*) info.value, true);
         info.trait_scope = trait_fields;
         info.declaration_scope = outer_scope;
         return info;

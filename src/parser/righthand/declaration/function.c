@@ -11,18 +11,25 @@
 #include "../../literal/wrapper.h"
 #include "parser/lefthand/lefthand.h"
 #include "parser/lefthand/reference.h"
+#include "parser/type/clash_types.h"
 #include "parser/type/traverse_type.h"
 
-static int recycle_missing_generics(Type* missing, Type* ignore, void* void_scope) {
-    (void) ignore;
-    Scope* const scope = void_scope;
+typedef struct RecycleAccumulator {
+    Vec(Message)* messages;
+    Scope* scope;
+} RecycleAccumulator;
 
-    if(missing->id != NodeMissing) return 0;
-    Wrapper* possible_found = find_in_scope(*scope, missing->trace);
+static int recycle_missing_generics(Type* missing, Type* ignore, void* void_accumulator) {
+    (void) ignore;
+    RecycleAccumulator* const accumulator = void_accumulator;
+
+    if(missing->id != WrapperAuto || !missing->Wrapper.Auto.missing) return 0;
+    Wrapper* possible_found = find_in_scope(*accumulator->scope, missing->trace);
 
     if(possible_found && possible_found->flags & fType) {
-        *missing = *(Type*) (void*) possible_found;
-        unbox((void*) possible_found);
+        // missing->Wrapper = *possible_found;
+        clash_types(missing, (void*) possible_found, missing->trace, accumulator->messages, 0);
+        missing->Wrapper.Auto.missing = false;
         return 1;
     }
 
@@ -156,14 +163,30 @@ Node* parse_function_declaration(Type* return_type, IdentifierInfo info, Parser*
 
     assign_generics_to_declaration((void*) declaration, info.generics_collection);
     push(&parser->stack, declaration->body);
+
+    bool breakpoint = streq(info.identifier.base, str("alloc"));
+
     if(info.generics_collection.generic_declarations_scope) {
-        traverse_type(return_type, NULL, &recycle_missing_generics, info.generics_collection.generic_declarations_scope,
-                      TraverseGenerics, 0);
+        RecycleAccumulator accumulator = {
+            parser->tokenizer->messages, info.generics_collection.generic_declarations_scope
+        };
+        traverse_type(return_type, NULL, &recycle_missing_generics, &accumulator,
+                      TraverseGenerics | TraverseIntermediate, 0);
     }
 
-    put(&info.declaration_scope->variables, info.identifier.base, (void*) declaration);
+    Declaration* scoped_declaration = info.declaration_actions
+                                          ? (void*) new_node((Node) {
+                                              .Declaration.DeclarationLink = {
+                                                  .id = NodeDeclarationLink,
+                                                  .link = (void*) declaration,
+                                                  .actions = info.declaration_actions,
+                                              },
+                                          })
+                                          : (void*) declaration;
+
+    put(&info.declaration_scope->variables, info.identifier.base, scoped_declaration);
     if(info.trait_scope) {
-        put(&info.trait_scope->variables, info.identifier.base, (void*) declaration);
+        put(&info.trait_scope->variables, info.identifier.base, scoped_declaration);
     }
 
     parse_function_arguments(function_type, declaration, parser, false);

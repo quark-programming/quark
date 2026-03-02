@@ -58,7 +58,10 @@ void apply_type_arguments(Wrapper* variable, Parser* parser) {
     apply_action(variable->action, 0, 2);
 
     Declaration* const declaration = variable->Variable.declaration;
-    if(!declaration->generics.base_type_arguments) return;
+    if(!declaration->generics.base_type_arguments) {
+        remove_action(variable->action, 0, 2);
+        return;
+    }
 
     Vec(Type*) const base_generics = declaration->generics.base_type_arguments;
     Vec(Type*) input_generics = NULL;

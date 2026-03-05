@@ -22,6 +22,7 @@ typedef struct Message {
 } Message;
 
 extern const char* global_message_labels[];
+extern bool global_stdout_only;
 
 Trace stretch(Trace a, Trace b);
 

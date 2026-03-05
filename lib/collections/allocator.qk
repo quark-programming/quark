@@ -2,13 +2,14 @@ import containers::slice::{ str };
 import io::{ _write_panic_head, panic };
 import c::stdlib;
 import c::string;
+import c::stdio;
 
 struct Allocator {
     void _panic_err(str message) {
-        void extern fprintf(File* file, char* fmt, char* a);
+        void extern fprintf(stdio::FILE* file, char* fmt, char* a);
 
         _write_panic_head();
-        fprintf(extern<File*> stderr, message.data(), string::strerror(extern<Int> errno));
+        fprintf(extern<stdio::FILE*> stderr, message.data(), string::strerror(extern<Int> errno));
         stdlib::exit(extern<Int> EXIT_FAILURE);
     }
 

@@ -1,3 +1,8 @@
 char* extern strerror(Int errno);
+usize extern strlen(char* s);
+
 T* extern memcpy<T>(T* dest, T* src, usize size);
 T* extern memset<T>(T* ptr, Int value, usize num);
+
+Long extern strtol(char* nptr, char** endptr, Int base);
+LongLong extern strtoll(char* nptr, char** endptr, Int base);

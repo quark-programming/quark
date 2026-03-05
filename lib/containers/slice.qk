@@ -1,4 +1,5 @@
 import operator::{ Operator };
+import c::string::{ strtoll };
 
 struct Slice<T> {
 	T* data;
@@ -22,6 +23,10 @@ struct str {
 
 	char* data(self) {
 		return self.slice.data;
+	}
+
+	LongLong parse_int(self) {
+	    return strtoll(self.data(), null, 0);
 	}
 
 	char Operator::index(self, usize index) {

@@ -34,6 +34,7 @@ Node* parse_struct_literal(Type* const wrapped_struct_type, Parser* parser) {
             .type = (void*) wrapped_struct_type,
         }
     });
+    bool breakpoint = streq(struct_type->module->declaration->identifier.base, str("Mapped"));
 
     for(u32 field_index = 0; parser->tokenizer->current.type && parser->tokenizer->current.type != '}'; field_index++) {
         str field_name = { 0 };

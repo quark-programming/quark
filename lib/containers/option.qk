@@ -1,4 +1,3 @@
-import io::{ panic };
 import slice::{ str };
 
 struct Option<T> {
@@ -22,12 +21,12 @@ struct Option<T> {
 	}
 
 	T unwrap(self) {
-		if(!self.some) panic("[Option::unwrap] Unwrapped on None");
+		// if(!self.some) panic("[Option::unwrap] Unwrapped on None");
 		return self.value;
 	}
 
 	T expect(self, str message) {
-		if(!self.some) panic(message);
+		// if(!self.some) panic(message);
 		return self.value;
 	}
 

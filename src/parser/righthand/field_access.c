@@ -45,6 +45,10 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
                 switch(required_traits[i]->id) {
                     case NodeFunctionDeclaration:
                         if(streq(required_traits[i]->identifier.base, field_token.trace.source)) {
+                            Wrapper* variable_shadow = variable_of(required_traits[i], (Trace) {}, 0);
+                            apply_type_arguments(variable_shadow, parser, false);
+                            const OpenedType opened_shadow = open_type(variable_shadow->type, 0, 2);
+
                             Node* const trait_access = new_node((Node) {
                                 .TraitAccess = {
                                     .id = NodeTraitAccess,
@@ -57,6 +61,7 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
                                 },
                             });
 
+                            close_type(opened_shadow.actions, 0, 2);
                             close_type(opened.actions, 0, 2);
                             return trait_access;
                         }
@@ -67,6 +72,10 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
                                 find_in_scope_unwrapped(*required_traits[i]->type->StructType.module->scope,
                                                         field_token.trace.source);
                         if(!child) break;
+
+                        Wrapper* variable_shadow = variable_of(child, (Trace) {}, 0);
+                        apply_type_arguments(variable_shadow, parser, false);
+                        const OpenedType opened_shadow = open_type(variable_shadow->type, 0, 2);
 
                         Node* const trait_access = new_node((Node) {
                             .TraitAccess = {
@@ -80,6 +89,7 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
                             },
                         });
 
+                        close_type(opened_shadow.actions, 0, 2);
                         close_type(opened.actions, 0, 2);
                         return trait_access;
                     }
@@ -115,7 +125,7 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
                 assign_action((void*) child, lefthand->type->Wrapper.action, true, true);
             }
 
-            apply_type_arguments(child, parser);
+            apply_type_arguments(child, parser, false);
 
             close_type(opened.actions, 0, 2);
             return (void*) child;

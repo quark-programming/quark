@@ -80,7 +80,7 @@ void build_std_scope(Declaration* declaration) {
     put_std_type(str("ULongLong"), str("unsigned long long"), fNumeric);
 
     put_std_type(str("bool"), str("bool"), fNumeric);
-    put_std_type(str("File"), str("FILE"), 0);
+    // put_std_type(str("File"), str("FILE"), 0);
     put_std_type(str("void"), str("void"), 0);
 
     static Type bool_type = {
@@ -91,7 +91,24 @@ void build_std_scope(Declaration* declaration) {
             .data = str("bool"),
         },
     };
+    static Type const_auto = {
+        .Wrapper = {
+            .id = WrapperAuto,
+            .flags = fConst | fConstExpr | fType,
+            .type = &const_auto,
+            .Auto.constant = true,
+        },
+    };
+    static Type const_autop = {
+        .PointerType = {
+            .id = NodePointerType,
+            .flags = fConst | fConstExpr | fType | fNumeric,
+            .type = &const_autop,
+            .base = &const_auto,
+        },
+    };
 
     put_std_const(str("true"), str("true"), fNumeric, &bool_type);
     put_std_const(str("false"), str("false"), fNumeric, &bool_type);
+    put_std_const(str("null"), str("NULL"), fNumeric, &const_autop);
 }

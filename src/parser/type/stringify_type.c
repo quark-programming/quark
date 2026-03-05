@@ -56,7 +56,7 @@ static int stringify_acceptor(Type* type, Type* follower, void* void_accumulator
         case WrapperAuto:
             if(type->Wrapper.Auto.missing) {
                 strf(accumulator->string, "(%.*s)", fmtof(type->trace.source));
-                break;
+                return 0;
             }
 
             if(type->Wrapper.Auto.test_against && !(accumulator->flags & StringifyAlphaNumeric)) {

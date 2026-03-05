@@ -149,9 +149,9 @@ Token next(Tokenizer* const tokenizer) {
     const Token next = tokenizer->current;
 
     if(!next.type) {
-        push(tokenizer->messages, MERROR(next.trace, str(
-                 iftty("expected a token, but got "HERR"end of file"H,
-                     "expected a token, but got end of file" ))));
+        push(tokenizer->messages, MERROR(next.trace,
+                 iftty(str("expected a token, but got "HERR"end of file"H),
+                     str("expected a token, but got end of file"))));
     } else {
         tokenizer->current = create_token(next.trace, tokenizer->remove_newlines);
     }
@@ -160,15 +160,15 @@ Token next(Tokenizer* const tokenizer) {
 }
 
 Token expect(Tokenizer* const tokenizer, const unsigned char type) {
-    const Token expect = next(tokenizer);
-
-    if(expect.type != type) {
-        push(tokenizer->messages, MERROR(expect.trace,
+    if(tokenizer->current.type != type) {
+        str display = tokenizer->current.type ? tokenizer->current.trace.source : str("end of file");
+        push(tokenizer->messages, MERROR(tokenizer->current.trace,
                  strf(0, iftty("expected "HERR"%s"H", but got "HERR"%.*s"H, "expected %s, but got %.*s"),
-                     token_type_to_string(type), fmtof(expect.trace.source))));
+                     token_type_to_string(type), fmtof(display))));
+        return tokenizer->current;
     }
 
-    return expect;
+    return next(tokenizer);
 }
 
 bool try(Tokenizer* const tokenizer, const unsigned char type, Token* result) {

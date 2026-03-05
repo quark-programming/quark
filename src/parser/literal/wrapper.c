@@ -22,10 +22,15 @@ Wrapper* variable_of(Declaration* declaration, const Trace trace, unsigned long 
             .flags = flags,
             .trace = trace,
             .type = declaration->type,
-            .action = { ActionApplyCollection * !!link_actions, .collection = link_actions },
+            // .action = { ActionApplyCollection * !!link_actions, .collection = link_actions },
             .Variable = { declaration },
         }
     });
+
+    if(link_actions) {
+        assign_action((void*) variable, (Action) { ActionApplyCollection, .collection = link_actions }, true, true);
+    }
+
     // if(declaration->actions) {
     //     variable->action = (Action) { ActionApplyCollection, .collection = declaration->actions };
     //     // assign_action((void*) variable, (Action) {

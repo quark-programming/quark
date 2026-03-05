@@ -1,28 +1,69 @@
 import containers::slice::{ str };
-import c::stdio::{ fwrite };
+import containers::option::{ Option };
+import c::stdio::{ FILE, fopen, fclose, fwrite };
 import c::stdlib::{ exit };
 
-void write_file(File* file, str message) {
-	fwrite(message.slice.data, message.slice.size, sizeof(char), file);
+struct File {
+    FILE* file;
+
+    static File stdin;
+    static File stdout;
+    static File stderr;
+
+    File? open(str filename, str mode) {
+        usize filename_len = filename.len();
+        char* extern filename_buffer;
+
+        extern {
+            char filename_buffer[filename_len + 1];
+            memcpy(filename_buffer, filename.slice.data, filename_len);
+            filename_buffer[filename_len] = '\0';
+        };
+
+        FILE* file = fopen(filename_buffer, mode.data());
+        if(file) {
+            return Option::Some(File { file });
+        }
+    }
+
+    File? new(str filename) {
+        return File::open(filename, "w+");
+    }
+
+    void close(self) {
+        fclose(self.file);
+    }
+
+    void write(self, str data) {
+        fwrite(data.data(), sizeof(char), data.len(), self.file);
+    }
+
+    void print(self, str data) {
+        self.write(data);
+        char newline = '\n';
+        fwrite(&newline, sizeof(char), 1, self.file);
+    }
 }
 
-void print_file(File* file, str message) {
-	fwrite(message.slice.data, message.slice.size, sizeof(char), file);
-	const char newline = '\n';
-	fwrite(&newline, 1, sizeof(char), file);
+File::stdin = File { extern<FILE*> stdin };
+File::stdout = File { extern<FILE*> stdout };
+File::stderr = File { extern<FILE*> stderr };
+
+void write(str message) {
+    File::stdout.write(message);
 }
 
 void print(str message) {
-	print_file(extern<File*> stdout, message);
+    File::stdout.print(message);
 }
 
 void _write_panic_head() {
-    write_file(extern<File*> stderr, "[\x1b[31mpanicked\x1b[0m]:\n\t");
+    File::stderr.write("[\x1b[31mpanicked\x1b[0m]:\n\t");
 }
 
 void panic(str message) {
     _write_panic_head();
-	print_file(extern<File*> stderr, message);
+    File::stderr.print(message);
 	exit(extern<Int> EXIT_FAILURE);
 }
 

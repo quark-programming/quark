@@ -9,18 +9,18 @@ trait Iterator<T> {
         }
     }
 
-    struct Mapped<IterA : Iterator<T>, K> : Iterator<K> {
-        IterA iter_a;
+    struct Mapped<I : Iterator<T>, K> : Iterator<K> {
+        I base_iter;
         K (T) func;
 
         K? Iterator::next(&self) {
-            if((T? next = self->iter_a.next()).is_none()) return Option::None();
+            if((T? next = self->base_iter.next()).is_none()) return Option::None();
             return Option::Some(self->func(next.unwrap()));
         }
     }
 
-    Mapped<I, K> map<I : Iterator<T>, K>(self, K value) {
-        return Mapped { self };
+    Mapped<I, K> map<I : Iterator<T>, K>(self, K (T) map_func) {
+        return Mapped { self, map_func };
     }
 }
 

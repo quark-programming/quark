@@ -42,6 +42,7 @@ typedef struct Wrapper {
             Type* ref;
             Type* test_against;
             Vec(Declaration*) required_traits;
+            GenericReference* closed_generic;
             i32 priority;
             bool constant;
             bool missing;

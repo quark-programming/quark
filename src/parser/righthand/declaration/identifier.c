@@ -25,11 +25,27 @@ IdentifierInfo new_identifier(Token base_identifier, Parser* parser, const unsig
     Scope* outer_scope = info.declaration_scope;
 
 compound_start:
+    // if(flags & IdentifierDeclaration
+    //     && !(info.value && info.value->Variable.declaration->id == NodeStructDeclaration)
+    //     && !(info.value && outer_scope != info.declaration_scope
+    //         && info.declaration_scope->declaration->id == NodeStructDeclaration
+    //         && info.declaration_scope->declaration->type->StructType.is_trait)) {
+    //     info.generics_collection = collect_generics(parser);
+    // } else if(info.value) {
+    // }
+
     if(flags & IdentifierDeclaration
        && !(info.value && info.value->Variable.declaration->id == NodeStructDeclaration)) {
+        if(info.value && outer_scope != info.declaration_scope
+           && info.value->Variable.declaration->id == NodeFunctionDeclaration
+           && info.declaration_scope->declaration->id == NodeStructDeclaration
+           && info.declaration_scope->declaration->type->StructType.is_trait) {
+            apply_type_arguments(info.value, parser, true);
+        }
+
         info.generics_collection = collect_generics(parser);
     } else if(info.value) {
-        apply_type_arguments(info.value, parser);
+        apply_type_arguments(info.value, parser, false);
     }
 
     if(!try(parser->tokenizer, TokenDoubleColon, NULL)) {
@@ -115,6 +131,11 @@ compound_start:
     info.trace = stretch(info.trace, next_trace);
     info.identifier.base = next_trace.source;
     info.identifier.parent_declaration = module->declaration;
+
+    if(module->declaration && module->declaration->id == NodeStructDeclaration
+       && !module->declaration->type->StructType.is_trait) {
+        info.identifier.parent_scope = module->scope;
+    }
 
     goto compound_start;
 }

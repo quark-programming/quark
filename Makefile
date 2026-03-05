@@ -43,6 +43,11 @@ endif
 # ========= Flags =========
 CFLAGS  := -Isrc/include -Isrc/lib -Isrc -Wall -Wno-missing-braces -Wno-char-subscripts -DWRAPSETIMPL
 LDFLAGS :=
+EMCCFLAGS := -s WASM=1 -s MODULARIZE=1 -s EXPORT_NAME="QuarkCompiler" \
+	-s EXPORTED_FUNCTIONS='["_main"]' \
+	-s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap", "FS", "callMain"]' -s ALLOW_MEMORY_GROWTH=1 \
+	-s NO_EXIT_RUNTIME=1 -s STACK_SIZE=5MB -g -s ASSERTIONS=2 -s STACK_OVERFLOW_CHECK=2 -s SAFE_HEAP=1 \
+	-s INVOKE_RUN=0
 
 # ========= Directories =========
 BUILD_DIR := build
@@ -137,6 +142,9 @@ release:
 debug:
 	$(MAKE) build MODE=debug
 	$(MAKE) test-c
+
+wasm:
+	emcc $(CFLAGS) $(EMCCFLAGS) $(MAIN_C) $(SRCS) -o $(BUILD_DIR)/qc.js
 
 # ========= Clean =========
 clean:

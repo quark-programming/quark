@@ -53,7 +53,7 @@ Vec(Action) extract_actions(Type* type, const bool close) {
     return actions_clone;
 }
 
-void apply_type_arguments(Wrapper* variable, Parser* parser) {
+void apply_type_arguments(Wrapper* variable, Parser* parser, const bool skip_arguments) {
     // while(variable->id != WrapperVariable) variable = (void*) variable->child;
     apply_action(variable->action, 0, 2);
 
@@ -80,7 +80,7 @@ void apply_type_arguments(Wrapper* variable, Parser* parser) {
         push(&input_generics, type_argument);
     }
 
-    if(try(parser->tokenizer, '<', 0)) {
+    if(!skip_arguments && try(parser->tokenizer, '<', 0)) {
         const bool save = global_righthand_collecting_type_arguments;
         global_righthand_collecting_type_arguments = true;
 
@@ -121,6 +121,32 @@ void apply_type_arguments(Wrapper* variable, Parser* parser) {
     assign_action((void*) variable, (Action) { ActionApplyGenerics, input_generics, declaration }, false, true);
 }
 
+Type* create_generic(const Trace trace, Declaration** declaration) {
+    declaration = declaration ? declaration : &(Declaration*) { 0 };
+
+    Type* const type = new_type((Type) {
+        .Wrapper = {
+            .id = WrapperAuto,
+            .flags = fConstExpr,
+            .trace = trace,
+            .Auto.priority = -1,
+        },
+    });
+
+    if(declaration) {
+        *declaration = (void*) new_node((Node) {
+            .VariableDeclaration = {
+                .id = NodeVariableDeclaration,
+                .flags = fType | fConst,
+                .type = type,
+                .const_value = (void*) type,
+            },
+        });
+    }
+
+    return type;
+}
+
 GenericsCollection collect_generics(Parser* const parser) {
     GenericsCollection collection = { 0 };
 
@@ -134,23 +160,8 @@ GenericsCollection collect_generics(Parser* const parser) {
     while(parser->tokenizer->current.type && parser->tokenizer->current.type != '>') {
         const Token identifier = expect(parser->tokenizer, TokenIdentifier);
 
-        Type* const base_type = new_type((Type) {
-            .Wrapper = {
-                .id = WrapperAuto,
-                .flags = fConstExpr,
-                .trace = identifier.trace,
-                .Auto.priority = -1,
-            },
-        });
-
-        Declaration* type_declaration = (void*) new_node((Node) {
-            .VariableDeclaration = {
-                .id = NodeVariableDeclaration,
-                .flags = fType | fConst,
-                .type = base_type,
-                .const_value = (void*) base_type,
-            },
-        });
+        Declaration* type_declaration;
+        Type* const base_type = create_generic(identifier.trace, &type_declaration);
 
 #define exp_trait_error() \
     push(parser->tokenizer->messages, MERROR(extension->trace, str("expected a trait or structure here")))
@@ -241,6 +252,8 @@ void close_generics_declaration(Declaration* declaration) {
 
     for(size_t i = 0; i < len(declaration->generics.base_type_arguments); i++) {
         Type* base_type = declaration->generics.base_type_arguments[i];
+        if(base_type->Wrapper.Auto.ref) continue;
+
         declaration->generics.base_type_arguments[i] = new_type(*base_type);
 
         *base_type = (Type) {

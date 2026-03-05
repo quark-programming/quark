@@ -46,20 +46,34 @@ static Argument create_self_literal(const Trace trace, Declaration* declaration,
              MERROR(trace, str("Cannot create self literal outside of a struct declaration")));
         type = new_type((Type) { .Wrapper = { WrapperAuto, 0, trace } });
     } else if(declaration->type->StructType.is_trait) {
-        type = new_type((Type) {
-            .Wrapper = {
-                .id = WrapperAuto,
-                .trace = trace,
-                .Auto = {
-                    .priority = 1,
-                    .constant = true,
-                    .required_traits = vec(declaration, func_declaration),
-                },
-            },
-        });
+        type = create_generic(trace, NULL);
+        type->Wrapper.Auto.required_traits = vec(declaration, func_declaration);
+
+        push(&func_declaration->generics.base_type_arguments, type);
+        if(len(func_declaration->generics.base_type_arguments) == 1) {
+            push(&func_declaration->generics.type_arguments_stacks[0], func_declaration->generics.base_type_arguments);
+            push(&func_declaration->generics.type_arguments_stacks[1], func_declaration->generics.base_type_arguments);
+        } else {
+            func_declaration->generics.type_arguments_stacks[0][0] = func_declaration->generics.base_type_arguments;
+            func_declaration->generics.type_arguments_stacks[1][0] = func_declaration->generics.base_type_arguments;
+        }
+        // push(&declaration->generics.type_arguments_stacks[0][0], type);
+        // push(&declaration->generics.type_arguments_stacks[1][0], type);
+
+        // type = new_type((Type) {
+        //     .Wrapper = {
+        //         .id = WrapperAuto,
+        //         .trace = trace,
+        //         .Auto = {
+        //             .priority = -2,
+        //             .constant = true,
+        //             .required_traits = vec(declaration, func_declaration),
+        //         },
+        //     },
+        // });
     } else {
         Wrapper* wrapper = variable_of(declaration, trace, 0);
-        apply_type_arguments(wrapper, parser);
+        apply_type_arguments(wrapper, parser, false);
         type = (void*) wrapper;
     }
 
@@ -163,8 +177,6 @@ Node* parse_function_declaration(Type* return_type, IdentifierInfo info, Parser*
 
     assign_generics_to_declaration((void*) declaration, info.generics_collection);
     push(&parser->stack, declaration->body);
-
-    bool breakpoint = streq(info.identifier.base, str("alloc"));
 
     if(info.generics_collection.generic_declarations_scope) {
         RecycleAccumulator accumulator = {

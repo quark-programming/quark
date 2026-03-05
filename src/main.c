@@ -13,13 +13,18 @@
 #include "compiler/righthand/declaration/identifier.h"
 #include "parser/statement/modules.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #define QUARK_VERSION "0.5pre"
 #define QUARK_STABILITY "untested"
 
 FunctionDeclaration* entry_declaration() {
     FunctionType* function_type = (void*) new_type((Type) { NodeFunctionType });
     Type* const int_type = new_type((Type) { .External = { NodeExternal, .data = str("int") } });
-    push(&function_type->signature, int_type);
+    Type* const charpp_type = new_type((Type) { .External = { NodeExternal, .data = str("char**") } });
+    push(&function_type->signature, int_type, int_type, charpp_type);
 
     FunctionDeclaration* declaration = (void*) new_node((Node) {
         .FunctionDeclaration = {
@@ -29,6 +34,7 @@ FunctionDeclaration* entry_declaration() {
                 .base = str("main"),
             },
             .body = new_scope(NULL),
+            .arguments = vec(((Argument) { int_type, str("__argc") }), { charpp_type, str("__argv") }),
         }
     });
     declaration->identifier.parent_declaration = (void*) declaration;
@@ -79,6 +85,9 @@ int main(int argc, char** argv) {
             }
             case 'i':
                 push(&include_paths, clarg(&argc, &argv));
+                break;
+            case 'O':
+                global_stdout_only = true;
                 break;
             default: panicf("unknown flag '-%c'\n hint: %s -h\n", flag, name);
         }

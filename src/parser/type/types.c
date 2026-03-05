@@ -116,23 +116,28 @@ Type* peek_type(Type* type, Action* action, const unsigned flags, u8 generics_of
 
     switch(type->id) {
         case WrapperAuto:
-            if(!type->Wrapper.Auto.ref && type->Wrapper.Auto.test_against
-               && type->Wrapper.Auto.test_against->id == NodeGenericReference) {
-                GenericReference* const reference = &type->Wrapper.Auto.test_against->GenericReference;
+            if(!type->Wrapper.Auto.ref && type->Wrapper.Auto.test_against) {
+                if(type->Wrapper.Auto.test_against->id == NodeGenericReference) {
+                    GenericReference* const reference = &type->Wrapper.Auto.test_against->GenericReference;
 
-                do {
-                    Vec(Vec(Type*)) stack =
-                        reference->generics_declaration->generics.type_arguments_stacks[generics_offset];
+                    do {
+                        Vec(Vec(Type*)) stack =
+                               reference->generics_declaration->generics.type_arguments_stacks[generics_offset];
 
-                    for(size_t i = len(stack); i > 0; i--) {
-                        Type* const type_argument = stack[i - 1][reference->index];
-                        if(is_stack_reference(type_argument, reference->generics_declaration))
-                            continue;
-                        return type_argument;
-                    }
-                } while(generics_offset != 2 && ((generics_offset = 2)));
+                        for(size_t i = len(stack); i > 0; i--) {
+                            Type* const type_argument = stack[i - 1][reference->index];
+                            if(is_stack_reference(type_argument, reference->generics_declaration))
+                                continue;
+                            return type_argument;
+                        }
+                    } while(generics_offset != 2 && ((generics_offset = 2)));
 
-                panicf("path should not be reached");
+                    panicf("path should not be reached");
+                }
+
+                if(global_in_compiler_step) {
+                    return type->Wrapper.Auto.test_against;
+                }
             }
 
             return type->Wrapper.Auto.ref ? type->Wrapper.Auto.ref : type;

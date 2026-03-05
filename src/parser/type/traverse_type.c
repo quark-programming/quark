@@ -91,6 +91,22 @@ int traverse_type(Type* type, Type* follower, int (*acceptor)(Type*, Type*, void
                 break;
 
             case NodeFunctionType:
+                if(open_follower.type) {
+                    if(open_follower.type->id != NodeFunctionType || len(open_type.type->FunctionType.signature)
+                       != len(open_follower.type->FunctionType.signature)) {
+                        result = 1;
+                        break;
+                    }
+
+                    for(u32 i = 0; i < len(open_type.type->FunctionType.signature); i++) {
+                        result = traverse_type(open_type.type->FunctionType.signature[i],
+                                               open_follower.type->FunctionType.signature[i], acceptor, accumulator,
+                                               flags, generics_offset);
+                        if(result) break;
+                    }
+                }
+
+                if(result) break;
                 result = traverse_generics((void*) open_type.type->FunctionType.declaration, acceptor, accumulator,
                                            flags, generics_offset);
                 break;

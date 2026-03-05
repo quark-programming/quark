@@ -2,6 +2,7 @@
 #include "trace.h"
 
 const char* global_message_labels[] = { "error", "hint", "info", "warning" };
+bool global_stdout_only = false;
 
 Trace stretch(Trace a, const Trace b) {
     a.source.len = b.source.data - a.source.data + b.source.len;
@@ -10,9 +11,12 @@ Trace stretch(Trace a, const Trace b) {
 }
 
 bool print_message(const Message message) {
+    FILE* out = !global_stdout_only && message.label == 0 ? stderr : stdout;
+
     if(!message.trace.filename) {
-        printf(iftty("\33[3%um", "["), message.tty_color);
-        printf(iftty("%s:\33[0m %.*s\n", "%s]: %.*s\n"), global_message_labels[message.label], fmtof(message.content));
+        fprintf(out, iftty("\33[3%um", "["), message.tty_color);
+        fprintf(out, iftty("%s:\33[0m %.*s\n", "%s]: %.*s\n"), global_message_labels[message.label],
+                fmtof(message.content));
         return 0;
     }
 
@@ -29,14 +33,14 @@ bool print_message(const Message message) {
     }
     underline[sizeof(underline) - 1] = '\0';
 
-    printf(iftty("\33[1m%s:%u:%u: \33[3%um", "%s:%u:%u: ["),
-           message.trace.filename, message.trace.row, message.trace.col,
-           message.tty_color);
-    printf(iftty("%s:\33[0m %.*s\n%4d | %s\n     : \33[3%um", "%s]: %.*s\n%4d | %s\n     : "),
-           global_message_labels[message.label], fmtof(message.content),
-           message.trace.row, line_start, message.tty_color);
-    printf(iftty("%.*s\33[0m\n", "%.*s\n"),
-           (int) sizeof(underline), underline);
+    fprintf(out, iftty("\33[1m%s:%u:%u: \33[3%um", "%s:%u:%u: ["),
+            message.trace.filename, message.trace.row, message.trace.col,
+            message.tty_color);
+    fprintf(out, iftty("%s:\33[0m %.*s\n%4d | %s\n     : \33[3%um", "%s]: %.*s\n%4d | %s\n     : "),
+            global_message_labels[message.label], fmtof(message.content),
+            message.trace.row, line_start, message.tty_color);
+    fprintf(out, iftty("%.*s\33[0m\n", "%.*s\n"),
+            (int) sizeof(underline), underline);
 
     return !message.label;
 }

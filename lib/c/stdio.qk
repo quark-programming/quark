@@ -1,1 +1,10 @@
-usize extern fwrite<T>(T* ptr, usize size, usize nitems, File* stream);
+type FILE = extern FILE;
+char extern EOF;
+
+FILE* extern fopen(char* path, char* mode);
+Int extern fclose(FILE* stream);
+
+usize extern fread<T>(T* ptr, usize size, usize nitems, FILE* stream);
+usize extern fwrite<T>(T* ptr, usize size, usize nitems, FILE* stream);
+
+Int extern getc(FILE* stream);

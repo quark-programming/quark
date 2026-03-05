@@ -8,12 +8,14 @@ Node* assign_action(Node* node, Action action, bool important, bool owned_variab
 
 Vec(Action) extract_actions(Type* type, bool close);
 
-void apply_type_arguments(Wrapper* variable, Parser* parser);
+void apply_type_arguments(Wrapper* variable, Parser* parser, bool skip_arguments);
 
 typedef struct GenericsCollection {
     Vec(Type*) base_type_arguments;
     Scope* generic_declarations_scope;
 } GenericsCollection;
+
+Type* create_generic(Trace trace, Declaration** declaration);
 
 GenericsCollection collect_generics(Parser* parser);
 

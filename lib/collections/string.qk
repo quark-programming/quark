@@ -1,5 +1,6 @@
 import vector::{ Vec };
 import containers::slice::{ str, Slice };
+import operator::{ Operator };
 
 struct String {
 	Vec<char> vector;
@@ -28,10 +29,44 @@ struct String {
 	    self->vector.data[self->vector.size] = '\0';
 		return self->vector.data;
 	}
+
+	char* data(self) {
+	    return self.vector.data;
+	}
+
+	String Operator::add(&self, str slice) {
+        return *self->cat(slice);
+	}
 }
 
 String str::to_owned(str self) {
 	String string = String::new();
 	string.vector.push_many(self.slice);
 	return string;
+}
+
+str str::[Operator::add](self, str slice) {
+    return self.to_owned().cat(slice)->to_str();
+}
+
+import io::{ File, write };
+import c::stdio::{ fread, getc, EOF };
+
+String File::read(self, usize bytes) {
+    String string = String { Vec::from_capacity(bytes) };
+    string.vector.size += fread(string.data(), sizeof(char), bytes, self.file);
+    return string;
+}
+
+String File::read_line(self) {
+    String string = String::new();
+    while((char ch = getc(self.file)) != '\n' && ch != EOF) {
+        string.vector.push(ch);
+    }
+    return string;
+}
+
+String input(str prompt) {
+    write(prompt);
+    return File::stdin.read_line();
 }

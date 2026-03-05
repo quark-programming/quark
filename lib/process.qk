@@ -1,0 +1,27 @@
+import operator::{ Operator };
+import c::string::{ strlen };
+
+struct ProcessArguments {
+    Int argc;
+    char** argv;
+
+    usize len(self) {
+        return self.argc.(usize);
+    }
+
+    str Operator::index(self, usize index) {
+        return str { Slice { self.argv[index], strlen(self.argv[index]) } };
+    }
+}
+
+struct Process {
+    static Int argc;
+    static char** argv;
+
+    ProcessArguments args() {
+        return ProcessArguments { argc, argv };
+    }
+}
+
+Process::argc = extern<Int> __argc;
+Process::argv = extern<char**> __argv;

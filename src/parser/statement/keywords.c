@@ -103,8 +103,8 @@ Node* keyword_return(const Token token, Parser* parser) {
              MERROR(value ? stretch(trace_start, value->trace) : trace_start,
                  str("return statement needs to be inside of a function")));
     } else if(value) {
-        clash_types(last(parser->stack)->declaration->FunctionDeclaration.type->FunctionType.signature[0], value->type,
-                    value->trace, parser->tokenizer->messages, 0);
+        clash_types(last(parser->stack)->declaration->type->FunctionType.signature[0], value->type, value->trace,
+                    parser->tokenizer->messages, 0);
     }
 
     return new_node((Node) {

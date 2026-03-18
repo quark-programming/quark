@@ -48,7 +48,10 @@ int traverse_type(Type* type, Type* follower, int (*acceptor)(Type*, Type*, void
                                     flags & (ActionKeepGlobalState | ActionNoChildCompilation), generics_offset);
     const OpenedType open_follower = open_type(follower, flags & (ActionKeepGlobalState | ActionNoChildCompilation), 1);
 
-    int result = 0, result_offset = !!((result = acceptor(open_type.type, open_follower.type, accumulator)));
+    int result = 0, result_offset = 0;
+    if((result = acceptor(open_type.type, open_follower.type, accumulator))) {
+        result_offset = 1;
+    }
 
     if(result) {
     } else if(follower && open_type.type->id != open_follower.type->id) {
@@ -118,4 +121,28 @@ int traverse_type(Type* type, Type* follower, int (*acceptor)(Type*, Type*, void
     close_type(open_type.actions, flags & (ActionKeepGlobalState | ActionNoChildCompilation), generics_offset);
     close_type(open_follower.actions, flags & (ActionKeepGlobalState | ActionNoChildCompilation), 1);
     return result - result_offset;
+}
+
+int traverse_action(const Action action, int (*acceptor)(Type*, Type*, void*), void* accumulator, const unsigned flags,
+                    const u8 generics_offset) {
+    switch(action.type) {
+        case ActionApplyGenerics:
+            for(u32 i = 0; i < len(action.generics); i++) {
+                const int result = traverse_type(action.generics[i], NULL, acceptor, accumulator, flags,
+                                                 generics_offset);
+                if(result) return result;
+            }
+            break;
+
+        case ActionApplyCollection:
+            for(u32 i = 0; i < len(action.collection); i++) {
+                const int result = traverse_action(action.collection[i], acceptor, accumulator, flags, generics_offset);
+                if(result) return result;
+            }
+            break;
+
+        default: ;
+    }
+
+    return 0;
 }

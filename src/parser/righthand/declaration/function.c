@@ -47,30 +47,20 @@ static Argument create_self_literal(const Trace trace, Declaration* declaration,
         type = new_type((Type) { .Wrapper = { WrapperAuto, 0, trace } });
     } else if(declaration->type->StructType.is_trait) {
         type = create_generic(trace, NULL);
-        type->Wrapper.Auto.required_traits = vec(declaration, func_declaration);
+        type->Wrapper.Auto.required_traits = vec(variable_of(func_declaration, trace, 0));
+        type->Wrapper.Auto.non_matching_required_traits = vec(variable_of(declaration, trace, 0));
+
+        apply_type_arguments(type->Wrapper.Auto.required_traits[0], NULL, true);
+        apply_type_arguments(type->Wrapper.Auto.non_matching_required_traits[0], NULL, true);
+
+        type->Wrapper.Auto.priority = -2;
 
         push(&func_declaration->generics.base_type_arguments, type);
         if(len(func_declaration->generics.base_type_arguments) == 1) {
-            push(&func_declaration->generics.type_arguments_stacks[0], func_declaration->generics.base_type_arguments);
-            push(&func_declaration->generics.type_arguments_stacks[1], func_declaration->generics.base_type_arguments);
+            push(&func_declaration->generics.type_arguments_stacks[2], func_declaration->generics.base_type_arguments);
         } else {
-            func_declaration->generics.type_arguments_stacks[0][0] = func_declaration->generics.base_type_arguments;
-            func_declaration->generics.type_arguments_stacks[1][0] = func_declaration->generics.base_type_arguments;
+            func_declaration->generics.type_arguments_stacks[2][0] = func_declaration->generics.base_type_arguments;
         }
-        // push(&declaration->generics.type_arguments_stacks[0][0], type);
-        // push(&declaration->generics.type_arguments_stacks[1][0], type);
-
-        // type = new_type((Type) {
-        //     .Wrapper = {
-        //         .id = WrapperAuto,
-        //         .trace = trace,
-        //         .Auto = {
-        //             .priority = -2,
-        //             .constant = true,
-        //             .required_traits = vec(declaration, func_declaration),
-        //         },
-        //     },
-        // });
     } else {
         Wrapper* wrapper = variable_of(declaration, trace, 0);
         apply_type_arguments(wrapper, parser, false);
@@ -184,6 +174,8 @@ Node* parse_function_declaration(Type* return_type, IdentifierInfo info, Parser*
         };
         traverse_type(return_type, NULL, &recycle_missing_generics, &accumulator,
                       TraverseGenerics | TraverseIntermediate, 0);
+        traverse_action((Action) { ActionApplyCollection, .collection = info.declaration_actions },
+                        &recycle_missing_generics, &accumulator, TraverseGenerics | TraverseIntermediate, 0);
     }
 
     Declaration* scoped_declaration = info.declaration_actions
@@ -203,17 +195,31 @@ Node* parse_function_declaration(Type* return_type, IdentifierInfo info, Parser*
 
     parse_function_arguments(function_type, declaration, parser, false);
 
+    bool parse_body = false;
+
     if(no_body) {
-        if(try(parser->tokenizer, '{', NULL)) {
-            declaration->body->children = collect_until(parser, &statement, 0, '}');
-        } else {
-            expect(parser->tokenizer, ';');
-        }
-    } else if(declaration->identifier.is_external) {
-        expect(parser->tokenizer, ';');
-    } else {
+        if(try(parser->tokenizer, '{', NULL)) parse_body = true;
+    } else if(!declaration->identifier.is_external) {
         expect(parser->tokenizer, '{');
+        parse_body = true;
+    }
+
+    if(info.declaration_scope->declaration->id == NodeStructDeclaration
+       && info.declaration_scope->declaration->type->StructType.is_trait && parse_body) {
+        push(&info.declaration_scope->declaration->StructDeclaration.trait_declarations, (void*) declaration);
+    }
+
+    if(info.trait_scope) {
+        apply_action((Action) { ActionApplyCollection, .collection = info.declaration_actions }, 0, 2);
+        // clash_types((void*) function_type, info.value->Variable.declaration->type, function_type->trace,
+        //             parser->tokenizer->messages, 0);
+        remove_action((Action) { ActionApplyCollection, .collection = info.declaration_actions }, 0, 2);
+    }
+
+    if(parse_body) {
         declaration->body->children = collect_until(parser, &statement, 0, '}');
+    } else {
+        expect(parser->tokenizer, ';');
     }
 
     close_generics_declaration((void*) declaration);

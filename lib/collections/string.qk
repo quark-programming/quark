@@ -33,10 +33,6 @@ struct String {
 	char* data(self) {
 	    return self.vector.data;
 	}
-
-	String Operator::add(&self, str slice) {
-        return *self->cat(slice);
-	}
 }
 
 String str::to_owned(str self) {

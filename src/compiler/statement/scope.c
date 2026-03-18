@@ -22,7 +22,7 @@ void comp_Scope(void* void_self, String* line, Compiler* compiler) {
         push(&compiler->sections[compiler->open_section].lines, strf(&close_bracket, "}").as_owned);
     }
 
-    if(self->result_value) {
+    if(self->result_value && !(self->result_value->flags & fType)) {
         compile(self->result_value, line, compiler);
     }
 }

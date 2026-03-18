@@ -109,6 +109,7 @@ int main(int argc, char** argv) {
     init_tty();
 
     Vec(Message) messages = { 0 };
+    global_critical_messages = &messages;
     Tokenizer tokenizer = new_tokenizer(input_files[0], input_content, &messages);
     Parser parser = create_parser(&tokenizer, (str) { strlen(input_files[0]), input_files[0] }, true, str(""));
 
@@ -137,14 +138,18 @@ int main(int argc, char** argv) {
 
     bool printed_error = false;
     for(size_t i = 0; i < len(messages); i++) {
-        if(print_message(messages[i])) printed_error = true;
+        if(print_message(messages[i], i + 1 >= len(messages)
+                                      || messages[i + 1].label == 0 || messages[i + 1].label == 3)) {
+            printed_error = true;
+        }
     }
 
     for(u32 i = 0; i < len(global_missing_identifiers); i++) {
         if(global_missing_identifiers[i]->Auto.missing) {
             print_message(MERROR(global_missing_identifiers[i]->trace, strf(0,
                                      iftty("cannot find "HERR"%.*s"H" in scope", "cannot find %.*s in scope"),
-                                     fmtof(global_missing_identifiers[i]->trace.source))));
+                                     fmtof(global_missing_identifiers[i]->trace.source))),
+                          true);
             printed_error = true;
         }
     }

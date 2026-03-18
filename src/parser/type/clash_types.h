@@ -7,12 +7,13 @@ enum {
     TestMismatch = 2,
     TestCircular,
 
-    ClashPassive = 1 << 0,
+    ClashPassive = 1 << 4,
 };
 
 typedef struct ClashAccumulator {
     Trace trace;
     Vec(Message)* messages;
+    Type* circular_type;
     unsigned flags;
     u8 assign_auto_generic_offset;
 } ClashAccumulator;

@@ -11,6 +11,7 @@ enum {
 
 typedef struct IdentifierInfo {
     Identifier identifier;
+    Wrapper* parent_value;
     Wrapper* value;
     Scope* declaration_scope;
     Scope* trait_scope;

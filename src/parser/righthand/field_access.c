@@ -12,6 +12,65 @@
 #include "declaration/variable.h"
 #include "parser/literal/number.h"
 
+static Node* find_trait_access(Vec(Wrapper*) required_traits, Node* parent, Type* parent_type, Token field,
+                               Parser* parser) {
+    for(u32 i = 0; i < len(required_traits); i++) {
+        switch(required_traits[i]->Variable.declaration->id) {
+            case NodeFunctionDeclaration:
+                if(streq(required_traits[i]->Variable.declaration->identifier.base, field.trace.source)) {
+                    // apply_type_arguments(variable_shadow, parser, false);
+                    const OpenedType opened_shadow = open_type(required_traits[i]->type, 0, 2);
+
+                    Node* const trait_access = new_node((Node) {
+                        .TraitAccess = {
+                            .id = NodeTraitAccess,
+                            .trace = stretch(parent->trace, field.trace),
+                            .type = make_type_standalone(required_traits[i]->type, 2),
+                            .generic_type = parent_type,
+                            .trait_declaration = required_traits[i]->Variable.declaration->identifier
+                                                                   .parent_scope->declaration,
+                            .field_trace = field.trace,
+                            .bound_self_argument = parent,
+                        },
+                    });
+
+                    close_type(opened_shadow.actions, 0, 2);
+                    return trait_access;
+                }
+                break;
+
+            case NodeStructDeclaration: {
+                Declaration* const child = find_in_scope_unwrapped(*required_traits[i]->Variable.declaration->type
+                                                                   ->StructType.module->scope, field.trace.source);
+                if(!child) break;
+
+                Wrapper* variable_shadow = variable_of(child, (Trace) {}, 0);
+                apply_type_arguments(variable_shadow, parser, false);
+                const OpenedType opened_shadow = open_type(variable_shadow->type, 0, 2);
+
+                Node* const trait_access = new_node((Node) {
+                    .TraitAccess = {
+                        .id = NodeTraitAccess,
+                        .trace = stretch(parent->trace, field.trace),
+                        .type = make_type_standalone(child->type, 2),
+                        .generic_type = parent_type,
+                        .trait_declaration = required_traits[i]->Variable.declaration,
+                        .field_trace = field.trace,
+                        .bound_self_argument = parent,
+                    },
+                });
+
+                close_type(opened_shadow.actions, 0, 2);
+                return trait_access;
+            }
+
+            default: ;
+        }
+    }
+
+    return NULL;
+}
+
 Node* parse_field_access(Node* lefthand, Parser* parser) {
     const str operator_token = next(parser->tokenizer).trace.source;
 
@@ -39,63 +98,20 @@ Node* parse_field_access(Node* lefthand, Parser* parser) {
 
     if(struct_type->id != NodeStructType) {
         if(opened.type->id == WrapperAuto && opened.type->Wrapper.Auto.required_traits) {
-            Vec(Declaration*) required_traits = opened.type->Wrapper.Auto.required_traits;
+            Type* const parent_type = make_type_standalone(opened.type, 2);
 
-            for(u32 i = 0; i < len(required_traits); i++) {
-                switch(required_traits[i]->id) {
-                    case NodeFunctionDeclaration:
-                        if(streq(required_traits[i]->identifier.base, field_token.trace.source)) {
-                            Wrapper* variable_shadow = variable_of(required_traits[i], (Trace) {}, 0);
-                            apply_type_arguments(variable_shadow, parser, false);
-                            const OpenedType opened_shadow = open_type(variable_shadow->type, 0, 2);
+            Node* trait_access =
+                    find_trait_access(opened.type->Wrapper.Auto.required_traits, lefthand, parent_type, field_token,
+                                      parser);
+            if(!trait_access) {
+                trait_access =
+                        find_trait_access(opened.type->Wrapper.Auto.non_matching_required_traits, lefthand, parent_type,
+                                          field_token, parser);
+            }
 
-                            Node* const trait_access = new_node((Node) {
-                                .TraitAccess = {
-                                    .id = NodeTraitAccess,
-                                    .trace = stretch(lefthand->trace, field_token.trace),
-                                    .type = make_type_standalone(required_traits[i]->type, 2),
-                                    .generic_type = make_type_standalone(opened.type, 2),
-                                    .trait_declaration = required_traits[i]->identifier.parent_scope->declaration,
-                                    .field_trace = field_token.trace,
-                                    .bound_self_argument = lefthand,
-                                },
-                            });
-
-                            close_type(opened_shadow.actions, 0, 2);
-                            close_type(opened.actions, 0, 2);
-                            return trait_access;
-                        }
-                        break;
-
-                    case NodeStructDeclaration: {
-                        Declaration* const child =
-                                find_in_scope_unwrapped(*required_traits[i]->type->StructType.module->scope,
-                                                        field_token.trace.source);
-                        if(!child) break;
-
-                        Wrapper* variable_shadow = variable_of(child, (Trace) {}, 0);
-                        apply_type_arguments(variable_shadow, parser, false);
-                        const OpenedType opened_shadow = open_type(variable_shadow->type, 0, 2);
-
-                        Node* const trait_access = new_node((Node) {
-                            .TraitAccess = {
-                                .id = NodeTraitAccess,
-                                .trace = stretch(lefthand->trace, field_token.trace),
-                                .type = make_type_standalone(child->type, 2),
-                                .generic_type = make_type_standalone(opened.type, 2),
-                                .trait_declaration = required_traits[i],
-                                .field_trace = field_token.trace,
-                                .bound_self_argument = lefthand,
-                            },
-                        });
-
-                        close_type(opened_shadow.actions, 0, 2);
-                        close_type(opened.actions, 0, 2);
-                        return trait_access;
-                    }
-
-                    default: ;
-                }
+            if(trait_access) {
+                close_type(opened.actions, 0, 2);
+                return trait_access;
             }
         }
 

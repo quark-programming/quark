@@ -25,6 +25,8 @@ bool apply_action(Action action, unsigned flags, u8 generics_offset);
 
 void remove_action(Action action, unsigned flags, u8 generics_offset);
 
+extern Vec(Message)* global_critical_messages;
+
 Type* peek_type(Type* type, Action* action, unsigned flags, u8 generics_offset);
 
 OpenedType open_type_with_acceptor(Type* type, Type* follower, int (*acceptor)(Type*, Type*, void*),

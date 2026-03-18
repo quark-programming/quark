@@ -1,6 +1,7 @@
 #include "types.h"
 
 #include "stringify_type.h"
+#include "tty.h"
 #include "../compiler/compiler.h"
 #include "parser/parser.h"
 #include "parser/lefthand/lefthand.h"
@@ -105,6 +106,8 @@ static bool is_stack_reference(Type* const type_argument, Declaration* const dec
            == declaration;
 }
 
+Vec(Message)* global_critical_messages;
+
 Type* peek_type(Type* type, Action* action, const unsigned flags, u8 generics_offset) {
     if(!type) return type;
 
@@ -132,7 +135,9 @@ Type* peek_type(Type* type, Action* action, const unsigned flags, u8 generics_of
                         }
                     } while(generics_offset != 2 && ((generics_offset = 2)));
 
-                    panicf("path should not be reached");
+                    panicf(
+                        "generic reference hook mis-alignment caught, report issue: "
+                        "https://github.com/quark-programming/quark/issues");
                 }
 
                 if(global_in_compiler_step) {
@@ -148,6 +153,30 @@ Type* peek_type(Type* type, Action* action, const unsigned flags, u8 generics_of
         case NodeGenericReference: {
             const Generics generics = type->GenericReference.generics_declaration->generics;
             const u8 normal_offset = len(generics.type_arguments_stacks[generics_offset]) ? generics_offset : 2;
+
+            if(!len(generics.type_arguments_stacks[normal_offset])) {
+                static bool message_called = false;
+                if(!message_called) {
+                    push(global_critical_messages, MERROR(type->trace, str(
+                             "generic reference mis-alignment. report: "
+                             "https://github.com/quark-programming/quark/issues")));
+                    push(global_critical_messages, MINFO(type->GenericReference.generics_declaration->trace,
+                             strf(0, iftty("on declaration of "HINF"%.*s"H, "on declaration of %.*s"),
+                                 fmtof(type->GenericReference.generics_declaration->identifier.base))));
+                    message_called = true;
+                }
+
+                static Type static_any = {
+                    .Wrapper = {
+                        .id = WrapperAuto,
+                        .trace = (Trace) { str("[internal] any") },
+                        .Auto.priority = 1,
+                        .Auto.constant = true,
+                    },
+                };
+                return &static_any;
+            }
+
             return last(generics.type_arguments_stacks[normal_offset])[type->GenericReference.index];
         }
 

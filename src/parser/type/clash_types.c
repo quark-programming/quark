@@ -3,46 +3,89 @@
 #include "stringify_type.h"
 #include "traverse_type.h"
 #include "tty.h"
+#include "parser/literal/wrapper.h"
 #include "parser/statement/scope.h"
 
 static int circular_acceptor(Type* const type, Type* follower, void* const compare) {
     (void) follower;
-    return 2 * (type == compare);
+    return (TestCircular - 1) * (type == compare);
 }
 
-static int test_required_traits(Wrapper* left, StructType* right) {
+static int clash_acceptor(Type* type, Type* follower, void* void_accumulator);
+
+static Type** order_types(Type* left, Type* right, const bool swap, Type** result) {
+    result[0] = swap ? right : left;
+    result[1] = swap ? left : right;
+    return result;
+}
+
+static int test_required_traits(Wrapper* left, StructType* right, ClashAccumulator* accumulator,
+                                const u8 generics_offset) {
     if(!left->Auto.required_traits || right->id == WrapperAuto) return 0;
     if(right->id != NodeStructType) return 1;
 
     for(u32 i = 0; i < len(left->Auto.required_traits); i++) {
-        switch(left->Auto.required_traits[i]->id) {
-            case NodeFunctionDeclaration: {
-                Scope* const trait_scope = get(right->traits, left->Auto.required_traits[i]
-                                               ->identifier.parent_scope->declaration->identifier.base);
-                if(!trait_scope) return 1;
-                if(trait_scope->declaration) break;
+        // Match Only
+        const OpenedType opened_trait = open_type(left->Auto.required_traits[i]->type, 0, !generics_offset);
+        close_type(opened_trait.actions, 0, !generics_offset);
 
-                Declaration* const trait_function =
-                        find_in_scope_unwrapped(*trait_scope, left->Auto.required_traits[i]->identifier.base);
-                if(!trait_function) return 1;
+        switch(opened_trait.type->id) {
+            case NodeFunctionType: {
+                Scope* const trait_functions = get(right->traits, opened_trait.type->FunctionType.declaration
+                                                   ->identifier.parent_scope->declaration->identifier.base);
+                if(!trait_functions) return 1;
 
+                Declaration* function_declaration =
+                        find_in_scope_unwrapped(*trait_functions, opened_trait.type->FunctionType.declaration
+                                                                              ->identifier.base);
+                if(!function_declaration) return 1;
+
+                const Action function_action = {
+                    .type = ActionApplyCollection,
+                    .collection = extract_link_actions(&function_declaration, NULL),
+                };
+                apply_action(function_action, 0, !generics_offset);
+
+                Type** const types = order_types(left->Auto.required_traits[i]->type, function_declaration->type,
+                                                 !generics_offset, (Type*[2]) {});
+                const int result = traverse_type(types[0], types[1], &clash_acceptor, accumulator,
+                                                 accumulator->flags, 0);
+
+                remove_action(function_action, 0, !generics_offset);
+                if(result) return result;
                 break;
             }
 
-            case NodeStructDeclaration: {
-                Scope* const trait_scope = get(right->traits, left->Auto.required_traits[i]->identifier.base);
-                if(!trait_scope || !trait_scope->declaration) return 1;
+            case NodeStructType: {
+                Scope* const trait_functions = get(right->traits, opened_trait.type->StructType.module->declaration
+                                                   ->identifier.base);
+                if(!trait_functions) return 1;
+
+                Type** const types = order_types(left->Auto.required_traits[i]->type,
+                                                 (void*) trait_functions->result_value, !generics_offset,
+                                                 (Type*[2]) {});
+                const int result = traverse_type(types[0], types[1], &clash_acceptor, accumulator,
+                                                 accumulator->flags, 0);
+                if(result) return result;
                 break;
             }
 
-            default: return 1;
+            default: ;
         }
     }
 
     return 0;
 }
 
-static int assign_auto_ref(Type* type, Type* follower, const bool passive) {
+static void move_required_traits(Vec(Wrapper*)* dest, Vec(Wrapper*) src) {
+    for(u32 i = 0, j; i < len(src); i++) {
+        for(j = 0; j < len(*dest) && src[i] != (*dest)[i]; j++);
+        if(j == len(*dest))
+            push(dest, src[i]);
+    }
+}
+
+static int assign_auto_ref(Type* type, Type* follower, ClashAccumulator* accumulator, const bool passive) {
     u8 generics_offset = 1;
     Wrapper* wrapper = &type->Wrapper;
 
@@ -54,7 +97,8 @@ static int assign_auto_ref(Type* type, Type* follower, const bool passive) {
     }
 
     if(follower->id != WrapperAuto && wrapper->flags & fNumeric && !(follower->flags & fNumeric)) return TestMismatch;
-    if(test_required_traits(wrapper, (void*) follower)) return TestMismatch;
+    const int result = test_required_traits(wrapper, (void*) follower, accumulator, generics_offset);
+    if(result) return result;
     if(passive || wrapper->Auto.constant) return 1;
 
     wrapper->Auto.ref = make_type_standalone(follower, generics_offset);
@@ -65,21 +109,14 @@ static int assign_auto_ref(Type* type, Type* follower, const bool passive) {
             follower->flags |= fNumeric;
         }
         if(wrapper->Auto.test_against) follower->Wrapper.Auto.test_against = wrapper->Auto.test_against;
-        if(wrapper->Auto.required_traits) {
-            for(u32 i = 0, j; i < len(wrapper->Auto.required_traits); i++) {
-                for(j = 0; j < len(follower->Wrapper.Auto.required_traits)
-                           && wrapper->Auto.required_traits[i] != follower->Wrapper.Auto.required_traits[j]; j++);
-                if(j == len(follower->Wrapper.Auto.required_traits)) {
-                    push(&follower->Wrapper.Auto.required_traits, wrapper->Auto.required_traits[i]);
-                }
-            }
-        }
+
+        move_required_traits(&follower->Wrapper.Auto.required_traits, type->Wrapper.Auto.required_traits);
+        move_required_traits(&follower->Wrapper.Auto.non_matching_required_traits,
+                             type->Wrapper.Auto.non_matching_required_traits);
     }
 
     return 1;
 }
-
-static int clash_acceptor(Type* type, Type* follower, void* void_accumulator);
 
 static int clash_autos(Type* type, Type* follower, ClashAccumulator* accumulator) {
 #ifdef EBUG
@@ -103,26 +140,35 @@ static int clash_autos(Type* type, Type* follower, ClashAccumulator* accumulator
                                         ? follower->Wrapper.Auto.test_against
                                         : follower;
 
-        if(type == follower_test || follower == type_test
-           || traverse_type(follower_test, NULL, &circular_acceptor, type,
-                            TraverseGenerics | TraverseIntermediate, 1)) {
+        if(type == follower_test || follower == type_test) {
             return 1;
         }
 
-        const int test_result = clash_types(type_test, follower_test, accumulator->trace, accumulator->messages,
-                                            ClashPassive | accumulator->flags);
+        if(traverse_type(follower_test, NULL, &circular_acceptor, type, TraverseGenerics | TraverseIntermediate, 1)) {
+            accumulator->circular_type = follower_test;
+            return TestCircular;
+        }
+
+        const unsigned flags_save = accumulator->flags;
+        const int test_result = traverse_type(type_test, follower_test, &clash_acceptor, accumulator,
+                                              accumulator->flags |= ClashPassive, 0);
+        accumulator->flags = flags_save;
+        // const int test_result = clash_types(type_test, follower_test, accumulator->trace, accumulator->messages,
+        //                                     ClashPassive | accumulator->flags);
         if(test_result) {
             return test_result + 1;
         }
     }
 
     // TODO: try making this one way (like above)
-    if(traverse_type(type, NULL, &circular_acceptor, follower, TraverseGenerics | TraverseIntermediate, 0)
+    bool first = false;
+    if(((first = traverse_type(type, NULL, &circular_acceptor, follower, TraverseGenerics | TraverseIntermediate, 0)))
        || traverse_type(follower, NULL, &circular_acceptor, type, TraverseGenerics | TraverseIntermediate, 1)) {
+        accumulator->circular_type = first ? type : follower;
         return TestCircular;
     }
 
-    return assign_auto_ref(type, follower, accumulator->flags & ClashPassive);
+    return assign_auto_ref(type, follower, accumulator, accumulator->flags & ClashPassive);
 }
 
 static int clash_acceptor(Type* type, Type* follower, void* void_accumulator) {
@@ -154,7 +200,7 @@ static int clash_acceptor(Type* type, Type* follower, void* void_accumulator) {
 }
 
 int clash_types(Type* a, Type* b, const Trace trace, Vec(Message)* messages, const unsigned flags) {
-    ClashAccumulator accumulator = { trace, messages, flags };
+    ClashAccumulator accumulator = { trace, messages, {}, flags };
     const int result = traverse_type(a, b, &clash_acceptor, &accumulator, 0, 0);
 
     if(result && !(flags & ClashPassive)) {
@@ -168,7 +214,11 @@ int clash_types(Type* a, Type* b, const Trace trace, Vec(Message)* messages, con
         push(messages, MERROR(trace, as_str(message)));
 
         if(result + 1 == TestCircular) {
-            push(messages, MINFO({ 0 }, str("types are referencing each-other circularly")));
+            String info = strf(0, iftty("types are referencing each-other circularly, see "HINF,
+                                   "types are referencing each-other circularly, see")).as_owned;
+            stringify_type(accumulator.circular_type, &info, 0, 0);
+
+            push(messages, MINFO(accumulator.circular_type->trace, strf(&info, iftty(H, ""))));
         }
     }
 

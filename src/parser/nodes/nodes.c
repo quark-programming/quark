@@ -17,8 +17,8 @@ Node* new_node(const Node node) {
 
     Vec(Node)* vector = &last(global_node_arena);
 
-    if(vhead(*vector)->byte_capacity == len(vector) * sizeof(Node)) {
-        Vec(Node) section = { 0 };
+    if((len(*vector) + 1) * sizeof(Node) > vhead(*vector)->byte_capacity) {
+        Vec(Node) section = NULL;
         resv(&section, vhead(*vector)->byte_capacity / sizeof(Node) * 2);
         push(&global_node_arena, section);
         vector = &last(global_node_arena);

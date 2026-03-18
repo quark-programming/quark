@@ -14,7 +14,8 @@ typedef struct Generics {
 typedef struct GenericReference {
     TYPE_FIELDS;
     Declaration* generics_declaration;
-    size_t index;
+    u32 index;
+    u32 recursive_offset[3];
 } GenericReference;
 
 #endif

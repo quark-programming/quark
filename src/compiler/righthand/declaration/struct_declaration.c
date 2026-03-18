@@ -56,7 +56,7 @@ void comp_NodeTraitAccess(void* void_self, String* line, Compiler* compiler) {
 
     Scope* const trait_scope = get(struct_type->traits, self->trait_declaration->identifier.base);
     Wrapper* const resolved = find_in_scope(*trait_scope, self->field_trace);
-    //
+
     // if(resolved->Variable.declaration->id == NodeFunctionDeclaration
     //    && len(resolved->Variable.declaration->type->FunctionType.signature) >= 2
     //    && resolved->Variable.declaration->type->FunctionType.signature[1]->id == WrapperAuto

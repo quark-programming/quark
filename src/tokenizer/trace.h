@@ -26,7 +26,7 @@ extern bool global_stdout_only;
 
 Trace stretch(Trace a, Trace b);
 
-bool print_message(Message message);
+bool print_message(Message message, bool newline);
 
 #define MERROR(trace, content) ((Message) { trace, content, 1, 0 })
 #define MHINT(content) ((Message) { { 0 }, content, 6, 1 })

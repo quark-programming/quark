@@ -31,6 +31,16 @@ Node* statement(Parser* parser) {
         return (void*) block_scope;
     }
 
+    if(try(parser->tokenizer, ';', NULL)) {
+        static Node empty_node = { NodeNone };
+        return new_node((Node) {
+            .StatementWrapper = {
+                .id = NodeStatementWrapper,
+                .expression = &empty_node,
+            },
+        });
+    }
+
     Node* expr = expression(parser);
     if(!(expr->flags & fStatementTerminated)) expect(parser->tokenizer, ';');
 

@@ -163,31 +163,15 @@ GenericsCollection collect_generics(Parser* const parser) {
         Declaration* type_declaration;
         Type* const base_type = create_generic(identifier.trace, &type_declaration);
 
-#define exp_trait_error() \
-    push(parser->tokenizer->messages, MERROR(extension->trace, str("expected a trait or structure here")))
-
         if(try(parser->tokenizer, ':', NULL)) {
-            type_declaration = (void*) new_node((Node) {
-                .Declaration.DeclarationLink = {
-                    .id = NodeDeclarationLink,
-                    .link = type_declaration,
-                },
-            });
-
             do {
                 Wrapper* const extension = (void*) lefthand_expression(parser);
-                if(extension->id != WrapperVariable) {
-                    exp_trait_error();
-                    continue;
-                }
+                Declaration* declaration = extension->id == WrapperVariable ? extension->Variable.declaration : NULL;
 
-                Declaration* declaration = extension->Variable.declaration;
-                switch(declaration->id) {
+                switch(declaration ? declaration->id : NodeNone) {
                     case NodeFunctionDeclaration: {
-                        StructDeclaration* const parent_trait =
-                                (void*) declaration->identifier.parent_scope->declaration;
+                        Declaration* const parent_trait = declaration->identifier.parent_scope->declaration;
                         if(parent_trait->id != NodeStructDeclaration || !parent_trait->type->StructType.is_trait) {
-                            exp_trait_error();
                             declaration = NULL;
                             break;
                         }
@@ -197,7 +181,6 @@ GenericsCollection collect_generics(Parser* const parser) {
 
                     case NodeStructDeclaration:
                         if(!declaration->type->StructType.is_trait) {
-                            exp_trait_error();
                             declaration = NULL;
                             break;
                         }
@@ -205,24 +188,16 @@ GenericsCollection collect_generics(Parser* const parser) {
                         break;
 
                     default:
-                        exp_trait_error();
                         declaration = NULL;
                 }
 
-                if(!declaration) continue;
+                if(!declaration) {
+                    push(parser->tokenizer->messages, MERROR(extension->trace,
+                             str("expected a trait or structure here")));
+                    continue;
+                }
 
-                push(&type_declaration->DeclarationLink.actions,
-                     { ActionApplyCollection, .collection = extract_actions((void*) extension, true) });
-                // assign_action((void*) base_type, (Action) {
-                //                   ActionApplyCollection,
-                //                   .collection = extract_actions((void*) extension, true)
-                //               }, false, true);
-                push(&base_type->Wrapper.Auto.required_traits, declaration);
-
-                // Declaration* const declaration_mirror = (void*) new_node((Node) { .Declaration = *declaration });
-                // declaration_mirror->actions = extract_actions((void*) extension, true);
-                //
-                // push(&base_type->Wrapper.Auto.required_traits, declaration_mirror);
+                push(&base_type->Wrapper.Auto.required_traits, extension);
             } while(try(parser->tokenizer, '+', NULL));
         }
 
@@ -242,8 +217,9 @@ GenericsCollection collect_generics(Parser* const parser) {
 void assign_generics_to_declaration(Declaration* declaration, const GenericsCollection collection) {
     if(!len(collection.base_type_arguments)) return;
     declaration->generics.base_type_arguments = collection.base_type_arguments;
-    push(&declaration->generics.type_arguments_stacks[0], collection.base_type_arguments);
-    push(&declaration->generics.type_arguments_stacks[1], collection.base_type_arguments);
+    push(&declaration->generics.type_arguments_stacks[2], collection.base_type_arguments);
+    // push(&declaration->generics.type_arguments_stacks[0], collection.base_type_arguments);
+    // push(&declaration->generics.type_arguments_stacks[1], collection.base_type_arguments);
 }
 
 void close_generics_declaration(Declaration* declaration) {
@@ -252,7 +228,7 @@ void close_generics_declaration(Declaration* declaration) {
 
     for(size_t i = 0; i < len(declaration->generics.base_type_arguments); i++) {
         Type* base_type = declaration->generics.base_type_arguments[i];
-        if(base_type->Wrapper.Auto.ref) continue;
+        // if(base_type->Wrapper.Auto.ref) continue;
 
         declaration->generics.base_type_arguments[i] = new_type(*base_type);
 

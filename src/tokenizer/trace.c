@@ -10,7 +10,7 @@ Trace stretch(Trace a, const Trace b) {
     return a;
 }
 
-bool print_message(const Message message) {
+bool print_message(const Message message, bool newline) {
     FILE* out = !global_stdout_only && message.label == 0 ? stderr : stdout;
 
     if(!message.trace.filename) {
@@ -33,14 +33,19 @@ bool print_message(const Message message) {
     }
     underline[sizeof(underline) - 1] = '\0';
 
-    fprintf(out, iftty("\33[1m%s:%u:%u: \33[3%um", "%s:%u:%u: ["),
-            message.trace.filename, message.trace.row, message.trace.col,
-            message.tty_color);
+    if(message.label == 0 || message.label == 3) {
+        fprintf(out, iftty("\33[1m%s:%u:%u: ", "%s:%u:%u"),
+            message.trace.filename, message.trace.row, message.trace.col);
+    }
+
+    fprintf(out, iftty("\33[3%um", "["), message.tty_color);
     fprintf(out, iftty("%s:\33[0m %.*s\n%4d | %s\n     : \33[3%um", "%s]: %.*s\n%4d | %s\n     : "),
             global_message_labels[message.label], fmtof(message.content),
             message.trace.row, line_start, message.tty_color);
-    fprintf(out, iftty("%.*s\33[0m\n", "%.*s\n"),
+    fprintf(out, iftty("%.*s\33[0m", "%.*s"),
             (int) sizeof(underline), underline);
+
+    fprintf(out, newline ? "\n" : " ");
 
     return !message.label;
 }

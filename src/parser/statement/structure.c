@@ -34,7 +34,6 @@ Node* parse_struct_literal(Type* const wrapped_struct_type, Parser* parser) {
             .type = (void*) wrapped_struct_type,
         }
     });
-    bool breakpoint = streq(struct_type->module->declaration->identifier.base, str("Mapped"));
 
     for(u32 field_index = 0; parser->tokenizer->current.type && parser->tokenizer->current.type != '}'; field_index++) {
         str field_name = { 0 };
@@ -140,12 +139,12 @@ Node* parse_struct_declaration(const Token keyword, Parser* parser, bool is_trai
 
             put(&type->traits, trait_info.identifier.base,
                 ((Scope) { NodeScope, .declaration = trait_info.value->Variable.declaration }));
+            Scope* const trait_scope = get(type->traits, trait_info.identifier.base);
+            trait_scope->result_value = (void*) trait_info.value;
 
             Vec(Declaration*) const trait_declarations =
                 trait_info.value->Variable.declaration->StructDeclaration.trait_declarations;
             if(!len(trait_declarations)) continue;
-
-            Scope* const trait_scope = get(type->traits, trait_info.identifier.base);
 
             for(u32 i = 0; i < len(trait_declarations); i++) {
                 DeclarationLink* const link = (void*) new_node((Node) {
@@ -157,8 +156,6 @@ Node* parse_struct_declaration(const Token keyword, Parser* parser, bool is_trai
                 });
 
                 push(&link->actions, { ActionAnchorTrait, .trait_struct = type, .target = trait_declarations[i] });
-                // link->identifier.trait = (void*) trait_info.value->Variable.declaration;
-                // link->identifier.parent_scope = module->scope;
 
                 put(&trait_scope->variables, trait_declarations[i]->identifier.base, (void*) link);
                 if(trait_declarations[i]->FunctionDeclaration.body->children) {
@@ -202,15 +199,15 @@ outer:
 
             Wrapper* variable = (void*) parse_function_declaration(declaration_type, declaration_info, parser,
                                                                    is_trait);
-            if(is_trait && variable->Variable.declaration->FunctionDeclaration.body->children) {
-                // FunctionDeclaration* const function_declaration = (void*) variable->Variable.declaration;
-                //
-                // resv(&function_declaration->actions, len(global_actions[2]));
-                // memcpy(function_declaration->actions, global_actions[2], len(global_actions[2]) * sizeof(Action));
-                // len(function_declaration->actions) = len(global_actions[2]);
-                //
-                push(&declaration->trait_declarations, variable->Variable.declaration);
-            }
+            // if(is_trait && variable->Variable.declaration->FunctionDeclaration.body->children) {
+            //     // FunctionDeclaration* const function_declaration = (void*) variable->Variable.declaration;
+            //     //
+            //     // resv(&function_declaration->actions, len(global_actions[2]));
+            //     // memcpy(function_declaration->actions, global_actions[2], len(global_actions[2]) * sizeof(Action));
+            //     // len(function_declaration->actions) = len(global_actions[2]);
+            //     //
+            //     push(&declaration->trait_declarations, variable->Variable.declaration);
+            // }
 
             variable->Variable.declaration->flags |= fPrivate * is_private;
             unbox((void*) variable);

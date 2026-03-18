@@ -1,4 +1,5 @@
 import containers::option::{ Option };
+import containers::slice::{ Slice };
 
 trait Iterator<T> {
     T? next(&self);
@@ -9,21 +10,102 @@ trait Iterator<T> {
         }
     }
 
-    struct Mapped<I : Iterator<T>, K> : Iterator<K> {
-        I base_iter;
-        K (T) func;
-
-        K? Iterator::next(&self) {
-            if((T? next = self->base_iter.next()).is_none()) return Option::None();
-            return Option::Some(self->func(next.unwrap()));
-        }
-    }
-
-    Mapped<I, K> map<I : Iterator<T>, K>(self, K (T) map_func) {
-        return Mapped { self, map_func };
+    T? nth(self, usize index) {
+        while((T? value = self.next()).is_some() && index) index--;
+        return value;
     }
 }
 
 trait IntoIter<T, K : Iterator<T>> {
     K iter(self);
+}
+
+struct Map<T, K, I : Iterator<T>> : Iterator<K> {
+    I base_iter;
+    K (T) map_function;
+
+    K? Iterator::next(&self) {
+        if((T? next = self->base_iter.next()).is_none()) return Option::None();
+        return Option::Some(self->map_function(next.unwrap()));
+    }
+}
+
+Map<T, K> Iterator<T>::map<T, K>(self, K (T) map_function) {
+    return Map { self, map_function };
+}
+
+struct Filter<T, I : Iterator<T>> : Iterator<T> {
+    I base_iter;
+    bool (T) filter;
+
+    T? Iterator::next(&self) {
+        while((T? next = self->base_iter.next()).is_some() && !self->filter(next.unwrap()));
+        return next;
+    }
+}
+
+Filter<T> Iterator<T>::filter<T>(self, bool (T) filter) {
+    return Filter { self, filter };
+}
+
+struct TakeWhile<T, I : Iterator<T>> : Iterator<T> {
+    I base_iter;
+    bool (T) filter;
+
+    T? Iterator::next(&self) {
+        if((T? next = self->base_iter.next()).is_none() || !self->filter(next.unwrap())) return Option::None();
+        return next;
+    }
+}
+
+TakeWhile<T> Iterator<T>::take_while<T>(self, bool (T) filter) {
+    return TakeWhile { self, filter };
+}
+
+struct SkipWhile<T, I : Iterator<T>> : Iterator<T> {
+    I base_iter;
+    bool (T) filter;
+
+    T? Iterator::next(&self) {
+        while((T? next = self->base_iter.next()).is_some() && self->filter(next.unwrap()));
+        self->filter = bool (T _ignore) => false;
+        return next;
+    }
+}
+
+SkipWhile<T> Iterator<T>::skip_while<T>(self, bool (T) filter) {
+    return SkipWhile { self, filter };
+}
+
+struct EnumeratePair<T> {
+    usize i;
+    T value;
+}
+
+struct Enumerate<T, I : Iterator<T>> : Iterator<EnumeratePair<T>> {
+    I base_iter;
+    usize index;
+
+    EnumeratePair<T>? Iterator::next(&self) {
+        if((T? next = self->base_iter.next()).is_none()) return Option::None();
+        return Option::Some(EnumeratePair { self->index++, next.unwrap() });
+    }
+}
+
+Enumerate<T> Iterator<T>::enumerate<T>(self) {
+    return Enumerate { self, 0 };
+}
+
+struct Chunks<T> : Iterator<T> {
+    [T] slice;
+    usize index;
+
+    T? Iterator::next(&self) {
+        if(self->index >= self->slice.len()) return Option::None();
+        return Option::Some(self->slice[self->index++]);
+    }
+}
+
+Chunks<T> Slice<T>::[IntoIter::iter]<T>(self) {
+    return Chunks { self, 0 };
 }

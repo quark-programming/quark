@@ -97,9 +97,9 @@ static int assign_auto_ref(Type* type, Type* follower, ClashAccumulator* accumul
     }
 
     if(follower->id != WrapperAuto && wrapper->flags & fNumeric && !(follower->flags & fNumeric)) return TestMismatch;
+    if(passive || wrapper->Auto.constant) return 1;
     const int result = test_required_traits(wrapper, (void*) follower, accumulator, generics_offset);
     if(result) return result;
-    if(passive || wrapper->Auto.constant) return 1;
 
     wrapper->Auto.ref = make_type_standalone(follower, generics_offset);
 

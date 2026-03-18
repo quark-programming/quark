@@ -169,7 +169,7 @@ Type* peek_type(Type* type, Action* action, const unsigned flags, u8 generics_of
                 static Type static_any = {
                     .Wrapper = {
                         .id = WrapperAuto,
-                        .trace = (Trace) { str("[internal] any") },
+                        .trace = { { sizeof("[internal] any") - 1, { "[internal] any" } } },
                         .Auto.priority = 1,
                         .Auto.constant = true,
                     },

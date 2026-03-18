@@ -194,6 +194,9 @@ WRAPDEF void* __wvpop(__WVHead* vec[static 1], const size_t stride) {
 		errno = EDOM;
 		return NULL;
 #else
+#include <execinfo.h>
+		void* bt[30]; int nbt = backtrace(bt, 30);
+		backtrace_symbols_fd(bt, nbt, 2);
 		wpanicf("called pop on an empty vector\n");
 #endif
 	}

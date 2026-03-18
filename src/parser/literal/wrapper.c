@@ -3,7 +3,8 @@
 #include "parser/type/generics.h"
 
 Vec(Action) extract_link_actions(Declaration** declaration, Vec(Action)* actions) {
-    if(!actions) actions = &(Vec(Action)) { NULL };
+    Vec(Action) local_actions = NULL;
+    if(!actions) actions = &local_actions;
     for(; (*declaration)->id == NodeDeclarationLink; *declaration = (*declaration)->DeclarationLink.link) {
         resv(actions, len((*declaration)->DeclarationLink.actions));
         for(u32 i = 0; i < len((*declaration)->DeclarationLink.actions); i++) {
